@@ -1,0 +1,1302 @@
+strain	genbank	date	country	region	division	location	length	host_type	host	authors	date_submitted
+JF912185	JF912185	1992-01-01	Brazil				11008	Mosquito	Sabethes sp.	Palacios et al	2011-05-03
+MF405338	MF405338	1927-XX-XX	Ghana				10395	Human	Homo sapiens	Klitting et al	2017-06-26
+MZ285906	MZ285906	1927-XX-XX	Senegal				10832	Human	Homo sapiens	Strother et al	2021-05-22
+KU978764	KU978764	1941-06-06	Sudan				10824	Human	Homo sapiens	Guerbois et al	2016-03-24
+KU978763	KU978763	1946-XX-XX	Nigeria				10804	Human	Homo sapiens	Guerbois et al	2016-03-24
+MW158338	MW158338	1955-01-21	Brazil				10780	Non-human primate	sentinel monkey	Tesh et al	2020-10-15
+MW158339	MW158339	1960-09-23	Brazil				10742	Non-human primate	Cebus sp.	Tesh et al	2020-10-15
+KU978765	KU978765	1965-08-23	Guinea-Bissau				10851	Human	Homo sapiens	Guerbois et al	2016-03-24
+MW158363	MW158363	1966-XX-XX	USA				10838	Human	Homo sapiens	Tesh et al	2020-10-15
+MW158340	MW158340	1968-06-06	Brazil				10780	Non-human primate	Saguinus midas	Tesh et al	2020-10-15
+MW158343	MW158343	1973-02-16	Brazil				10667	Mosquito	Haemagogus sp.	Tesh et al	2020-10-15
+JX898869	JX898869	1973-XX-XX	Cote d'Ivoire				10848	Mosquito	Aedes africanus	Stock et al	2012-10-03
+MK060080	MK060080	1979-10-30	Senegal				10195	Human	Homo sapiens	Amraoui et al	2018-10-16
+JF912179	JF912179	1980-XX-XX	Brazil				10889	Mosquito	Haemagogus sp.	Palacios et al	2011-05-03
+JF912180	JF912180	1981-XX-XX	Brazil				11008	Human	Homo sapiens	Palacios et al	2011-05-03
+JF912181	JF912181	1983-XX-XX	Brazil				10795	Human	Homo sapiens	Palacios et al	2011-05-03
+JF912182	JF912182	1984-XX-XX	Brazil				10860	Human	Homo sapiens	Palacios et al	2011-05-03
+JF912183	JF912183	1984-XX-XX	Brazil				10852	Human	Homo sapiens	Palacios et al	2011-05-03
+MW158344	MW158344	1985-06-16	Brazil				10665	Mosquito	Haemagogus janthinomys	Tesh et al	2020-10-15
+JF912184	JF912184	1987-XX-XX	Brazil				11004	Human	Homo sapiens	Palacios et al	2011-05-03
+MW158345	MW158345	1988-12-14	Trinidad and Tobago				10660	Mosquito	Haemagogus janthinomys	Tesh et al	2020-10-15
+MW158346	MW158346	1989-01-20	Trinidad and Tobago				10667	Mosquito	Sabethes chloropterus	Tesh et al	2020-10-15
+MW158347	MW158347	1989-02-22	Trinidad and Tobago				10666	Non-human primate	Alouatta sp.	Tesh et al	2020-10-15
+MW158341	MW158341	1991-06-21	Brazil				10618	Non-human primate	Alouatta sp.	Tesh et al	2020-10-15
+ON022722	ON022722	1993-04-06	Brazil	Sudeste	São Paulo	Campinas	10173	Human	Homo sapiens	Hill et al	2022-03-16
+JF912186	JF912186	1994-XX-XX	Brazil				11004	Human	Homo sapiens	Palacios et al	2011-05-03
+MW158361	MW158361	1995-05-19	Peru				10665	Human	Homo sapiens	Tesh et al	2020-10-15
+JX898872	JX898872	1995-XX-XX	Senegal				10859	Mosquito	Aedes aegypti	Stock et al	2012-10-03
+JX898871	JX898871	1995-XX-XX	Senegal				10859	Mosquito	Aedes aegypti	Stock et al	2012-10-03
+JX898868	JX898868	1995-XX-XX	Senegal				10862	Human	Homo sapiens	Stock et al	2012-10-03
+MW158348	MW158348	1995-XX-XX	Trinidad and Tobago				10448	Mosquito	Haemagogus sp.	Tesh et al	2020-10-15
+JX898870	JX898870	1996-XX-XX	Senegal				10862	Mosquito	Aedes furcifer	Stock et al	2012-10-03
+MW158362	MW158362	1997-07-01	Ecuador				10735	Human	Homo sapiens	Tesh et al	2020-10-15
+MW158359	MW158359	1998-01-20	Peru				10668	Human	Homo sapiens	Tesh et al	2020-10-15
+MF004382	MF004382	1999-01-01	Bolivia				10795	Human	Homo sapiens	Baronti et al	2017-04-29
+ON022720	ON022720	2000-01-18	Brazil	Sudeste	São Paulo	Campinas	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022717	ON022717	2000-01-18	Brazil	Sudeste	São Paulo	São Paulo	10172	Human	Homo sapiens	Hill et al	2022-03-16
+MW158342	MW158342	2000-02-07	Brazil				10859	Non-human primate	Alouatta sp.	Tesh et al	2020-10-15
+ON022718	ON022718	2000-04-27	Brazil	Sudeste	São Paulo	São José do Rio Preto	10172	Human	Homo sapiens	Hill et al	2022-03-16
+JF912188	JF912188	2000-XX-XX	Brazil				10817	Human	Homo sapiens	Palacios et al	2011-05-03
+JF912187	JF912187	2000-XX-XX	Brazil				11008	Human	Homo sapiens	Palacios et al	2011-05-03
+JX898875	JX898875	2000-XX-XX	Senegal				10857	Mosquito	Aedes furcifer	Stock et al	2012-10-03
+JX898873	JX898873	2000-XX-XX	Senegal				10862	Mosquito	Aedes furcifer	Stock et al	2012-10-03
+JX898874	JX898874	2000-XX-XX	Senegal				10861	Mosquito	Aedes taylori	Stock et al	2012-10-03
+MG969501	MG969501	2001-03-07	Brazil				11007	Human	Homo sapiens; 39-years old man infected in the sylvatic yellow fever cycle at Bom Despacho, State of Minas Gerais	Bonaldo et al	2018-02-16
+JF912189	JF912189	2001-XX-XX	Brazil				11008	Mosquito	Haemagogus leucocelaenus	Palacios et al	2011-05-03
+JX898876	JX898876	2001-XX-XX	Senegal				10859	Mosquito	Aedes furcifer	Stock et al	2012-10-03
+JF912190	JF912190	2002-XX-XX	Brazil				10859	Human	Homo sapiens	Palacios et al	2011-05-03
+MH018100	MH018100	2003-03-15	Brazil				10169	Human	Homo sapiens	Faria et al	2018-03-02
+MH018101	MH018101	2003-08-15	Brazil				10169	Human	Homo sapiens	Faria et al	2018-03-02
+ON022716	ON022716	2004-11-26	Brazil				10172	Human	Homo sapiens	Hill et al	2022-03-16
+MW158358	MW158358	2004-XX-XX	Peru				10376	Human	Homo sapiens	Tesh et al	2020-10-15
+DQ118157	DQ118157	2004-XX-XX	Spain				10862			Domingo Carrasco et al	2005-07-06
+KM388817	KM388817	2004-XX-XX	Venezuela				10236	Non-human primate	Alouatta seniculus	Auguste et al	2014-08-22
+MW158349	MW158349	2004-XX-XX	Venezuela				10673	Non-human primate	Alouatta seniculus	Tesh et al	2020-10-15
+MW158350	MW158350	2004-XX-XX	Venezuela				10659	Non-human primate	Alouatta seniculus	Tesh et al	2020-10-15
+JX898877	JX898877	2005-XX-XX	Senegal				10862	Mosquito	Aedes furcifer	Stock et al	2012-10-03
+JX898878	JX898878	2005-XX-XX	Senegal				10862	Mosquito	Aedes furcifer	Stock et al	2012-10-03
+JX898880	JX898880	2005-XX-XX	Senegal				10862	Mosquito	Aedes luteocephalus	Stock et al	2012-10-03
+JX898881	JX898881	2005-XX-XX	Senegal				10862	Mosquito	Aedes luteocephalus	Stock et al	2012-10-03
+JX898879	JX898879	2005-XX-XX	Senegal				10862	Mosquito	Aedes taylori	Stock et al	2012-10-03
+MW158352	MW158352	2005-XX-XX	Venezuela				10763	Non-human primate	Alouatta seniculus	Tesh et al	2020-10-15
+MW158351	MW158351	2005-XX-XX	Venezuela				10671	Non-human primate	Alouatta seniculus	Tesh et al	2020-10-15
+KM388814	KM388814	2005-XX-XX	Venezuela				10236	Human	Homo sapiens	Auguste et al	2014-08-22
+MW158354	MW158354	2005-XX-XX	Venezuela				10705	Human	Homo sapiens	Tesh et al	2020-10-15
+MW158353	MW158353	2005-XX-XX	Venezuela				10677	Human	Homo sapiens	Tesh et al	2020-10-15
+KM388818	KM388818	2006-XX-XX	Venezuela				10236	Non-human primate	Alouatta seniculus	Auguste et al	2014-08-22
+MW158355	MW158355	2006-XX-XX	Venezuela				10675	Non-human primate	Alouatta seniculus	Tesh et al	2020-10-15
+GQ379162	GQ379162	2007-10-01	Peru				10862	Human	Homo sapiens	Lanciotti et al	2009-07-13
+GQ379163	GQ379163	2007-10-01	Peru				10862	Human	Homo sapiens	Lanciotti et al	2009-07-13
+KM388815	KM388815	2007-XX-XX	Venezuela				10236	Non-human primate	Alouatta seniculus	Auguste et al	2014-08-22
+MW158356	MW158356	2007-XX-XX	Venezuela				10668	Non-human primate	Alouatta seniculus	Tesh et al	2020-10-15
+KY861728	KY861728	2008-02-09	Brazil	Sul	Rio Grande do Sul	Caibaté	11008	Non-human primate	Alouatta sp. (howler monkey)	Bonaldo et al	2017-04-01
+MW158365	MW158365	2008-12-05	Trinidad and Tobago				10668	Mosquito	Mansonia titillans	Tesh et al	2020-10-15
+MW158367	MW158367	2009-01-16	Trinidad and Tobago				10666	Mosquito	Coquillettidia venezuelensis	Tesh et al	2020-10-15
+MW158366	MW158366	2009-01-16	Trinidad and Tobago				10659	Mosquito	Culex spissipes	Tesh et al	2020-10-15
+MW158364	MW158364	2009-01-22	Trinidad and Tobago				10622	Mosquito	Coquillettidia venezuelensis	Tesh et al	2020-10-15
+HM582851	HM582851	2009-XX-XX	Trinidad and Tobago				10236	Non-human primate	Alouatta seniculus	Auguste et al	2010-06-21
+JN620362	JN620362	2010-10-01	Uganda				10820	Human	Homo sapiens	McMullan et al	2011-08-25
+KM388816	KM388816	2010-XX-XX	Venezuela				10236	Non-human primate	Alouatta seniculus	Auguste et al	2014-08-22
+MW158357	MW158357	2010-XX-XX	Venezuela				10660	Non-human primate	Alouatta seniculus	Tesh et al	2020-10-15
+MW158360	MW158360	2011-03-01	Peru				10845	Human	Homo sapiens	Tesh et al	2020-10-15
+JX949181	JX949181	2012-07-03	USA				10815			Amanna et al	2012-10-10
+OQ077983	OQ077983	2012-XX-XX	Uganda				10741	Human	Homo sapiens	Ashraf et al	2022-12-01
+MK333804	MK333804	2015-08-17	Brazil	Centro-Oeste	Goiás	Novo Brasil	11007	Non-human primate	Sapajus libidinosus	Pereira Ribeiro et al	2018-12-21
+MF370549	MF370549	2015-08-26	Brazil				10581	Non-human primate	Monkey	Cardoso et al	2017-06-18
+MF926243	MF926243	2015-XX-XX	France				10195	Other	hamster	Klitting et al	2017-09-07
+KU949599	KU949599	2016-03-09					10759			Zhang et al	2016-03-17
+KU921608	KU921608	2016-03-10	China				10823	Human	Homo sapiens	Liu et al	2016-03-13
+KY495641	KY495641	2016-03-11	China				10783	Human	Homo sapiens	Bi et al	2017-01-20
+KX268355	KX268355	2016-03-11	China				10825	Human	Homo sapiens	Liu et al	2016-05-21
+KX010994	KX010994	2016-03-11	China				10823	Human	Homo sapiens	Pan et al	2016-03-25
+KY873606	KY873606	2016-03-14	China				9519	Human	Homo sapiens	Liu et al	2017-04-01
+KX982182	KX982182	2016-03-16	Angola				10623	Human	Homo sapiens	Simon-Loriere et al	2016-10-12
+KX010995	KX010995	2016-03-17	China				10822	Human	Homo sapiens	Cui et al	2016-03-25
+MG589641	MG589641	2016-03-18	China				10789	Human	Homo sapiens	Bi et al	2017-11-28
+KX010996	KX010996	2016-03-18	China				10823	Human	Homo sapiens	Cui et al	2016-03-25
+KX027336	KX027336	2016-03-19	China				10823	Human	Homo sapiens	Cui et al	2016-04-06
+KY587416	KY587416	2016-03-20	China				10763	Human	Homo sapiens	Tang et al	2017-02-07
+KY873607	KY873607	2016-03-21	China				10744	Human	Homo sapiens	Liu et al	2017-04-01
+KY873608	KY873608	2016-03-23	China				10345	Human	Homo sapiens	Liu et al	2017-04-01
+MF370534	MF370534	2016-04-05	Brazil				11007	Non-human primate	Callithrix penicillata	Cruz et al	2017-06-18
+MF370535	MF370535	2016-08-30	Brazil				10897	Non-human primate	Alouatta sp.	Cruz et al	2017-06-18
+MF370536	MF370536	2016-09-02	Brazil				11007	Non-human primate	Alouatta sp.	Cruz et al	2017-06-18
+MT497520	MT497520	2016-10-10	Brazil	Sudeste	São Paulo	Potirendaba	10172	Non-human primate	Sapajus sp.	Hill et al	2020-05-19
+MT497521	MT497521	2016-10-13	Brazil	Sudeste	São Paulo	Pindorama	10172	Non-human primate	Alouatta sp.	Hill et al	2020-05-19
+MW034590	MW034590	2016-11-01	Brazil				10945	Non-human primate	Alouatta caraya	Siconelli et al	2020-09-24
+ON022302	ON022302	2016-11-03	Brazil	Sudeste	São Paulo	Ribeirão Preto	10233	Mosquito	mosquito	Hill et al	2022-03-16
+ON022300	ON022300	2016-11-03	Brazil	Sudeste	São Paulo	Ribeirão Preto	10122	Mosquito	mosquito	Hill et al	2022-03-16
+ON022301	ON022301	2016-11-03	Brazil	Sudeste	São Paulo	Ribeirão Preto	10130	Mosquito	mosquito	Hill et al	2022-03-16
+ON022703	ON022703	2016-11-04	Brazil	Sudeste	São Paulo	Adolfo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022702	ON022702	2016-11-07	Brazil	Sudeste	São Paulo	Pindorama	10172	Non-human primate	Sapajus	Hill et al	2022-03-16
+MT497522	MT497522	2016-11-15	Brazil	Sudeste	São Paulo	Jaboticabal	10172	Non-human primate	Alouatta sp.	Hill et al	2020-05-19
+MT497523	MT497523	2016-11-16	Brazil	Sudeste	São Paulo	Catanduva	10172	Non-human primate	Alouatta sp.	Hill et al	2020-05-19
+ON022288	ON022288	2016-11-16	Brazil	Sudeste	São Paulo	Catanduva	10183	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022698	ON022698	2016-11-16	Brazil	Sudeste	São Paulo	Jaboticabal	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MH666056	MH666056	2016-11-16	Brazil				10236	Non-human primate	Alouatta sp.	Cunha et al	2018-07-24
+ON022700	ON022700	2016-11-17	Brazil	Sudeste	São Paulo	Catanduva	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022701	ON022701	2016-11-17	Brazil	Sudeste	São Paulo	Catiguá	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022688	ON022688	2016-11-21	Brazil	Sudeste	São Paulo	Severínia	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022686	ON022686	2016-12-09	Brazil	Sudeste	São Paulo	Jaboticabal	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MT497524	MT497524	2016-12-12	Brazil	Sudeste	São Paulo	Catiguá	10172	Non-human primate	Alouatta sp.	Hill et al	2020-05-19
+ON022600	ON022600	2016-12-13	Brazil	Sudeste	São Paulo	Jaboticabal	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022311	ON022311	2016-12-19	Brazil	Sudeste	São Paulo	Tabapuã	10228	Non-human primate	Non-human primate	Hill et al	2022-03-16
+MH666058	MH666058	2016-12-19	Brazil				10239	Non-human primate	Sapajus sp.	Cunha et al	2018-07-24
+MH633689	MH633689	2016-XX-XX	China				10243	Human	Homo sapiens	Chen et al	2018-07-17
+MH633684	MH633684	2016-XX-XX	China				10420	Human	Homo sapiens	Chen et al	2018-07-17
+MH633686	MH633686	2016-XX-XX	China				10420	Human	Homo sapiens	Chen et al	2018-07-17
+MH633687	MH633687	2016-XX-XX	China				10568	Human	Homo sapiens	Chen et al	2018-07-17
+MH633690	MH633690	2016-XX-XX	China				10221	Human	Homo sapiens	Chen et al	2018-07-17
+MH633691	MH633691	2016-XX-XX	China				10838	Human	Homo sapiens	Chen et al	2018-07-17
+MH633688	MH633688	2016-XX-XX	China				10420	Human	Homo sapiens	Chen et al	2018-07-17
+MH633692	MH633692	2016-XX-XX	China				10310	Human	Homo sapiens	Chen et al	2018-07-17
+MH633685	MH633685	2016-XX-XX	China				10420	Human	Homo sapiens	Chen et al	2018-07-17
+OM938988	OM938988	2016-XX-XX	France				10862	Other	vero cells	Esson et al	2022-03-07
+MH560359	MH560359	2017-01-01	Brazil				10780	Human	Homo sapiens	Figueiredo et al	2018-06-28
+MH018089	MH018089	2017-01-02	Brazil	Sudeste	Minas Gerais	Ladainha	10213	Human	Homo sapiens	Faria et al	2018-03-02
+MH018072	MH018072	2017-01-07	Brazil	Sudeste	Minas Gerais	Itambacuri	10213	Human	Homo sapiens	Faria et al	2018-03-02
+MH018077	MH018077	2017-01-07	Brazil	Sudeste	Minas Gerais	Ladainha	10213	Human	Homo sapiens	Faria et al	2018-03-02
+MH018068	MH018068	2017-01-09	Brazil	Sudeste	Minas Gerais	Caratinga	10213	Human	Homo sapiens	Faria et al	2018-03-02
+MH018087	MH018087	2017-01-10	Brazil	Sudeste	Minas Gerais	Teófilo Otoni	10213	Human	Homo sapiens	Faria et al	2018-03-02
+MF370532	MF370532	2017-01-10	Brazil				11005	Human	Homo sapiens	Cruz et al	2017-06-18
+MF370533	MF370533	2017-01-11	Brazil				10881	Human	Homo sapiens	Cruz et al	2017-06-18
+MH018090	MH018090	2017-01-12	Brazil	Sudeste	Minas Gerais	Caratinga	10213	Human	Homo sapiens	Faria et al	2018-03-02
+MH018106	MH018106	2017-01-13	Brazil	Sudeste	Minas Gerais	Coronel Murta	10213	Non-human primate	Alouatta sp.	Faria et al	2018-03-02
+MH018085	MH018085	2017-01-13	Brazil	Sudeste	Minas Gerais	Imbé de Minas	10213	Human	Homo sapiens	Faria et al	2018-03-02
+MH484426	MH484426	2017-01-13	Brazil	Sudeste	Minas Gerais	Itamarandiba	9758	Non-human primate	monkey	Faria et al	2018-06-13
+MH018096	MH018096	2017-01-13	Brazil	Sudeste	Minas Gerais	José Raydan	10213	Non-human primate	Alouatta sp.	Faria et al	2018-03-02
+MH018069	MH018069	2017-01-14	Brazil	Sudeste	Minas Gerais	Ladainha	9509	Human	Homo sapiens	Faria et al	2018-03-02
+MH018074	MH018074	2017-01-14	Brazil	Sudeste	Minas Gerais	Novo Cruzeiro	10213	Human	Homo sapiens	Faria et al	2018-03-02
+MF370530	MF370530	2017-01-15	Brazil				10885	Mosquito	Haemagogus janthinomys	Cruz et al	2017-06-18
+MK583152	MK583152	2017-01-16	Brazil	Sudeste	São Paulo	Ibiúna	10984	Human	Homo sapiens	Cunha et al	2019-02-28
+MF465805	MF465805	2017-01-17	Brazil				10948	Human	Homo sapiens	Meneguin et al	2017-07-09
+MF370537	MF370537	2017-01-17	Brazil				11007	Non-human primate	Monkey	Cruz et al	2017-06-18
+MH018078	MH018078	2017-01-18	Brazil	Sudeste	Minas Gerais	Novo Cruzeiro	10213	Human	Homo sapiens	Faria et al	2018-03-02
+MH018075	MH018075	2017-01-18	Brazil	Sudeste	Minas Gerais	Poté	9519	Human	Homo sapiens	Faria et al	2018-03-02
+MH018086	MH018086	2017-01-19	Brazil	Sudeste	Minas Gerais	Ladainha	9519	Human	Homo sapiens	Faria et al	2018-03-02
+MH018095	MH018095	2017-01-19	Brazil	Sudeste	Minas Gerais	Sabinópolis	10213	Non-human primate	Callithrix sp.	Faria et al	2018-03-02
+MH018076	MH018076	2017-01-19	Brazil	Sudeste	Minas Gerais	Setubinha	10213	Human	Homo sapiens	Faria et al	2018-03-02
+ON022531	ON022531	2017-01-20	Brazil	Sudeste	Espírito Santo	Brejetuba	10172	Human	Homo sapiens	Hill et al	2022-03-16
+MH018093	MH018093	2017-01-20	Brazil	Sudeste	Minas Gerais	Santa Bárbara do Leste	10213	Human	Homo sapiens	Faria et al	2018-03-02
+MH018073	MH018073	2017-01-20	Brazil	Sudeste	Minas Gerais	Teófilo Otoni	10213	Human	Homo sapiens	Faria et al	2018-03-02
+MF370538	MF370538	2017-01-20	Brazil				11007	Non-human primate	Callithrix penicillata	Cruz et al	2017-06-18
+MH018070	MH018070	2017-01-21	Brazil	Sudeste	Minas Gerais	Itambacuri	10213	Human	Homo sapiens	Faria et al	2018-03-02
+MH018088	MH018088	2017-01-21	Brazil	Sudeste	Minas Gerais	Teófilo Otoni	10213	Human	Homo sapiens	Faria et al	2018-03-02
+MT497525	MT497525	2017-01-21	Brazil	Sudeste	São Paulo	Ribeirão Preto	10172	Non-human primate	Alouatta sp.	Hill et al	2020-05-19
+MH484434	MH484434	2017-01-22	Brazil	Sudeste	Minas Gerais	São João Evangelista	10169	Human	Homo sapiens	Faria et al	2018-06-13
+ON022456	ON022456	2017-01-23	Brazil	Sudeste	Espírito Santo	Itarana	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+MH484432	MH484432	2017-01-23	Brazil	Sudeste	Minas Gerais	Bom Jesus do Galho	9763	Non-human primate	Alouatta sp.	Faria et al	2018-06-13
+ON022581	ON022581	2017-01-23	Brazil	Sudeste	São Paulo	Ribeirão Preto	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MH666057	MH666057	2017-01-23	Brazil				10185	Non-human primate	Alouatta sp.	Cunha et al	2018-07-24
+MK882601	MK882601	2017-01-24	Brazil	Sudeste	Espírito Santo	Ibatiba	10169	Human	Homo sapiens	Giovanetti et al	2019-05-03
+MH018114	MH018114	2017-01-24	Brazil	Sudeste	Espírito Santo	Itarana	10233	Non-human primate	nonhuman primate	Faria et al	2018-03-02
+ON022238	ON022238	2017-01-24	Brazil	Sudeste	Espírito Santo	Pancas	10233	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022461	ON022461	2017-01-24	Brazil	Sudeste	Espírito Santo	Santa Teresa	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+MH018115	MH018115	2017-01-24	Brazil	Sudeste	Espírito Santo	Venda Nova do Imigrante	10233	Non-human primate	nonhuman primate	Faria et al	2018-03-02
+MH484427	MH484427	2017-01-24	Brazil	Sudeste	Minas Gerais	Felício dos Santos	10169	Non-human primate	Callithrix sp.	Faria et al	2018-06-13
+MH484423	MH484423	2017-01-24	Brazil	Sudeste	Minas Gerais	José Raydan	9475	Non-human primate	Callithrix sp.	Faria et al	2018-06-13
+MH484424	MH484424	2017-01-24	Brazil	Sudeste	Minas Gerais	Teófilo Otoni	10169	Human	Homo sapiens	Faria et al	2018-06-13
+ON022303	ON022303	2017-01-24	Brazil	Sudeste	São Paulo	Ribeirão Preto	10096	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022536	ON022536	2017-01-25	Brazil	Sudeste	Espírito Santo	Ibatiba	10172	Human	Homo sapiens	Hill et al	2022-03-16
+MF170976	MF170976	2017-01-25	Brazil	Sudeste	Espírito Santo	Laranja da Terra	10236	Human	Homo sapiens	Moreira-Soto et al	2017-05-26
+MH018098	MH018098	2017-01-25	Brazil	Sudeste	Minas Gerais	Chapada Gaúcha	10213	Non-human primate	Cebidae sp.	Faria et al	2018-03-02
+MH018097	MH018097	2017-01-25	Brazil	Sudeste	Minas Gerais	Luisburgo	10212	Non-human primate	Callicebus sp.	Faria et al	2018-03-02
+MH018071	MH018071	2017-01-25	Brazil	Sudeste	Minas Gerais	Novo Cruzeiro	9925	Human	Homo sapiens	Faria et al	2018-03-02
+MF185660	MF185660	2017-01-25	Brazil	Sudeste	Rio de Janeiro	São Sebastião do Alto	7969	Non-human primate	New World monkey	Moreira-Soto et al	2017-06-01
+ON022535	ON022535	2017-01-26	Brazil	Sudeste	Espírito Santo	Ibatiba	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022464	ON022464	2017-01-26	Brazil	Sudeste	Espírito Santo	Santa Teresa	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022538	ON022538	2017-01-27	Brazil	Sudeste	Espírito Santo	Baixo Guandu	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022723	ON022723	2017-01-27	Brazil	Sudeste	Espírito Santo	Santa Teresa	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+MH018092	MH018092	2017-01-27	Brazil	Sudeste	Minas Gerais	Itambacuri	10213	Human	Homo sapiens	Faria et al	2018-03-02
+MH484425	MH484425	2017-01-27	Brazil	Sudeste	Minas Gerais	Teófilo Otoni	10169	Human	Homo sapiens	Faria et al	2018-06-13
+MH018079	MH018079	2017-01-28	Brazil	Sudeste	Minas Gerais	Itambacuri	10213	Human	Homo sapiens	Faria et al	2018-03-02
+MH018080	MH018080	2017-01-28	Brazil	Sudeste	Minas Gerais	Ladainha	10213	Human	Homo sapiens	Faria et al	2018-03-02
+MH018105	MH018105	2017-01-28	Brazil	Sudeste	Minas Gerais	Teófilo Otoni	10194	Human	Homo sapiens	Faria et al	2018-03-02
+ON022532	ON022532	2017-01-29	Brazil	Sudeste	Espírito Santo	Ibatiba	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022524	ON022524	2017-01-30	Brazil	Sudeste	Espírito Santo	Laranja da Terra	10172	Human	Homo sapiens	Hill et al	2022-03-16
+MH018104	MH018104	2017-01-30	Brazil	Sudeste	Minas Gerais	Itambacuri	10195	Human	Homo sapiens	Faria et al	2018-03-02
+MH018103	MH018103	2017-01-30	Brazil	Sudeste	Minas Gerais	Novo Cruzeiro	10194	Human	Homo sapiens	Faria et al	2018-03-02
+MH018091	MH018091	2017-01-30	Brazil	Sudeste	Minas Gerais	Novo Cruzeiro	10213	Human	Homo sapiens	Faria et al	2018-03-02
+MF170971	MF170971	2017-01-30	Brazil	Sudeste	Minas Gerais	São Roque de Minas	10236	Non-human primate	New World monkey	Moreira-Soto et al	2017-05-26
+MH018094	MH018094	2017-01-30	Brazil	Sudeste	Minas Gerais	Simonésia	10213	Human	Homo sapiens	Faria et al	2018-03-02
+MK882602	MK882602	2017-01-31	Brazil	Sudeste	Espírito Santo	Domingos Martins	9763	Human	Homo sapiens	Giovanetti et al	2019-05-03
+MH018102	MH018102	2017-01-31	Brazil	Sudeste	Espírito Santo	Domingos Martins	10215	Non-human primate	nonhuman primate	Faria et al	2018-03-02
+MK249065	MK249065	2017-02-01	Brazil				10164	Human	Homo sapiens	Iani et al	2018-11-30
+MH484429	MH484429	2017-02-03	Brazil	Sudeste	Minas Gerais	Chapada Gaúcha	10169	Non-human primate	Callithrix sp.	Faria et al	2018-06-13
+MH484433	MH484433	2017-02-03	Brazil	Sudeste	Minas Gerais	São Roque de Minas	9763	Non-human primate	monkey	Faria et al	2018-06-13
+MH484428	MH484428	2017-02-05	Brazil	Sudeste	Minas Gerais	Teófilo Otoni	10169	Human	Homo sapiens	Faria et al	2018-06-13
+ON022537	ON022537	2017-02-06	Brazil	Sudeste	Espírito Santo	Vitória	10172	Human	Homo sapiens	Hill et al	2022-03-16
+MK882599	MK882599	2017-02-09	Brazil	Sudeste	Espírito Santo	Itarana	9763	Human	Homo sapiens	Giovanetti et al	2019-05-03
+MH018084	MH018084	2017-02-09	Brazil	Sudeste	Minas Gerais	Ladainha	10213	Non-human primate	Callithrix sp.	Faria et al	2018-03-02
+MH484430	MH484430	2017-02-09	Brazil	Sudeste	Minas Gerais	Sacramento	10169	Non-human primate	Callithrix sp.	Faria et al	2018-06-13
+ON022539	ON022539	2017-02-10	Brazil	Sudeste	Espírito Santo	Aracruz	10172	Human	Homo sapiens	Hill et al	2022-03-16
+MF170977	MF170977	2017-02-10	Brazil	Sudeste	Espírito Santo	Conceição do Castelo	10236	Human	Homo sapiens	Moreira-Soto et al	2017-05-26
+ON022528	ON022528	2017-02-12	Brazil	Sudeste	Espírito Santo	Cachoeiro de Itapemirim	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022375	ON022375	2017-02-12	Brazil	Sudeste	Minas Gerais	Alvorada de Minas	10172	Non-human primate	Cebidae	Hill et al	2022-03-16
+MH018067	MH018067	2017-02-13	Brazil	Sudeste	Minas Gerais	Caldas	10213	Non-human primate	Cebidae sp.	Faria et al	2018-03-02
+ON022730	ON022730	2017-02-14	Brazil	Sudeste	Espírito Santo	Muniz Freira	9884	Human	Homo sapiens	Hill et al	2022-03-16
+MH018065	MH018065	2017-02-14	Brazil	Sudeste	Minas Gerais	Delfinópolis	10213	Non-human primate	Cebidae sp.	Faria et al	2018-03-02
+MH484431	MH484431	2017-02-14	Brazil	Sudeste	Minas Gerais	Juatuba	9763	Non-human primate	monkey	Faria et al	2018-06-13
+MH018066	MH018066	2017-02-15	Brazil	Sudeste	Minas Gerais	Ouro Fino	10213	Non-human primate	Alouatta sp.	Faria et al	2018-03-02
+MH018064	MH018064	2017-02-15	Brazil	Sudeste	Minas Gerais	Santa Rita de Caldas	10213	Non-human primate	Alouatta sp.	Faria et al	2018-03-02
+MN117917	MN117917	2017-02-15	Brazil				10172	Mosquito	Ochlerotatus scapularis	Cunha et al	2019-06-28
+MK882604	MK882604	2017-02-16	Brazil	Sudeste	Espírito Santo	Brejetuba	10169	Human	Homo sapiens	Giovanetti et al	2019-05-03
+MH018083	MH018083	2017-02-17	Brazil	Sudeste	Minas Gerais	Abre Campo	10213	Non-human primate	Alouatta sp.	Faria et al	2018-03-02
+ON022732	ON022732	2017-02-18	Brazil	Sudeste	Espírito Santo	Marechal Floriano	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+KY885000	KY885000	2017-02-20	Brazil	Sudeste	Espírito Santo	Domingos Martins	11007	Non-human primate	Alouatta guariba clamitans	Bonaldo et al	2017-04-03
+MK333800	MK333800	2017-02-20	Brazil	Sudeste	Espírito Santo	Domingos Martins	11007	Non-human primate	Alouatta guariba clamitans	Pereira Ribeiro et al	2018-12-21
+MH018082	MH018082	2017-02-20	Brazil	Sudeste	Minas Gerais	Claraval	10213	Non-human primate	Callithrix sp.	Faria et al	2018-03-02
+MF423373	MF423373	2017-02-21	Brazil	Sudeste	Espírito Santo	Domingos Martins	11007	Mosquito	Haemagogus leucocelaenus	Bonaldo et al	2017-06-29
+ON022523	ON022523	2017-02-21	Brazil	Sudeste	Espírito Santo	Muniz Freira	10172	Human	Homo sapiens	Hill et al	2022-03-16
+KY885001	KY885001	2017-02-22	Brazil	Sudeste	Espírito Santo	Domingos Martins	11007	Non-human primate	Alouatta guariba clamitans	Bonaldo et al	2017-04-03
+ON022527	ON022527	2017-02-22	Brazil	Sudeste	Espírito Santo	Iúna	10172	Human	Homo sapiens	Hill et al	2022-03-16
+MH018107	MH018107	2017-02-22	Brazil	Sudeste	Espírito Santo	Vitória	10218	Human	Homo sapiens	Faria et al	2018-03-02
+MH018081	MH018081	2017-02-22	Brazil	Sudeste	Minas Gerais	Aguanil	10213	Non-human primate	Cebidae sp.	Faria et al	2018-03-02
+MF423374	MF423374	2017-02-23	Brazil	Sudeste	Espírito Santo	Domingos Martins	11007	Mosquito	Haemagogus janthinomys	Bonaldo et al	2017-06-29
+MF370539	MF370539	2017-02-23	Brazil				11006	Non-human primate	Sapajus libidinosus	Cruz et al	2017-06-18
+ON022496	ON022496	2017-02-24	Brazil	Sudeste	Espírito Santo	Cariacica	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022578	ON022578	2017-02-24	Brazil	Sudeste	São Paulo	Monte Alegre do Sul	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MF370540	MF370540	2017-02-25	Brazil				11005	Non-human primate	Alouatta seniculus	Cruz et al	2017-06-18
+MF538784	MF538784	2017-02-26	Brazil	Sudeste	Rio de Janeiro	Porciúncula	11007	Human	Homo sapiens	Bonaldo et al	2017-07-24
+ON022518	ON022518	2017-02-27	Brazil	Sudeste	Espírito Santo	Serra	9884	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022582	ON022582	2017-02-27	Brazil	Sudeste	São Paulo	Águas da Prata	10172	Non-human primate	Cebus	Hill et al	2022-03-16
+MF370541	MF370541	2017-02-28	Brazil				11005	Non-human primate	Alouatta sp.	Cruz et al	2017-06-18
+MF370531	MF370531	2017-02-28	Brazil				11004	Human	Homo sapiens	Cruz et al	2017-06-18
+ON022510	ON022510	2017-03-02	Brazil	Sudeste	Espírito Santo	Vitória	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022428	ON022428	2017-03-02	Brazil	Sudeste	Minas Gerais	Itabira	10172	Non-human primate	Alouatta caraya	Hill et al	2022-03-16
+MF170975	MF170975	2017-03-03	Brazil	Sudeste	Espírito Santo	Brejetuba	10236	Human	Homo sapiens	Moreira-Soto et al	2017-05-26
+MF370543	MF370543	2017-03-03	Brazil				11007	Non-human primate	Alouatta sp.	Cruz et al	2017-06-18
+MK728873	MK728873	2017-03-04	Brazil	Centro-Oeste	Goiás	Amorinópolis	11007	Human	Homo sapiens	Delatorre et al	2019-03-29
+ON022468	ON022468	2017-03-06	Brazil	Sudeste	Espírito Santo	Aracruz	9884	Non-human primate	Non-human primate	Hill et al	2022-03-16
+MK882610	MK882610	2017-03-06	Brazil	Sudeste	Espírito Santo	Guarapari	10169	Human	Homo sapiens	Giovanetti et al	2019-05-03
+ON022520	ON022520	2017-03-07	Brazil	Sudeste	Espírito Santo	Santa Maria de Jetibá	10172	Human	Homo sapiens	Hill et al	2022-03-16
+MK882606	MK882606	2017-03-07	Brazil	Sudeste	Rio de Janeiro	Campos dos Goytacazes	9763	Human	Homo sapiens	Giovanetti et al	2019-05-03
+MH018109	MH018109	2017-03-08	Brazil	Sudeste	Espírito Santo	Cariacica	10195	Non-human primate	Alouatta sp.	Faria et al	2018-03-02
+MK882611	MK882611	2017-03-08	Brazil	Sudeste	Espírito Santo	Cariacica	10169	Human	Homo sapiens	Giovanetti et al	2019-05-03
+MH018110	MH018110	2017-03-09	Brazil	Sudeste	Espírito Santo	Cariacica	10195	Non-human primate	Callithrix sp.	Faria et al	2018-03-02
+MK882605	MK882605	2017-03-09	Brazil	Sudeste	Rio de Janeiro	Rio de Janeiro	9763	Human	Homo sapiens	Giovanetti et al	2019-05-03
+MK882607	MK882607	2017-03-09	Brazil	Sudeste	Rio de Janeiro	Rio de Janeiro	10169	Human	Homo sapiens	Giovanetti et al	2019-05-03
+ON022661	ON022661	2017-03-09	Brazil	Sudeste	São Paulo	Amparo	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+MN604280	MN604280	2017-03-10	Brazil	Nordeste	Bahia	Cordeiros	10166	Non-human primate	Callithrix	Jesus et al	2019-10-21
+MH018099	MH018099	2017-03-10	Brazil	Nordeste	Bahia	Cordeiros	10169	Non-human primate	nonhuman primate	Faria et al	2018-03-02
+MH018108	MH018108	2017-03-10	Brazil	Sudeste	Espírito Santo	Cariacica	10191	Human	Homo sapiens	Faria et al	2018-03-02
+MK882608	MK882608	2017-03-12	Brazil	Sudeste	Rio de Janeiro	Rio de Janeiro	9763	Human	Homo sapiens	Giovanetti et al	2019-05-03
+MN604281	MN604281	2017-03-13	Brazil	Nordeste	Bahia	Santa Rita de Cássia	10167	Non-human primate	Alouatta	Jesus et al	2019-10-21
+MK882609	MK882609	2017-03-13	Brazil	Sudeste	Espírito Santo	Vitória	10169	Human	Homo sapiens	Giovanetti et al	2019-05-03
+ON022388	ON022388	2017-03-13	Brazil	Sudeste	Minas Gerais	Braúnas	10172	Non-human primate	Callithrix geoffroyi	Hill et al	2022-03-16
+ON022407	ON022407	2017-03-13	Brazil	Sudeste	Minas Gerais	São João da Mata	10172	Non-human primate	Alouatta guariba clamitans	Hill et al	2022-03-16
+ON022374	ON022374	2017-03-13	Brazil	Sudeste	Minas Gerais	Senador José Bento	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022426	ON022426	2017-03-14	Brazil	Sudeste	Minas Gerais	Andradas	10172	Non-human primate	Cebidae	Hill et al	2022-03-16
+ON022399	ON022399	2017-03-14	Brazil	Sudeste	Minas Gerais	Fervedouro	10172	Non-human primate	Cebidae	Hill et al	2022-03-16
+MF370542	MF370542	2017-03-14	Brazil				10898	Non-human primate	Alouatta guariba	Cruz et al	2017-06-18
+MN604284	MN604284	2017-03-15	Brazil	Nordeste	Bahia	Pedrão	10172	Human	Homo sapiens	Jesus et al	2019-10-21
+MN604283	MN604283	2017-03-15	Brazil	Nordeste	Bahia	Salvador	10167	Non-human primate	Callithrix	Jesus et al	2019-10-21
+MN604282	MN604282	2017-03-16	Brazil	Nordeste	Bahia	Camaçari	10167	Non-human primate	Callithrix	Jesus et al	2019-10-21
+ON022529	ON022529	2017-03-16	Brazil	Sudeste	Espírito Santo	Venda Nova do Imigrante	10172	Human	Homo sapiens	Hill et al	2022-03-16
+MF538782	MF538782	2017-03-16	Brazil	Sudeste	Rio de Janeiro	São Fidélis	11007	Human	Homo sapiens	Bonaldo et al	2017-07-24
+ON022684	ON022684	2017-03-16	Brazil	Sudeste	São Paulo	Socorro	10172	Non-human primate	Sapajus	Hill et al	2022-03-16
+MN604287	MN604287	2017-03-17	Brazil	Nordeste	Bahia	Cordeiros	10166	Non-human primate	Alouatta	Jesus et al	2019-10-21
+ON022504	ON022504	2017-03-17	Brazil	Sudeste	Espírito Santo	Viana	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022574	ON022574	2017-03-17	Brazil	Sudeste	São Paulo	Bragança Paulista	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022682	ON022682	2017-03-17	Brazil	Sudeste	São Paulo	Monte Alegre do Sul	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022683	ON022683	2017-03-17	Brazil	Sudeste	São Paulo	Tuiuti	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+MF170969	MF170969	2017-03-18	Brazil	Sudeste	Espírito Santo	Casimiro de Abreu	10236	Human	Homo sapiens	Moreira-Soto et al	2017-05-26
+MF538783	MF538783	2017-03-18	Brazil	Sudeste	Rio de Janeiro	Casimiro de Abreu	11007	Human	Homo sapiens	Bonaldo et al	2017-07-24
+ON022444	ON022444	2017-03-20	Brazil	Sudeste	Espírito Santo	Serra	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MK882612	MK882612	2017-03-20	Brazil	Sudeste	Espírito Santo	Serra	10169	Human	Homo sapiens	Giovanetti et al	2019-05-03
+MF170970	MF170970	2017-03-21	Brazil	Sudeste	Espírito Santo	Domingos Martins	10236	Human	Homo sapiens	Moreira-Soto et al	2017-05-26
+ON022430	ON022430	2017-03-21	Brazil	Sudeste	Minas Gerais	Marliéria	10172	Non-human primate	Alouatta caraya	Hill et al	2022-03-16
+ON022685	ON022685	2017-03-21	Brazil	Sudeste	São Paulo	Campinas	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022691	ON022691	2017-03-21	Brazil	Sudeste	São Paulo	Monte Alegre do Sul	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+MF170980	MF170980	2017-03-23	Brazil	Sudeste	Espírito Santo	Alfredo Chaves	10236	Human	Homo sapiens	Moreira-Soto et al	2017-05-26
+ON022400	ON022400	2017-03-23	Brazil	Sudeste	Minas Gerais	Carmo do Rio Claro	9884	Non-human primate	Callithrix penicillata	Hill et al	2022-03-16
+ON022396	ON022396	2017-03-23	Brazil	Sudeste	Minas Gerais	Itapecerica	10172	Non-human primate	Callithrix penicillata	Hill et al	2022-03-16
+ON022689	ON022689	2017-03-23	Brazil	Sudeste	São Paulo	Amparo	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022693	ON022693	2017-03-23	Brazil	Sudeste	São Paulo	Monte Alegre do Sul	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022395	ON022395	2017-03-24	Brazil	Sudeste	Minas Gerais	Carmópolis de Minas	10156	Non-human primate	Alouatta guariba clamitans	Hill et al	2022-03-16
+ON022418	ON022418	2017-03-24	Brazil	Sudeste	Minas Gerais	Ilicínea	10172	Non-human primate	Sapajus apella	Hill et al	2022-03-16
+ON022422	ON022422	2017-03-25	Brazil	Sudeste	Minas Gerais	Taquaraçu de Minas	10172	Non-human primate	Cebidae	Hill et al	2022-03-16
+ON022690	ON022690	2017-03-25	Brazil	Sudeste	São Paulo	Pinhalzinho	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MK882615	MK882615	2017-03-27	Brazil	Sudeste	Rio de Janeiro	São Sebastião do Alto	10104	Human	Homo sapiens	Giovanetti et al	2019-05-03
+MK882613	MK882613	2017-03-27	Brazil	Sudeste	Rio de Janeiro	São Sebastião do Alto	10172	Human	Homo sapiens	Giovanetti et al	2019-05-03
+ON022575	ON022575	2017-03-27	Brazil	Sudeste	São Paulo	Monte Alegre do Sul	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+MF370547	MF370547	2017-03-27	Brazil				10998	Non-human primate	Alouatta sp.	Filippis et al	2017-06-18
+MF170978	MF170978	2017-03-28	Brazil	Sudeste	Espírito Santo	Santa Maria de Jetibá	10236	Human	Homo sapiens	Moreira-Soto et al	2017-05-26
+ON022401	ON022401	2017-03-28	Brazil	Sudeste	Minas Gerais	Ilicínea	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022687	ON022687	2017-03-28	Brazil	Sudeste	São Paulo	Campinas	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022573	ON022573	2017-03-28	Brazil	Sudeste	São Paulo	Campinas	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MF170974	MF170974	2017-03-29	Brazil	Sudeste	Espírito Santo	Cariacica	10236	Human	Homo sapiens	Moreira-Soto et al	2017-05-26
+ON022692	ON022692	2017-03-29	Brazil	Sudeste	São Paulo	Pinhalzinho	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MF170972	MF170972	2017-03-31	Brazil	Sudeste	Espírito Santo	Cariacica	10236	Human	Homo sapiens	Moreira-Soto et al	2017-05-26
+ON022679	ON022679	2017-03-31	Brazil	Sudeste	São Paulo	Monte Alegre do Sul	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022704	ON022704	2017-03-31	Brazil	Sudeste	São Paulo	Tuiuti	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022579	ON022579	2017-04-01	Brazil	Sudeste	São Paulo	Pinhalzinho	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022447	ON022447	2017-04-02	Brazil	Sudeste	Espírito Santo	Santa Leopoldina	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022446	ON022446	2017-04-03	Brazil	Sudeste	Espírito Santo	Santa Leopoldina	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022414	ON022414	2017-04-03	Brazil	Sudeste	Minas Gerais	Congonhal	10172	Non-human primate	Alouatta caraya	Hill et al	2022-03-16
+ON022415	ON022415	2017-04-03	Brazil	Sudeste	Minas Gerais	Santa Maria de Itabira	10172	Non-human primate	Callithrix geoffroyi	Hill et al	2022-03-16
+ON022383	ON022383	2017-04-03	Brazil	Sudeste	Minas Gerais	Santo Antônio do Grama	10172	Non-human primate	Cebidae	Hill et al	2022-03-16
+ON022580	ON022580	2017-04-03	Brazil	Sudeste	São Paulo	Pinhalzinho	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MF423375	MF423375	2017-04-04	Brazil	Sudeste	Rio de Janeiro	Macaé	11007	Non-human primate	Alouatta guariba clamitans	Bonaldo et al	2017-06-29
+ON022576	ON022576	2017-04-04	Brazil	Sudeste	São Paulo	Pinhalzinho	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MN604285	MN604285	2017-04-05	Brazil	Nordeste	Bahia	Ichu	10172	Non-human primate	Callithrix penicillata	Jesus et al	2019-10-21
+MK333801	MK333801	2017-04-05	Brazil	Sudeste	Espírito Santo	Santa Leopoldina	11007	Mosquito	Haemagogus janthinomys	Pereira Ribeiro et al	2018-12-21
+MK333802	MK333802	2017-04-05	Brazil	Sudeste	Espírito Santo	Santa Leopoldina	11007	Mosquito	Haemagogus leucocelaenus	Pereira Ribeiro et al	2018-12-21
+MF170981	MF170981	2017-04-05	Brazil	Sudeste	Espírito Santo	Santa Leopoldina	10236	Human	Homo sapiens	Moreira-Soto et al	2017-05-26
+MF370546	MF370546	2017-04-05	Brazil				11004	Non-human primate	Alouatta caraya	Cruz et al	2017-06-18
+MF370545	MF370545	2017-04-05	Brazil				11008	Non-human primate	Aotus ozzarae infulatus	Cruz et al	2017-06-18
+MF370544	MF370544	2017-04-05	Brazil				11007	Non-human primate	Aotus ozzarae infulatus	Cruz et al	2017-06-18
+MF170979	MF170979	2017-04-06	Brazil	Sudeste	Espírito Santo	Santa Maria de Jetibá	10236	Human	Homo sapiens	Moreira-Soto et al	2017-05-26
+ON022381	ON022381	2017-04-06	Brazil	Sudeste	Minas Gerais	Congonhal	10172	Non-human primate	Alouatta caraya	Hill et al	2022-03-16
+ON022390	ON022390	2017-04-06	Brazil	Sudeste	Minas Gerais	Congonhal	10172	Non-human primate	Alouatta caraya	Hill et al	2022-03-16
+ON022410	ON022410	2017-04-06	Brazil	Sudeste	Minas Gerais	São Tiago	10172	Non-human primate	Callithrix penicillata	Hill et al	2022-03-16
+ON022680	ON022680	2017-04-06	Brazil	Sudeste	São Paulo	Tuiuti	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+MN604286	MN604286	2017-04-07	Brazil	Nordeste	Bahia	Salvador	10172	Non-human primate	Callithrix penicillata	Jesus et al	2019-10-21
+MH018111	MH018111	2017-04-10	Brazil	Sudeste	Espírito Santo	Domingos Martins	10195	Human	Homo sapiens	Faria et al	2018-03-02
+MF170973	MF170973	2017-04-10	Brazil	Sudeste	Espírito Santo	Domingos Martins	10236	Human	Homo sapiens	Moreira-Soto et al	2017-05-26
+ON022681	ON022681	2017-04-10	Brazil	Sudeste	São Paulo	Amparo	10172	Non-human primate	Callicebus	Hill et al	2022-03-16
+ON022677	ON022677	2017-04-10	Brazil	Sudeste	São Paulo	Espírito Santo do Pinhal	10172	Non-human primate	Sapajus	Hill et al	2022-03-16
+ON022615	ON022615	2017-04-10	Brazil	Sudeste	São Paulo	Pinhalzinho	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022705	ON022705	2017-04-10	Brazil	Sudeste	São Paulo	Pinhalzinho	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022421	ON022421	2017-04-11	Brazil	Sudeste	Minas Gerais	Senador Amaral	10172	Non-human primate	Alouatta caraya	Hill et al	2022-03-16
+ON022389	ON022389	2017-04-12	Brazil	Sudeste	Minas Gerais	Igaratinga	10172	Non-human primate	Cebidae	Hill et al	2022-03-16
+ON022621	ON022621	2017-04-12	Brazil	Sudeste	São Paulo	Pinhalzinho	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022725	ON022725	2017-04-13	Brazil	Sudeste	Espírito Santo	Marechal Floriano	10172	Human	Homo sapiens	Hill et al	2022-03-16
+MF170968	MF170968	2017-04-13	Brazil	Sudeste	Espírito Santo	Marechal Floriano	10236	Human	Homo sapiens	Moreira-Soto et al	2017-05-26
+MF423376	MF423376	2017-04-13	Brazil	Sudeste	Rio de Janeiro	Macaé	11007	Non-human primate	Alouatta guariba clamitans	Bonaldo et al	2017-06-29
+ON022618	ON022618	2017-04-16	Brazil	Sudeste	São Paulo	Pinhalzinho	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022460	ON022460	2017-04-17	Brazil	Sudeste	Rio de Janeiro	Carmo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MK882614	MK882614	2017-04-17	Brazil	Sudeste	Rio de Janeiro	Carmo	10169	Human	Homo sapiens	Giovanetti et al	2019-05-03
+ON022463	ON022463	2017-04-17	Brazil	Sudeste	Rio de Janeiro	Maricá	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MH018112	MH018112	2017-04-17	Brazil	Sudeste	Rio de Janeiro	Maricá	10216	Non-human primate	Alouatta sp.	Faria et al	2018-03-02
+MK882616	MK882616	2017-04-17	Brazil	Sudeste	Rio de Janeiro	Maricá	10169	Human	Homo sapiens	Giovanetti et al	2019-05-03
+ON022612	ON022612	2017-04-17	Brazil	Sudeste	São Paulo	Pinhalzinho	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022611	ON022611	2017-04-17	Brazil	Sudeste	São Paulo	Tuiuti	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022386	ON022386	2017-04-18	Brazil	Sudeste	Minas Gerais	Congonhal	10172	Non-human primate	Alouatta caraya	Hill et al	2022-03-16
+ON022429	ON022429	2017-04-18	Brazil	Sudeste	Minas Gerais	Congonhal	10172	Non-human primate	Alouatta caraya	Hill et al	2022-03-16
+ON022409	ON022409	2017-04-18	Brazil	Sudeste	Minas Gerais	Rio Doce	10172	Non-human primate	Alouatta caraya	Hill et al	2022-03-16
+ON022519	ON022519	2017-04-18	Brazil	Sudeste	Rio de Janeiro	Itaperuna	9884	Non-human primate	Callithrix	Hill et al	2022-03-16
+MG550109	MG550109	2017-04-18	Brazil	Sudeste	Rio de Janeiro	Maricá	11007	Human	Homo sapiens	Bonaldo et al	2017-11-17
+MF423377	MF423377	2017-04-19	Brazil	Sudeste	Rio de Janeiro	Carmo	11007	Non-human primate	Alouatta guariba clamitans	Bonaldo et al	2017-06-29
+MF423378	MF423378	2017-04-19	Brazil	Sudeste	Rio de Janeiro	Carmo	11007	Non-human primate	Alouatta guariba clamitans	Bonaldo et al	2017-06-29
+MN643088	MN643088	2017-04-19	Brazil	Sudeste	Rio de Janeiro	Macaé	11007	Non-human primate	Alouatta guariba	Abreu et al	2019-11-04
+MK333803	MK333803	2017-04-20	Brazil	Centro-Oeste	Goiás	Nova Crixás	11007	Non-human primate	Alouatta caraya	Pereira Ribeiro et al	2018-12-21
+ON022439	ON022439	2017-04-20	Brazil	Sudeste	Rio de Janeiro	Carmo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022469	ON022469	2017-04-20	Brazil	Sudeste	Rio de Janeiro	Niterói	9884	Non-human primate	Callithrix	Hill et al	2022-03-16
+ON022647	ON022647	2017-04-20	Brazil	Sudeste	São Paulo	Bragança Paulista	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022616	ON022616	2017-04-20	Brazil	Sudeste	São Paulo	Bragança Paulista	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MF370548	MF370548	2017-04-20	Brazil				11007	Non-human primate	Alouatta sp.	Filippis et al	2017-06-18
+MF538785	MF538785	2017-04-21	Brazil	Sudeste	Rio de Janeiro	Petrópolis	11007	Non-human primate	marmoset	Bonaldo et al	2017-07-24
+ON022384	ON022384	2017-04-22	Brazil	Sudeste	Minas Gerais	Santa Maria de Itabira	10172	Non-human primate	Callithrix geoffroyi	Hill et al	2022-03-16
+MH018113	MH018113	2017-04-22	Brazil	Sudeste	Rio de Janeiro	Casimiro de Abreu	10195	Human	Homo sapiens	Faria et al	2018-03-02
+ON022467	ON022467	2017-04-24	Brazil	Sudeste	Rio de Janeiro	Rio de Janeiro	10172	Non-human primate	Callithrix	Hill et al	2022-03-16
+MF434851	MF434851	2017-04-25	Brazil	Sudeste	Rio de Janeiro	Casimiro de Abreu	11007	Human	Homo sapiens	Bonaldo et al	2017-07-04
+ON022521	ON022521	2017-04-25	Brazil	Sudeste	Rio de Janeiro	Silva Jardim	9884	Human	Homo sapiens	Hill et al	2022-03-16
+ON022643	ON022643	2017-04-25	Brazil	Sudeste	São Paulo	Bragança Paulista	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022646	ON022646	2017-04-25	Brazil	Sudeste	São Paulo	Bragança Paulista	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MN506281	MN506281	2017-04-26	Brazil	Sudeste	Rio de Janeiro	Maricá	10859	Mosquito	Hg. janthinomys	Abreu et al	2019-09-23
+MH030087	MH030087	2017-04-26	Brazil	Sudeste	São Paulo	Americana	10169	Human	Homo sapiens	Souza et al	2018-03-06
+ON022619	ON022619	2017-04-28	Brazil	Sudeste	São Paulo	Piracaia	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022596	ON022596	2017-04-29	Brazil	Sudeste	São Paulo	Vinhedo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022731	ON022731	2017-05-02	Brazil	Sudeste	Espírito Santo	Vitória	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022455	ON022455	2017-05-02	Brazil	Sudeste	Rio de Janeiro	Santa Maria Madalena	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MH030090	MH030090	2017-05-02	Brazil	Sudeste	São Paulo	São João da Boa Vista	10169	Human	Homo sapiens	Souza et al	2018-03-06
+ON022617	ON022617	2017-05-03	Brazil	Sudeste	São Paulo	Pedra Bela	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MH030089	MH030089	2017-05-03	Brazil	Sudeste	São Paulo	São João da Boa Vista	10169	Human	Homo sapiens	Souza et al	2018-03-06
+MH030088	MH030088	2017-05-03	Brazil	Sudeste	São Paulo	Tuiuti	10169	Human	Homo sapiens	Souza et al	2018-03-06
+ON022408	ON022408	2017-05-04	Brazil	Sudeste	Minas Gerais	Senador Amaral	10172	Non-human primate	Alouatta caraya	Hill et al	2022-03-16
+MN506279	MN506279	2017-05-04	Brazil	Sudeste	Rio de Janeiro	Maricá	11007	Mosquito	Hg. leucocelaenus	Abreu et al	2019-09-23
+ON022416	ON022416	2017-05-05	Brazil	Sudeste	Minas Gerais	Rio Doce	10172	Non-human primate	Alouatta caraya	Hill et al	2022-03-16
+MN506283	MN506283	2017-05-05	Brazil	Sudeste	Rio de Janeiro	Maricá	11007	Mosquito	Hg. janthinomys	Abreu et al	2019-09-23
+MN506275	MN506275	2017-05-05	Brazil	Sudeste	Rio de Janeiro	Maricá	11007	Mosquito	Hg. leucocelaenus	Abreu et al	2019-09-23
+MN506270	MN506270	2017-05-05	Brazil	Sudeste	Rio de Janeiro	Maricá	11007	Mosquito	Hg. leucocelaenus	Abreu et al	2019-09-23
+MN506271	MN506271	2017-05-05	Brazil	Sudeste	Rio de Janeiro	Maricá	11007	Mosquito	Hg. leucocelaenus	Abreu et al	2019-09-23
+MN506268	MN506268	2017-05-05	Brazil	Sudeste	Rio de Janeiro	Maricá	11007	Mosquito	Hg. leucocelaenus	Abreu et al	2019-09-23
+MN506273	MN506273	2017-05-05	Brazil	Sudeste	Rio de Janeiro	Maricá	11007	Mosquito	Hg. leucocelaenus	Abreu et al	2019-09-23
+MN506277	MN506277	2017-05-05	Brazil	Sudeste	Rio de Janeiro	Maricá	11007	Mosquito	Hg. leucocelaenus	Abreu et al	2019-09-23
+MN506276	MN506276	2017-05-05	Brazil	Sudeste	Rio de Janeiro	Maricá	11007	Mosquito	Hg. leucocelaenus	Abreu et al	2019-09-23
+ON022608	ON022608	2017-05-05	Brazil	Sudeste	São Paulo	Pinhalzinho	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022662	ON022662	2017-05-05	Brazil	Sudeste	São Paulo	Pinhalzinho	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MN506272	MN506272	2017-05-06	Brazil	Sudeste	Rio de Janeiro	Maricá	11007	Mosquito	Ae. scapularis	Abreu et al	2019-09-23
+MN506274	MN506274	2017-05-06	Brazil	Sudeste	Rio de Janeiro	Maricá	10719	Mosquito	Ae. taeniorhynchus	Abreu et al	2019-09-23
+MN506269	MN506269	2017-05-06	Brazil	Sudeste	Rio de Janeiro	Maricá	11007	Mosquito	Hg. leucocelaenus	Abreu et al	2019-09-23
+MK089775	MK089775	2017-05-06	Brazil	Sudeste	Rio de Janeiro	Maricá	10354	Mosquito	Ochlerotatus taeniorhynchus	Vieira Santos de Abreu et al	2018-10-22
+MN506280	MN506280	2017-05-07	Brazil	Sudeste	Rio de Janeiro	Maricá	11007	Mosquito	Hg. leucocelaenus	Abreu et al	2019-09-23
+MN506278	MN506278	2017-05-07	Brazil	Sudeste	Rio de Janeiro	Maricá	11007	Mosquito	Hg. leucocelaenus	Abreu et al	2019-09-23
+MN506282	MN506282	2017-05-08	Brazil	Sudeste	Rio de Janeiro	Maricá	11007	Mosquito	Hg. janthinomys	Abreu et al	2019-09-23
+MN506267	MN506267	2017-05-08	Brazil	Sudeste	Rio de Janeiro	Maricá	11007	Mosquito	Hg. leucocelaenus	Abreu et al	2019-09-23
+ON022614	ON022614	2017-05-11	Brazil	Sudeste	São Paulo	Bragança Paulista	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022379	ON022379	2017-05-17	Brazil	Sudeste	Minas Gerais	Ferros	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022613	ON022613	2017-05-17	Brazil	Sudeste	São Paulo	Vinhedo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022466	ON022466	2017-05-19	Brazil	Sudeste	Rio de Janeiro	Macuco	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022443	ON022443	2017-05-19	Brazil	Sudeste	Rio de Janeiro	Macuco	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MH030091	MH030091	2017-05-29	Brazil	Sudeste	São Paulo	Campinas	10169	Human	Homo sapiens	Souza et al	2018-03-06
+MF289572	MF289572	2017-06-01	Singapore				10839			Chua et al	2017-06-09
+ON022522	ON022522	2017-06-02	Brazil	Sudeste	Rio de Janeiro	Macaé	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022734	ON022734	2017-06-03	Brazil	Sudeste	Espírito Santo	Serra	10172	Non-human primate	Callithrix	Hill et al	2022-03-16
+ON022604	ON022604	2017-06-04	Brazil	Sudeste	São Paulo	Louveira	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MF538786	MF538786	2017-06-05	Brazil	Sudeste	Rio de Janeiro	Guapimirim	11007	Non-human primate	marmoset	Bonaldo et al	2017-07-24
+ON022735	ON022735	2017-06-06	Brazil	Sudeste	Rio de Janeiro	Guapimirim	10172	Non-human primate	Callithrix	Hill et al	2022-03-16
+ON022605	ON022605	2017-06-14	Brazil	Sudeste	São Paulo	Bragança Paulista	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022382	ON022382	2017-07-03	Brazil	Sudeste	Minas Gerais	Além Paraíba	10172	Non-human primate	Alouatta caraya	Hill et al	2022-03-16
+ON022371	ON022371	2017-07-03	Brazil	Sudeste	Minas Gerais	São João del Rei	10172	Non-human primate	Alouatta caraya	Hill et al	2022-03-16
+ON022412	ON022412	2017-07-04	Brazil	Sudeste	Minas Gerais	São João del Rei	10172	Non-human primate	Alouatta caraya	Hill et al	2022-03-16
+ON022606	ON022606	2017-07-04	Brazil	Sudeste	São Paulo	Tuiuti	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022607	ON022607	2017-07-07	Brazil	Sudeste	São Paulo	Louveira	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022398	ON022398	2017-07-17	Brazil	Sudeste	Minas Gerais	Além Paraíba	10172	Non-human primate	Alouatta guariba clamitans	Hill et al	2022-03-16
+ON022610	ON022610	2017-07-17	Brazil	Sudeste	São Paulo	Louveira	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022635	ON022635	2017-07-20	Brazil	Sudeste	São Paulo	Louveira	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022706	ON022706	2017-07-27	Brazil	Sudeste	São Paulo	Jundiaí	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022708	ON022708	2017-08-03	Brazil	Sudeste	São Paulo	Bragança Paulista	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MH030050	MH030050	2017-08-16	Brazil	Sudeste	São Paulo	Louveira	10169	Non-human primate	Callicebus sp.	Souza et al	2018-03-06
+MH030049	MH030049	2017-08-17	Brazil	Sudeste	São Paulo	Vinhedo	10169	Non-human primate	Callithrix sp.	Souza et al	2018-03-06
+MH030053	MH030053	2017-08-30	Brazil	Sudeste	São Paulo	Itatiba	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+MH030052	MH030052	2017-09-01	Brazil	Sudeste	São Paulo	Louveira	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+MH030051	MH030051	2017-09-01	Brazil	Sudeste	São Paulo	Louveira	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+ON022663	ON022663	2017-09-01	Brazil	Sudeste	São Paulo	Louveira	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+OP508715	OP508715	2017-09-03	Brazil				10802	Non-human primate	non-human primate (NHP)	Giovanetti et al	2022-09-21
+ON022651	ON022651	2017-09-06	Brazil	Sudeste	São Paulo	Bragança Paulista	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MH030055	MH030055	2017-09-11	Brazil	Sudeste	São Paulo	Jundiaí	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+MH030056	MH030056	2017-09-12	Brazil	Sudeste	São Paulo	Jundiaí	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+MH030054	MH030054	2017-09-15	Brazil	Sudeste	São Paulo	Jundiaí	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+MH030062	MH030062	2017-09-19	Brazil	Sudeste	São Paulo	Itatiba	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+ON022648	ON022648	2017-09-20	Brazil	Sudeste	São Paulo	Itatiba	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022641	ON022641	2017-09-21	Brazil	Sudeste	São Paulo	Bragança Paulista	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022640	ON022640	2017-09-21	Brazil	Sudeste	São Paulo	Bragança Paulista	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MH030059	MH030059	2017-09-21	Brazil	Sudeste	São Paulo	Itatiba	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+MH030061	MH030061	2017-09-21	Brazil	Sudeste	São Paulo	Itatiba	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+ON022664	ON022664	2017-09-25	Brazil	Sudeste	São Paulo	Louveira	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022649	ON022649	2017-09-25	Brazil	Sudeste	São Paulo	Louveira	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+MH030058	MH030058	2017-09-26	Brazil	Sudeste	São Paulo	Itatiba	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+MH030057	MH030057	2017-09-27	Brazil	Sudeste	São Paulo	Bragança Paulista	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+MH030060	MH030060	2017-09-27	Brazil	Sudeste	São Paulo	Itatiba	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+MH030063	MH030063	2017-10-01	Brazil	Sudeste	São Paulo	Itatiba	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+MH030076	MH030076	2017-10-01	Brazil	Sudeste	São Paulo	Jarinu	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+MH030075	MH030075	2017-10-01	Brazil	Sudeste	São Paulo	Jarinu	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+MH030072	MH030072	2017-10-01	Brazil	Sudeste	São Paulo	Jarinu	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+MH030077	MH030077	2017-10-01	Brazil	Sudeste	São Paulo	Jarinu	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+MH030064	MH030064	2017-10-01	Brazil	Sudeste	São Paulo	Jundiaí	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+MH030068	MH030068	2017-10-01	Brazil	Sudeste	São Paulo	Jundiaí	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+MH030066	MH030066	2017-10-01	Brazil	Sudeste	São Paulo	Jundiaí	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+MH030067	MH030067	2017-10-01	Brazil	Sudeste	São Paulo	Jundiaí	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+MH030065	MH030065	2017-10-01	Brazil	Sudeste	São Paulo	Jundiaí	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+MH030078	MH030078	2017-10-01	Brazil	Sudeste	São Paulo	Morungaba	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+MH030069	MH030069	2017-10-01	Brazil	Sudeste	São Paulo	São Paulo	10169			Souza et al	2018-03-06
+ON022638	ON022638	2017-10-13	Brazil	Sudeste	São Paulo	Jundiaí	10172	Non-human primate	Callicebus	Hill et al	2022-03-16
+MH030071	MH030071	2017-10-18	Brazil	Sudeste	São Paulo	Campo Limpo Paulista	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+MH030074	MH030074	2017-10-18	Brazil	Sudeste	São Paulo	Jarinu	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+MH030073	MH030073	2017-10-18	Brazil	Sudeste	São Paulo	Mairiporã	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+MN643089	MN643089	2017-10-19	Brazil	Sudeste	Rio de Janeiro	Miguel Pereira	11007	Non-human primate	Alouatta guariba	Abreu et al	2019-11-04
+MH030070	MH030070	2017-10-19	Brazil	Sudeste	São Paulo	Campo Limpo Paulista	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+ON022636	ON022636	2017-10-19	Brazil	Sudeste	São Paulo	Jundiaí	10172	Non-human primate	Callicebus	Hill et al	2022-03-16
+ON022435	ON022435	2017-10-23	Brazil	Sudeste	Rio de Janeiro	Miguel Pereira	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022406	ON022406	2017-10-25	Brazil	Sudeste	Minas Gerais	Santana Do Deserto	10172	Non-human primate	Alouatta guariba clamitans	Hill et al	2022-03-16
+ON022645	ON022645	2017-10-25	Brazil	Sudeste	São Paulo	Itatiba	10172	Non-human primate	Cebus	Hill et al	2022-03-16
+ON022425	ON022425	2017-10-26	Brazil	Sudeste	Minas Gerais	Sabará	10172	Non-human primate	Callithrix penicillata	Hill et al	2022-03-16
+ON022405	ON022405	2017-10-27	Brazil	Sudeste	Minas Gerais	Sabará	10172	Non-human primate	Callithrix penicillata	Hill et al	2022-03-16
+ON022644	ON022644	2017-10-27	Brazil	Sudeste	São Paulo	Itatiba	10172	Non-human primate	Callithrix	Hill et al	2022-03-16
+ON022417	ON022417	2017-10-31	Brazil	Sudeste	Minas Gerais	Caeté	10172	Non-human primate	Alouatta guariba clamitans	Hill et al	2022-03-16
+MH030081	MH030081	2017-11-01	Brazil	Sudeste	São Paulo	Campo Limpo Paulista	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+MH030083	MH030083	2017-11-01	Brazil	Sudeste	São Paulo	Campo Limpo Paulista	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+MH030082	MH030082	2017-11-01	Brazil	Sudeste	São Paulo	Campo Limpo Paulista	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+MH030080	MH030080	2017-11-01	Brazil	Sudeste	São Paulo	Nazaré Paulista	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+MH030079	MH030079	2017-11-01	Brazil	Sudeste	São Paulo	Nazaré Paulista	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+MH030084	MH030084	2017-11-01	Brazil	Sudeste	São Paulo	Piracaia	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+MH030086	MH030086	2017-11-01	Brazil	Sudeste	São Paulo	Piracaia	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+MH030085	MH030085	2017-11-01	Brazil	Sudeste	São Paulo	Piracaia	10169	Non-human primate	Alouatta sp.	Souza et al	2018-03-06
+ON022419	ON022419	2017-11-05	Brazil	Sudeste	Minas Gerais	Casa Grande	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022665	ON022665	2017-11-06	Brazil	Sudeste	São Paulo	Bom Jesus dos Perdões	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022713	ON022713	2017-11-06	Brazil	Sudeste	São Paulo	Jundiaí	10172	Non-human primate	Callithrix	Hill et al	2022-03-16
+ON022402	ON022402	2017-11-07	Brazil	Sudeste	Minas Gerais	Casa Grande	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022403	ON022403	2017-11-07	Brazil	Sudeste	Minas Gerais	Congonhas	10172	Non-human primate	Alouatta guariba clamitans	Hill et al	2022-03-16
+ON022639	ON022639	2017-11-07	Brazil	Sudeste	São Paulo	Jundiaí	10172	Non-human primate	Callithrix	Hill et al	2022-03-16
+ON022634	ON022634	2017-11-07	Brazil	Sudeste	São Paulo	São Roque	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022413	ON022413	2017-11-08	Brazil	Sudeste	Minas Gerais	Mar de Espanha	10172	Non-human primate	Alouatta guariba clamitans	Hill et al	2022-03-16
+ON022378	ON022378	2017-11-09	Brazil	Sudeste	Minas Gerais	Extrema	10172	Non-human primate	Cebidae	Hill et al	2022-03-16
+ON022626	ON022626	2017-11-14	Brazil	Sudeste	São Paulo	São Roque	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022637	ON022637	2017-11-14	Brazil	Sudeste	São Paulo	São Roque	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022715	ON022715	2017-11-15	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022380	ON022380	2017-11-16	Brazil	Sudeste	Minas Gerais	Alvinópolis	10172	Non-human primate	Alouatta guariba clamitans	Hill et al	2022-03-16
+ON022372	ON022372	2017-11-17	Brazil	Sudeste	Minas Gerais	Entre Rios de Minas	10172	Non-human primate	Alouatta guariba clamitans	Hill et al	2022-03-16
+ON022373	ON022373	2017-11-18	Brazil	Sudeste	Minas Gerais	Esmeraldas	10172	Non-human primate	Alouatta caraya	Hill et al	2022-03-16
+ON022397	ON022397	2017-11-20	Brazil	Sudeste	Minas Gerais	Santana Do Deserto	10172	Non-human primate	Alouatta guariba clamitans	Hill et al	2022-03-16
+ON022385	ON022385	2017-11-24	Brazil	Sudeste	Minas Gerais	Nova Lima	10172	Non-human primate	Callithrix penicillata	Hill et al	2022-03-16
+ON022391	ON022391	2017-11-25	Brazil	Sudeste	Minas Gerais	Madre de Deus de Minas	10172	Non-human primate	Alouatta guariba clamitans	Hill et al	2022-03-16
+ON022269	ON022269	2017-11-28	Brazil	Sudeste	Rio de Janeiro	Nova Iguaçu	10169	Non-human primate	Alouatta	Hill et al	2022-03-16
+MK882617	MK882617	2017-11-28	Brazil	Sudeste	Rio de Janeiro	Nova Iguaçu	10169	Human	Homo sapiens	Giovanetti et al	2019-05-03
+ON022650	ON022650	2017-11-28	Brazil	Sudeste	São Paulo	São Roque	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022423	ON022423	2017-11-29	Brazil	Sudeste	Minas Gerais	Belo Horizonte	10172	Non-human primate	Callithrix penicillata	Hill et al	2022-03-16
+ON022404	ON022404	2017-11-30	Brazil	Sudeste	Minas Gerais	Madre de Deus de Minas	10172	Non-human primate	Alouatta caraya	Hill et al	2022-03-16
+ON022652	ON022652	2017-11-30	Brazil	Sudeste	São Paulo	Itapecerica da Serra	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022427	ON022427	2017-12-03	Brazil	Sudeste	Minas Gerais	Simão Pereira	10172	Non-human primate	Alouatta guariba clamitans	Hill et al	2022-03-16
+ON022387	ON022387	2017-12-04	Brazil	Sudeste	Minas Gerais	Matias Barbosa	10172	Non-human primate	Alouatta caraya	Hill et al	2022-03-16
+ON022654	ON022654	2017-12-04	Brazil	Sudeste	São Paulo	Itapecerica da Serra	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022653	ON022653	2017-12-04	Brazil	Sudeste	São Paulo	Itapecerica da Serra	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022411	ON022411	2017-12-05	Brazil	Sudeste	Minas Gerais	Belo Horizonte	10172	Non-human primate	Callithrix penicillata	Hill et al	2022-03-16
+ON022431	ON022431	2017-12-05	Brazil	Sudeste	Minas Gerais	Belo Horizonte	10172	Non-human primate	Cebidae	Hill et al	2022-03-16
+ON022393	ON022393	2017-12-05	Brazil	Sudeste	Minas Gerais	Mariana	10172	Non-human primate	Callithrix penicillata	Hill et al	2022-03-16
+ON022655	ON022655	2017-12-05	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022642	ON022642	2017-12-05	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022714	ON022714	2017-12-06	Brazil	Sudeste	São Paulo	Itapecerica da Serra	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022432	ON022432	2017-12-07	Brazil	Sudeste	Minas Gerais	Santo Antônio do Aventureiro	10172	Non-human primate	Alouatta guariba clamitans	Hill et al	2022-03-16
+ON022622	ON022622	2017-12-07	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022609	ON022609	2017-12-08	Brazil	Sudeste	São Paulo	São Roque	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022666	ON022666	2017-12-11	Brazil	Sudeste	São Paulo	Mairinque	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022629	ON022629	2017-12-12	Brazil	Sudeste	São Paulo	Cotia	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022627	ON022627	2017-12-12	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022628	ON022628	2017-12-12	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022420	ON022420	2017-12-13	Brazil	Sudeste	Minas Gerais	Juiz de Fora	10172	Non-human primate	Alouatta caraya	Hill et al	2022-03-16
+ON022623	ON022623	2017-12-13	Brazil	Sudeste	São Paulo	Igaratá	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022712	ON022712	2017-12-13	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022620	ON022620	2017-12-14	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022711	ON022711	2017-12-14	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022280	ON022280	2017-12-15	Brazil	Sudeste	Rio de Janeiro	Sumidouro	10169	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022710	ON022710	2017-12-16	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022707	ON022707	2017-12-16	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022624	ON022624	2017-12-17	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022264	ON022264	2017-12-18	Brazil	Sudeste	Minas Gerais	Belmiro Braga	10169	Non-human primate	Callithrix penicillata	Hill et al	2022-03-16
+ON022709	ON022709	2017-12-18	Brazil	Sudeste	São Paulo	Itapecerica da Serra	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+MN506265	MN506265	2017-12-19	Brazil	Sudeste	Rio de Janeiro	Teresópolis	11007	Mosquito	Hg. janthinomys	Abreu et al	2019-09-23
+ON022570	ON022570	2017-12-19	Brazil	Sudeste	São Paulo	Itapecerica da Serra	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022625	ON022625	2017-12-19	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022571	ON022571	2017-12-20	Brazil	Sudeste	São Paulo	Itapecerica da Serra	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022667	ON022667	2017-12-20	Brazil	Sudeste	São Paulo	Itapecerica da Serra	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022632	ON022632	2017-12-20	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022424	ON022424	2017-12-21	Brazil	Sudeste	Minas Gerais	Piau	10172	Non-human primate	Alouatta guariba clamitans	Hill et al	2022-03-16
+ON022631	ON022631	2017-12-21	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022630	ON022630	2017-12-21	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022567	ON022567	2017-12-21	Brazil	Sudeste	São Paulo	Vargem Grande Paulista	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022566	ON022566	2017-12-21	Brazil	Sudeste	São Paulo	Vargem Grande Paulista	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022281	ON022281	2017-12-22	Brazil	Sudeste	Rio de Janeiro	Sumidouro	10169	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022633	ON022633	2017-12-22	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022601	ON022601	2017-12-25	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022266	ON022266	2017-12-26	Brazil	Sudeste	Minas Gerais	Caeté	10169	Non-human primate	Cebidae	Hill et al	2022-03-16
+ON022363	ON022363	2017-12-26	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022362	ON022362	2017-12-26	Brazil	Sudeste	São Paulo	São Paulo	9478	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022359	ON022359	2017-12-26	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022353	ON022353	2017-12-27	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022699	ON022699	2017-12-27	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022356	ON022356	2017-12-27	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022355	ON022355	2017-12-27	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022357	ON022357	2017-12-27	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022354	ON022354	2017-12-27	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022568	ON022568	2017-12-28	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022364	ON022364	2017-12-29	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022321	ON022321	2017-12-29	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022258	ON022258	2017-12-30	Brazil	Sudeste	Minas Gerais	Nova Lima	10169	Non-human primate	Cebidae	Hill et al	2022-03-16
+ON022525	ON022525	2017-XX-XX	Brazil	Sudeste	Espírito Santo	Conceição do Castelo	10172	Human	Homo sapiens	Hill et al	2022-03-16
+MH378284	MH378284	2017-XX-XX	Brazil				10172	Human	Homo sapiens	Zelena et al	2018-05-21
+MG922934	MG922934	2017-XX-XX	Germany				10786	Human	Homo sapiens	Eisermann et al	2018-02-07
+MF347613	MF347613	2017-XX-XX	Suriname				10212	Human	Homo sapiens	Oude Munnink et al	2017-06-13
+ON022252	ON022252	2018-01-01	Brazil	Sudeste	Minas Gerais	Itatiaiuçu	10169	Non-human primate	Cebidae	Hill et al	2022-03-16
+MK249066	MK249066	2018-01-01	Brazil				10164			Iani et al	2018-11-30
+ON022241	ON022241	2018-01-02	Brazil	Sudeste	Minas Gerais	Juiz de Fora	9763	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022259	ON022259	2018-01-02	Brazil	Sudeste	Minas Gerais	Nova Lima	10169	Non-human primate	Callithrix penicillata	Hill et al	2022-03-16
+ON022565	ON022565	2018-01-02	Brazil	Sudeste	São Paulo	Itapecerica da Serra	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022341	ON022341	2018-01-02	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022360	ON022360	2018-01-02	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022358	ON022358	2018-01-03	Brazil	Sudeste	São Paulo	São Lourenço da Serra	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022697	ON022697	2018-01-03	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022254	ON022254	2018-01-04	Brazil	Sudeste	Minas Gerais	Brumadinho	10169	Non-human primate	Callithrix penicillata	Hill et al	2022-03-16
+ON022265	ON022265	2018-01-04	Brazil	Sudeste	Minas Gerais	Brumadinho	10169	Non-human primate	Callithrix penicillata	Hill et al	2022-03-16
+ON022603	ON022603	2018-01-04	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022251	ON022251	2018-01-05	Brazil	Sudeste	Minas Gerais	Itabirito	10169	Non-human primate	Cebidae	Hill et al	2022-03-16
+ON022240	ON022240	2018-01-05	Brazil	Sudeste	Minas Gerais	Juiz de Fora	10169	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022245	ON022245	2018-01-05	Brazil	Sudeste	Minas Gerais	Mariana	10169	Human	Homo sapiens	Hill et al	2022-03-16
+ON022365	ON022365	2018-01-05	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022361	ON022361	2018-01-05	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022366	ON022366	2018-01-05	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022262	ON022262	2018-01-06	Brazil	Sudeste	Minas Gerais	Santa Bárbara	10169	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022272	ON022272	2018-01-06	Brazil	Sudeste	Rio de Janeiro	Teresópolis	9763	Human	Homo sapiens	Hill et al	2022-03-16
+ON022670	ON022670	2018-01-06	Brazil	Sudeste	São Paulo	Itapecerica da Serra	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022569	ON022569	2018-01-06	Brazil	Sudeste	São Paulo	Itapecerica da Serra	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022671	ON022671	2018-01-06	Brazil	Sudeste	São Paulo	Itapecerica da Serra	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022322	ON022322	2018-01-07	Brazil	Sudeste	São Paulo	Itapecerica da Serra	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022672	ON022672	2018-01-07	Brazil	Sudeste	São Paulo	Itapecerica da Serra	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022257	ON022257	2018-01-08	Brazil	Sudeste	Minas Gerais	Nova Lima	10169	Human	Homo sapiens	Hill et al	2022-03-16
+ON022243	ON022243	2018-01-08	Brazil	Sudeste	Minas Gerais	Piranga	10169	Non-human primate	Callithrix	Hill et al	2022-03-16
+ON022320	ON022320	2018-01-08	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MK333798	MK333798	2018-01-08	Brazil	Sudeste	São Paulo	São Paulo	11007	Human	Homo sapiens	Pereira Ribeiro et al	2018-12-21
+MK333799	MK333799	2018-01-08	Brazil	Sudeste	São Paulo	São Paulo	11007	Human	Homo sapiens	Pereira Ribeiro et al	2018-12-21
+ON022246	ON022246	2018-01-09	Brazil	Sudeste	Minas Gerais	Mariana	10169	Human	Homo sapiens	Hill et al	2022-03-16
+MN506266	MN506266	2018-01-09	Brazil	Sudeste	Rio de Janeiro	Nova Iguaçu	11007	Mosquito	Hg. janthinomys	Abreu et al	2019-09-23
+MH193173	MH193173	2018-01-09	Brazil	Sudeste	São Paulo	Guarulhos	10169	Non-human primate	Alouatta sp.	Souza et al	2018-04-11
+MH193174	MH193174	2018-01-09	Brazil	Sudeste	São Paulo	Mairiporã	10169	Human	Homo sapiens	Souza et al	2018-04-11
+ON022263	ON022263	2018-01-10	Brazil	Sudeste	Minas Gerais	Belo Horizonte	10169	Human	Homo sapiens	Hill et al	2022-03-16
+ON022323	ON022323	2018-01-10	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022279	ON022279	2018-01-11	Brazil	Sudeste	Rio de Janeiro	Valença	9763	Human	Homo sapiens	Hill et al	2022-03-16
+ON022284	ON022284	2018-01-11	Brazil	Sudeste	São Paulo	Atibaia	10172	Non-human primate	Callithrix	Hill et al	2022-03-16
+MK760660	MK760660	2018-01-11	Netherlands				10869	Human	Homo sapiens	Phan et al	2019-04-05
+MK760661	MK760661	2018-01-11	Netherlands				10850	Human	Homo sapiens	Phan et al	2019-04-05
+ON022742	ON022742	2018-01-12	Brazil	Sudeste	São Paulo	Guarulhos	10172	Human	Homo sapiens	Hill et al	2022-03-16
+MK583147	MK583147	2018-01-12	Brazil	Sudeste	São Paulo	Mairiporã	10946	Human	Homo sapiens	Cunha et al	2019-02-28
+MK760662	MK760662	2018-01-12	Netherlands				10884	Human	Homo sapiens	Phan et al	2019-04-05
+MK760666	MK760666	2018-01-12	Netherlands				10924	Human	Homo sapiens	Phan et al	2019-04-05
+ON022247	ON022247	2018-01-13	Brazil	Sudeste	Minas Gerais	Mariana	10169	Human	Homo sapiens	Hill et al	2022-03-16
+ON022256	ON022256	2018-01-13	Brazil	Sudeste	Minas Gerais	Rio Acima	9823	Human	Homo sapiens	Hill et al	2022-03-16
+ON022273	ON022273	2018-01-13	Brazil	Sudeste	Rio de Janeiro	Valença	10169	Human	Homo sapiens	Hill et al	2022-03-16
+ON022274	ON022274	2018-01-13	Brazil	Sudeste	Rio de Janeiro	Valença	10169	Human	Homo sapiens	Hill et al	2022-03-16
+MK583148	MK583148	2018-01-13	Brazil	Sudeste	São Paulo	Mairiporã	10975	Human	Homo sapiens	Cunha et al	2019-02-28
+MK760663	MK760663	2018-01-13	Netherlands				10856	Human	Homo sapiens	Phan et al	2019-04-05
+ON022260	ON022260	2018-01-14	Brazil	Sudeste	Minas Gerais	Nova Lima	10169	Human	Homo sapiens	Hill et al	2022-03-16
+ON022275	ON022275	2018-01-14	Brazil	Sudeste	Rio de Janeiro	Valença	10169	Human	Homo sapiens	Hill et al	2022-03-16
+ON022586	ON022586	2018-01-14	Brazil	Sudeste	São Paulo	Jacareí	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MK760664	MK760664	2018-01-14	Netherlands				10835	Human	Homo sapiens	Phan et al	2019-04-05
+ON022255	ON022255	2018-01-15	Brazil	Sudeste	Minas Gerais	Brumadinho	10169	Human	Homo sapiens	Hill et al	2022-03-16
+ON022242	ON022242	2018-01-15	Brazil	Sudeste	Minas Gerais	Juiz de Fora	10169	Human	Homo sapiens	Hill et al	2022-03-16
+ON022248	ON022248	2018-01-15	Brazil	Sudeste	Minas Gerais	Mariana	10169	Human	Homo sapiens	Hill et al	2022-03-16
+ON022267	ON022267	2018-01-15	Brazil	Sudeste	Minas Gerais	Mariana	10169	Human	Homo sapiens	Hill et al	2022-03-16
+ON022261	ON022261	2018-01-15	Brazil	Sudeste	Minas Gerais	Nova Lima	10169	Human	Homo sapiens	Hill et al	2022-03-16
+ON022278	ON022278	2018-01-15	Brazil	Sudeste	Rio de Janeiro	Valença	10169	Human	Homo sapiens	Hill et al	2022-03-16
+ON022276	ON022276	2018-01-15	Brazil	Sudeste	Rio de Janeiro	Valença	10169	Human	Homo sapiens	Hill et al	2022-03-16
+ON022277	ON022277	2018-01-15	Brazil	Sudeste	Rio de Janeiro	Valença	10169	Human	Homo sapiens	Hill et al	2022-03-16
+ON022657	ON022657	2018-01-15	Brazil	Sudeste	São Paulo	Cotia	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MK583150	MK583150	2018-01-15	Brazil	Sudeste	São Paulo	Itaquaquecetuba	10991	Human	Homo sapiens	Cunha et al	2019-02-28
+MK583151	MK583151	2018-01-15	Brazil	Sudeste	São Paulo	Mairiporã	10953	Human	Homo sapiens	Cunha et al	2019-02-28
+ON022343	ON022343	2018-01-15	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Callithrix	Hill et al	2022-03-16
+ON022249	ON022249	2018-01-16	Brazil	Sudeste	Minas Gerais	Mariana	10169	Human	Homo sapiens	Hill et al	2022-03-16
+ON022250	ON022250	2018-01-16	Brazil	Sudeste	Minas Gerais	Mariana	10169	Human	Homo sapiens	Hill et al	2022-03-16
+ON022268	ON022268	2018-01-16	Brazil	Sudeste	Rio de Janeiro	Rio de Janeiro	10169	Human	Homo sapiens	Hill et al	2022-03-16
+MN643077	MN643077	2018-01-16	Brazil	Sudeste	Rio de Janeiro	Teresópolis	11007	Human	Homo sapiens	Abreu et al	2019-11-04
+ON022271	ON022271	2018-01-16	Brazil	Sudeste	Rio de Janeiro	Teresópolis	10169	Human	Homo sapiens	Hill et al	2022-03-16
+ON022597	ON022597	2018-01-16	Brazil	Sudeste	São Paulo	Itapecerica da Serra	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022743	ON022743	2018-01-16	Brazil	Sudeste	São Paulo	Mairiporã	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022329	ON022329	2018-01-16	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MK583149	MK583149	2018-01-16	Brazil	Sudeste	São Paulo	São Paulo	10999	Human	Homo sapiens	Cunha et al	2019-02-28
+ON022736	ON022736	2018-01-16	Brazil	Sudeste	São Paulo	São Paulo	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022253	ON022253	2018-01-17	Brazil	Sudeste	Minas Gerais	Brumadinho	10132	Human	Homo sapiens	Hill et al	2022-03-16
+ON022239	ON022239	2018-01-17	Brazil	Sudeste	Minas Gerais	Juiz de Fora	10169	Human	Homo sapiens	Hill et al	2022-03-16
+ON022244	ON022244	2018-01-17	Brazil	Sudeste	Minas Gerais	Ponte Nova	10169	Human	Homo sapiens	Hill et al	2022-03-16
+ON022270	ON022270	2018-01-17	Brazil	Sudeste	Rio de Janeiro	Teresópolis	10169	Human	Homo sapiens	Hill et al	2022-03-16
+ON022598	ON022598	2018-01-17	Brazil	Sudeste	São Paulo	Itapecerica da Serra	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+MK333807	MK333807	2018-01-18	Brazil	Sudeste	Minas Gerais	Belmiro Braga	11007	Mosquito	Haemagogus leucocelaenus	Pereira Ribeiro et al	2018-12-21
+ON022451	ON022451	2018-01-18	Brazil	Sudeste	Rio de Janeiro	Angra dos Reis	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022507	ON022507	2018-01-18	Brazil	Sudeste	Rio de Janeiro	Rio das Flores	9884	Human	Homo sapiens	Hill et al	2022-03-16
+MN506290	MN506290	2018-01-18	Brazil	Sudeste	Rio de Janeiro	Valença	11007	Mosquito	Hg. janthinomys	Abreu et al	2019-09-23
+ON022297	ON022297	2018-01-18	Brazil	Sudeste	São Paulo	Nazaré Paulista	10172	Non-human primate	Sapajus	Hill et al	2022-03-16
+MK333809	MK333809	2018-01-19	Brazil	Sudeste	Rio de Janeiro	Valença	11007	Mosquito	Haemagogus janthinomys	Pereira Ribeiro et al	2018-12-21
+ON022729	ON022729	2018-01-19	Brazil	Sudeste	Rio de Janeiro	Volta Redonda	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022738	ON022738	2018-01-19	Brazil	Sudeste	São Paulo	Atibaia	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022737	ON022737	2018-01-19	Brazil	Sudeste	São Paulo	Mairiporã	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022330	ON022330	2018-01-19	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022331	ON022331	2018-01-19	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022332	ON022332	2018-01-19	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022326	ON022326	2018-01-19	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MK760665	MK760665	2018-01-19	Netherlands				10786	Human	Homo sapiens	Phan et al	2019-04-05
+ON022516	ON022516	2018-01-20	Brazil	Sudeste	Rio de Janeiro	Teresópolis	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022492	ON022492	2018-01-20	Brazil	Sudeste	Rio de Janeiro	Valença	10172	Human	Homo sapiens	Hill et al	2022-03-16
+MK583153	MK583153	2018-01-20	Brazil	Sudeste	São Paulo	Mairiporã	10995	Human	Homo sapiens	Cunha et al	2019-02-28
+ON022338	ON022338	2018-01-21	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022325	ON022325	2018-01-21	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MK583154	MK583154	2018-01-21	Brazil	Sudeste	São Paulo	São Paulo	10993	Human	Homo sapiens	Cunha et al	2019-02-28
+ON022445	ON022445	2018-01-22	Brazil	Sudeste	Rio de Janeiro	Valença	10172	Non-human primate	Callithrix	Hill et al	2022-03-16
+MK882618	MK882618	2018-01-22	Brazil	Sudeste	Rio de Janeiro	Valença	10169	Human	Homo sapiens	Giovanetti et al	2019-05-03
+MK583155	MK583155	2018-01-22	Brazil	Sudeste	São Paulo	Mairiporã	10992	Human	Homo sapiens	Cunha et al	2019-02-28
+ON022324	ON022324	2018-01-22	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022588	ON022588	2018-01-22	Brazil	Sudeste	São Paulo	Tapiraí	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022282	ON022282	2018-01-23	Brazil	Sudeste	Rio de Janeiro	Rio de Janeiro	10172	Human	Homo sapiens	Hill et al	2022-03-16
+MK583156	MK583156	2018-01-23	Brazil	Sudeste	São Paulo	Atibaia	10941	Human	Homo sapiens	Cunha et al	2019-02-28
+MK583157	MK583157	2018-01-23	Brazil	Sudeste	São Paulo	Guarulhos	10949	Human	Homo sapiens	Cunha et al	2019-02-28
+ON022744	ON022744	2018-01-23	Brazil	Sudeste	São Paulo	Guarulhos	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022739	ON022739	2018-01-23	Brazil	Sudeste	São Paulo	Guarulhos	10172	Human	Homo sapiens	Hill et al	2022-03-16
+MK583158	MK583158	2018-01-23	Brazil	Sudeste	São Paulo	Mairiporã	10995	Human	Homo sapiens	Cunha et al	2019-02-28
+ON022594	ON022594	2018-01-23	Brazil	Sudeste	São Paulo	Salto de Pirapora	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022471	ON022471	2018-01-24	Brazil	Sudeste	Rio de Janeiro	Cantagalo	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022450	ON022450	2018-01-24	Brazil	Sudeste	Rio de Janeiro	Duas Barras	10172	Non-human primate	Callithrix	Hill et al	2022-03-16
+ON022479	ON022479	2018-01-24	Brazil	Sudeste	Rio de Janeiro	Sumidouro	10172	Human	Homo sapiens	Hill et al	2022-03-16
+MN506287	MN506287	2018-01-24	Brazil	Sudeste	Rio de Janeiro	Valença	11007	Mosquito	Hg. janthinomys	Abreu et al	2019-09-23
+MN506286	MN506286	2018-01-24	Brazil	Sudeste	Rio de Janeiro	Valença	11007	Mosquito	Hg. janthinomys	Abreu et al	2019-09-23
+MN506288	MN506288	2018-01-24	Brazil	Sudeste	Rio de Janeiro	Valença	11007	Mosquito	Hg. janthinomys	Abreu et al	2019-09-23
+MN506285	MN506285	2018-01-24	Brazil	Sudeste	Rio de Janeiro	Valença	11007	Mosquito	Hg. janthinomys	Abreu et al	2019-09-23
+MN506284	MN506284	2018-01-24	Brazil	Sudeste	Rio de Janeiro	Valença	11007	Mosquito	Hg. janthinomys	Abreu et al	2019-09-23
+ON022514	ON022514	2018-01-24	Brazil	Sudeste	Rio de Janeiro	Valença	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022506	ON022506	2018-01-24	Brazil	Sudeste	Rio de Janeiro	Valença	9884	Human	Homo sapiens	Hill et al	2022-03-16
+MK583159	MK583159	2018-01-24	Brazil	Sudeste	São Paulo	Atibaia	10998	Human	Homo sapiens	Cunha et al	2019-02-28
+MK583161	MK583161	2018-01-24	Brazil	Sudeste	São Paulo	Itaquaquecetuba	10945	Human	Homo sapiens	Cunha et al	2019-02-28
+ON022745	ON022745	2018-01-24	Brazil	Sudeste	São Paulo	São Paulo	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022530	ON022530	2018-01-25	Brazil	Sudeste	Espírito Santo	Santa Leopoldina	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+MK882619	MK882619	2018-01-25	Brazil	Sudeste	Rio de Janeiro	Duas Barras	10169	Human	Homo sapiens	Giovanetti et al	2019-05-03
+MN643078	MN643078	2018-01-25	Brazil	Sudeste	Rio de Janeiro	Teresópolis	11007	Human	Homo sapiens	Abreu et al	2019-11-04
+ON022508	ON022508	2018-01-25	Brazil	Sudeste	Rio de Janeiro	Valença	9884	Human	Homo sapiens	Hill et al	2022-03-16
+ON022498	ON022498	2018-01-25	Brazil	Sudeste	Rio de Janeiro	Valença	9884	Human	Homo sapiens	Hill et al	2022-03-16
+ON022695	ON022695	2018-01-25	Brazil	Sudeste	São Paulo	Santa Isabel	10172	Non-human primate	Callithrix	Hill et al	2022-03-16
+MN643079	MN643079	2018-01-26	Brazil	Sudeste	Rio de Janeiro	Teresópolis	11007	Human	Homo sapiens	Abreu et al	2019-11-04
+ON022727	ON022727	2018-01-26	Brazil	Sudeste	Rio de Janeiro	Teresópolis	9884	Human	Homo sapiens	Hill et al	2022-03-16
+MN506291	MN506291	2018-01-26	Brazil	Sudeste	Rio de Janeiro	Valença	11007	Mosquito	Hg. janthinomys	Abreu et al	2019-09-23
+MN506289	MN506289	2018-01-26	Brazil	Sudeste	Rio de Janeiro	Valença	11007	Mosquito	Hg. janthinomys	Abreu et al	2019-09-23
+ON022346	ON022346	2018-01-26	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MK333806	MK333806	2018-01-27	Brazil	Sudeste	Minas Gerais	Juiz de Fora	11007	Mosquito	Haemagogus janthinomys	Pereira Ribeiro et al	2018-12-21
+ON022587	ON022587	2018-01-28	Brazil	Sudeste	São Paulo	Igaratá	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MK333808	MK333808	2018-01-29	Brazil	Sudeste	Minas Gerais	Belmiro Braga	11007	Mosquito	Haemagogus janthinomys	Pereira Ribeiro et al	2018-12-21
+ON022392	ON022392	2018-01-29	Brazil	Sudeste	Minas Gerais	Juiz de Fora	10172	Non-human primate	Callithrix	Hill et al	2022-03-16
+MK583160	MK583160	2018-01-29	Brazil	Sudeste	São Paulo	Cotia	10968	Human	Homo sapiens	Cunha et al	2019-02-28
+ON022333	ON022333	2018-01-29	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022336	ON022336	2018-01-29	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022658	ON022658	2018-01-29	Brazil	Sudeste	São Paulo	Sarapuí	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MH329655	MH329655	2018-01-29	Brazil				10169	Mosquito	Aedes albopictus	Chiang et al	2018-05-07
+ON022740	ON022740	2018-01-30	Brazil	Sudeste	São Paulo	Mairiporã	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022342	ON022342	2018-01-30	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Callithrix	Hill et al	2022-03-16
+ON022589	ON022589	2018-01-31	Brazil	Sudeste	São Paulo	São José dos Campos	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022334	ON022334	2018-01-31	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022335	ON022335	2018-01-31	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022327	ON022327	2018-01-31	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MK583162	MK583162	2018-01-31	Brazil	Sudeste	São Paulo	São Paulo	10999	Human	Homo sapiens	Cunha et al	2019-02-28
+ON022590	ON022590	2018-01-31	Brazil	Sudeste	São Paulo	Tapiraí	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022344	ON022344	2018-02-01	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022741	ON022741	2018-02-01	Brazil	Sudeste	São Paulo	São Paulo	10172	Human	Homo sapiens	Hill et al	2022-03-16
+MH193175	MH193175	2018-02-01	Brazil	Sudeste	São Paulo	São Paulo	10169	Non-human primate	Alouatta sp.	Souza et al	2018-04-11
+ON022659	ON022659	2018-02-02	Brazil	Sudeste	São Paulo	Embu Guaçu	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MK583163	MK583163	2018-02-02	Brazil	Sudeste	São Paulo	São Paulo	10944	Human	Homo sapiens	Cunha et al	2019-02-28
+MK583164	MK583164	2018-02-03	Brazil	Sudeste	São Paulo	Cotia	10999	Human	Homo sapiens	Cunha et al	2019-02-28
+MN643090	MN643090	2018-02-04	Brazil	Sudeste	Rio de Janeiro	Ilha Grande	11007	Non-human primate	Alouatta guariba	Abreu et al	2019-11-04
+MK583165	MK583165	2018-02-04	Brazil	Sudeste	São Paulo	Mairiporã	10986	Human	Homo sapiens	Cunha et al	2019-02-28
+MK882621	MK882621	2018-02-05	Brazil	Sudeste	Rio de Janeiro	Angra dos Reis	10169	Human	Homo sapiens	Giovanetti et al	2019-05-03
+ON022509	ON022509	2018-02-05	Brazil	Sudeste	Rio de Janeiro	Cantagalo	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022503	ON022503	2018-02-05	Brazil	Sudeste	Rio de Janeiro	Duas Barras	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022458	ON022458	2018-02-05	Brazil	Sudeste	Rio de Janeiro	Rio de Janeiro	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022440	ON022440	2018-02-05	Brazil	Sudeste	Rio de Janeiro	Rio de Janeiro	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022437	ON022437	2018-02-05	Brazil	Sudeste	Rio de Janeiro	Rio de Janeiro	10172	Non-human primate	Callithrix	Hill et al	2022-03-16
+MK882620	MK882620	2018-02-05	Brazil	Sudeste	Rio de Janeiro	Rio de Janeiro	10169	Human	Homo sapiens	Giovanetti et al	2019-05-03
+ON022517	ON022517	2018-02-05	Brazil	Sudeste	Rio de Janeiro	Volta Redonda	9884	Non-human primate	Callithrix	Hill et al	2022-03-16
+ON022476	ON022476	2018-02-06	Brazil	Sudeste	Rio de Janeiro	Teresópolis	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022489	ON022489	2018-02-06	Brazil	Sudeste	Rio de Janeiro	Teresópolis	10172	Human	Homo sapiens	Hill et al	2022-03-16
+MK583166	MK583166	2018-02-06	Brazil	Sudeste	São Paulo	São Paulo	10946	Human	Homo sapiens	Cunha et al	2019-02-28
+MN643091	MN643091	2018-02-07	Brazil	Sudeste	Rio de Janeiro	Ilha Grande	11007	Non-human primate	Alouatta guariba	Abreu et al	2019-11-04
+MN643092	MN643092	2018-02-07	Brazil	Sudeste	Rio de Janeiro	Ilha Grande	11007	Non-human primate	Alouatta guariba	Abreu et al	2019-11-04
+MK333805	MK333805	2018-02-07	Brazil	Sudeste	Rio de Janeiro	Ilha Grande	10354	Mosquito	Sabethes chloropterus	Pereira Ribeiro et al	2018-12-21
+ON022434	ON022434	2018-02-08	Brazil	Sudeste	Rio de Janeiro	Angra dos Reis	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022485	ON022485	2018-02-08	Brazil	Sudeste	Rio de Janeiro	Angra dos Reis	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022478	ON022478	2018-02-09	Brazil	Sudeste	Rio de Janeiro	Duas Barras	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022491	ON022491	2018-02-09	Brazil	Sudeste	Rio de Janeiro	Duas Barras	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022495	ON022495	2018-02-09	Brazil	Sul	Rio Grande do Sul	São Leopoldo	9884	Human	Homo sapiens	Hill et al	2022-03-16
+ON022591	ON022591	2018-02-09	Brazil	Sudeste	São Paulo	São José dos Campos	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022602	ON022602	2018-02-09	Brazil	Sudeste	São Paulo	Sarapuí	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022337	ON022337	2018-02-10	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022533	ON022533	2018-02-11	Brazil	Sudeste	Rio de Janeiro	Angra dos Reis	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022488	ON022488	2018-02-11	Brazil	Sudeste	Rio de Janeiro	Angra dos Reis	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022513	ON022513	2018-02-11	Brazil	Sudeste	Rio de Janeiro	Duas Barras	9884	Human	Homo sapiens	Hill et al	2022-03-16
+MN643085	MN643085	2018-02-11	Brazil	Sudeste	Rio de Janeiro	Ilha Grande	10689	Human	Homo sapiens	Abreu et al	2019-11-04
+MK583167	MK583167	2018-02-11	Brazil	Sudeste	São Paulo	Guarulhos	10947	Human	Homo sapiens	Cunha et al	2019-02-28
+MK583168	MK583168	2018-02-11	Brazil	Sudeste	São Paulo	São Paulo	10993	Human	Homo sapiens	Cunha et al	2019-02-28
+ON022656	ON022656	2018-02-12	Brazil	Sudeste	São Paulo	Santa Isabel	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022526	ON022526	2018-02-13	Brazil	Sudeste	Rio de Janeiro	Angra dos Reis	10172	Human	Homo sapiens	Hill et al	2022-03-16
+MN643087	MN643087	2018-02-13	Brazil	Sudeste	Rio de Janeiro	Ilha Grande	11007	Human	Homo sapiens	Abreu et al	2019-11-04
+MN643086	MN643086	2018-02-14	Brazil	Sudeste	Rio de Janeiro	Angra dos Reis	11007	Human	Homo sapiens	Abreu et al	2019-11-04
+ON022477	ON022477	2018-02-14	Brazil	Sudeste	Rio de Janeiro	Rio de Janeiro	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022470	ON022470	2018-02-15	Brazil	Sudeste	Rio de Janeiro	Rio de Janeiro	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022490	ON022490	2018-02-15	Brazil	Sudeste	Rio de Janeiro	Rio de Janeiro	9884	Human	Homo sapiens	Hill et al	2022-03-16
+ON022340	ON022340	2018-02-15	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022473	ON022473	2018-02-16	Brazil	Sudeste	Rio de Janeiro	Bom Jardim	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022483	ON022483	2018-02-16	Brazil	Sudeste	Rio de Janeiro	Nova Friburgo	10172	Human	Homo sapiens	Hill et al	2022-03-16
+MN643082	MN643082	2018-02-16	Brazil	Sudeste	Rio de Janeiro	Teresópolis	11007	Human	Homo sapiens	Abreu et al	2019-11-04
+ON022481	ON022481	2018-02-16	Brazil	Sudeste	Rio de Janeiro	Teresópolis	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022494	ON022494	2018-02-17	Brazil	Sudeste	Rio de Janeiro	Nova Friburgo	9884	Human	Homo sapiens	Hill et al	2022-03-16
+MN643080	MN643080	2018-02-17	Brazil	Sudeste	Rio de Janeiro	Teresópolis	11007	Human	Homo sapiens	Abreu et al	2019-11-04
+ON022474	ON022474	2018-02-18	Brazil	Sudeste	Minas Gerais	Juiz de Fora	10172	Human	Homo sapiens	Hill et al	2022-03-16
+MK583170	MK583170	2018-02-18	Brazil	Sudeste	São Paulo	Guarulhos	11011	Human	Homo sapiens	Cunha et al	2019-02-28
+MK583169	MK583169	2018-02-18	Brazil	Sudeste	São Paulo	Guarulhos	10944	Human	Homo sapiens	Cunha et al	2019-02-28
+MK583171	MK583171	2018-02-18	Brazil	Sudeste	São Paulo	Guarulhos	10973	Human	Homo sapiens	Cunha et al	2019-02-28
+ON022454	ON022454	2018-02-19	Brazil	Sudeste	Rio de Janeiro	Angra dos Reis	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022452	ON022452	2018-02-19	Brazil	Sudeste	Rio de Janeiro	Angra dos Reis	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022487	ON022487	2018-02-19	Brazil	Sudeste	Rio de Janeiro	Angra dos Reis	10172	Human	Homo sapiens	Hill et al	2022-03-16
+MN643081	MN643081	2018-02-19	Brazil	Sudeste	Rio de Janeiro	Teresópolis	11007	Human	Homo sapiens	Abreu et al	2019-11-04
+ON022480	ON022480	2018-02-19	Brazil	Sudeste	Rio de Janeiro	Teresópolis	9884	Human	Homo sapiens	Hill et al	2022-03-16
+ON022502	ON022502	2018-02-19	Brazil	Sudeste	Rio de Janeiro	Trajano de Moraes	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022500	ON022500	2018-02-19	Brazil	Sudeste	Rio de Janeiro	Valença	10172	Human	Homo sapiens	Hill et al	2022-03-16
+MK583172	MK583172	2018-02-19	Brazil	Sudeste	São Paulo	Guarulhos	10996	Human	Homo sapiens	Cunha et al	2019-02-28
+ON022592	ON022592	2018-02-19	Brazil	Sudeste	São Paulo	Pilar do Sul	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022339	ON022339	2018-02-19	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022512	ON022512	2018-02-20	Brazil	Sudeste	Rio de Janeiro	Angra dos Reis	9884	Human	Homo sapiens	Hill et al	2022-03-16
+ON022484	ON022484	2018-02-20	Brazil	Sudeste	Rio de Janeiro	Angra dos Reis	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022482	ON022482	2018-02-20	Brazil	Sudeste	Rio de Janeiro	Bom Jardim	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022501	ON022501	2018-02-20	Brazil	Sudeste	Rio de Janeiro	Cachoeiras de Macacu	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022726	ON022726	2018-02-20	Brazil	Sudeste	Rio de Janeiro	Cantagalo	9884	Human	Homo sapiens	Hill et al	2022-03-16
+ON022599	ON022599	2018-02-20	Brazil	Sudeste	São Paulo	Tambaú	10172	Non-human primate	Cebus	Hill et al	2022-03-16
+ON022493	ON022493	2018-02-21	Brazil	Sudeste	Rio de Janeiro	Cachoeiras de Macacu	9884	Human	Homo sapiens	Hill et al	2022-03-16
+ON022499	ON022499	2018-02-21	Brazil	Sudeste	Rio de Janeiro	Duas Barras	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022505	ON022505	2018-02-21	Brazil	Sudeste	Rio de Janeiro	Duas Barras	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022497	ON022497	2018-02-21	Brazil	Sudeste	Rio de Janeiro	Italva	9884	Human	Homo sapiens	Hill et al	2022-03-16
+ON022475	ON022475	2018-02-22	Brazil	Sudeste	Rio de Janeiro	Barra Mansa	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022515	ON022515	2018-02-22	Brazil	Sudeste	Rio de Janeiro	Niterói	9884	Human	Homo sapiens	Hill et al	2022-03-16
+ON022486	ON022486	2018-02-22	Brazil	Sudeste	Rio de Janeiro	Niterói	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022511	ON022511	2018-02-22	Brazil	Sudeste	Rio de Janeiro	Nova Friburgo	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022328	ON022328	2018-02-22	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MK583173	MK583173	2018-02-23	Brazil	Sudeste	São Paulo	Guarulhos	10991	Human	Homo sapiens	Cunha et al	2019-02-28
+ON022472	ON022472	2018-02-24	Brazil	Sudeste	Rio de Janeiro	Angra dos Reis	10172	Human	Homo sapiens	Hill et al	2022-03-16
+MK583174	MK583174	2018-02-24	Brazil	Sudeste	São Paulo	Arujá	10980	Human	Homo sapiens	Cunha et al	2019-02-28
+MN643084	MN643084	2018-02-25	Brazil	Sudeste	Rio de Janeiro	Teresópolis	11007	Human	Homo sapiens	Abreu et al	2019-11-04
+MN643083	MN643083	2018-02-25	Brazil	Sudeste	Rio de Janeiro	Teresópolis	10682	Human	Homo sapiens	Abreu et al	2019-11-04
+ON022436	ON022436	2018-02-26	Brazil	Sudeste	Rio de Janeiro	Angra dos Reis	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022433	ON022433	2018-02-26	Brazil	Sudeste	Rio de Janeiro	Angra dos Reis	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022534	ON022534	2018-02-27	Brazil	Sudeste	Rio de Janeiro	Teresópolis	10172	Human	Homo sapiens	Hill et al	2022-03-16
+MK583175	MK583175	2018-02-27	Brazil	Sudeste	São Paulo	Itaquaquecetuba	10946	Human	Homo sapiens	Cunha et al	2019-02-28
+MK583176	MK583176	2018-02-27	Brazil	Sudeste	São Paulo	Piedade	10945	Human	Homo sapiens	Cunha et al	2019-02-28
+ON022453	ON022453	2018-02-28	Brazil	Sudeste	Rio de Janeiro	Angra dos Reis	10172	Non-human primate	Callithrix	Hill et al	2022-03-16
+ON022316	ON022316	2018-03-01	Brazil	Sudeste	São Paulo	Guarulhos	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022345	ON022345	2018-03-01	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022572	ON022572	2018-03-01	Brazil	Sudeste	São Paulo	Sarapuí	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022296	ON022296	2018-03-02	Brazil	Sudeste	São Paulo	Juquiá	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022347	ON022347	2018-03-03	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MK583177	MK583177	2018-03-04	Brazil	Sudeste	São Paulo	Guarulhos	10953	Human	Homo sapiens	Cunha et al	2019-02-28
+ON022318	ON022318	2018-03-05	Brazil	Sudeste	São Paulo	Ibiúna	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022349	ON022349	2018-03-10	Brazil	Sudeste	São Paulo	Guarulhos	10172	Non-human primate	Cebus	Hill et al	2022-03-16
+MK583178	MK583178	2018-03-10	Brazil	Sudeste	São Paulo	Itariri	10945	Human	Homo sapiens	Cunha et al	2019-02-28
+ON022675	ON022675	2018-03-10	Brazil	Sudeste	São Paulo	Sarapuí	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022310	ON022310	2018-03-10	Brazil	Sudeste	São Paulo	Sorocaba	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022285	ON022285	2018-03-11	Brazil	Sudeste	São Paulo	Bananal	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022540	ON022540	2018-03-11	Brazil	Sudeste	São Paulo	Carapicuíba	10172	Human	Homo sapiens	Hill et al	2022-03-16
+MK583179	MK583179	2018-03-11	Brazil	Sudeste	São Paulo	Ibiúna	10986	Human	Homo sapiens	Cunha et al	2019-02-28
+ON022317	ON022317	2018-03-12	Brazil	Sudeste	São Paulo	Carapicuíba	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022299	ON022299	2018-03-12	Brazil	Sudeste	São Paulo	Pinhalzinho	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022459	ON022459	2018-03-13	Brazil	Sudeste	Rio de Janeiro	Angra dos Reis	10172	Non-human primate	Callithrix	Hill et al	2022-03-16
+ON022449	ON022449	2018-03-13	Brazil	Sudeste	Rio de Janeiro	Valença	10172	Non-human primate	Callithrix	Hill et al	2022-03-16
+ON022348	ON022348	2018-03-13	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022673	ON022673	2018-03-14	Brazil	Sudeste	São Paulo	Embu Guaçu	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MK583182	MK583182	2018-03-14	Brazil	Sudeste	São Paulo	Guarulhos	10944	Human	Homo sapiens	Cunha et al	2019-02-28
+MK583180	MK583180	2018-03-14	Brazil	Sudeste	São Paulo	Guarulhos	10946	Human	Homo sapiens	Cunha et al	2019-02-28
+ON022554	ON022554	2018-03-14	Brazil	Sudeste	São Paulo	Piracaia	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022350	ON022350	2018-03-14	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022585	ON022585	2018-03-15	Brazil	Sudeste	São Paulo	Campos do Jordão	10172	Non-human primate	Cebus	Hill et al	2022-03-16
+ON022584	ON022584	2018-03-17	Brazil	Sudeste	São Paulo	Pindamonhangaba	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022674	ON022674	2018-03-19	Brazil	Sudeste	São Paulo	Embu Guaçu	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022438	ON022438	2018-03-20	Brazil	Sudeste	Rio de Janeiro	Volta Redonda	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022292	ON022292	2018-03-20	Brazil	Sudeste	São Paulo	Itapetininga	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022668	ON022668	2018-03-20	Brazil	Sudeste	São Paulo	Itapetininga	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022593	ON022593	2018-03-21	Brazil	Sudeste	São Paulo	Taubaté	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022315	ON022315	2018-03-21	Brazil	Sudeste	São Paulo	Vinhedo	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022298	ON022298	2018-03-23	Brazil	Sudeste	São Paulo	Peruíbe	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022312	ON022312	2018-03-24	Brazil	Sudeste	São Paulo	Taubaté	10172	Non-human primate	Callithrix	Hill et al	2022-03-16
+ON022313	ON022313	2018-03-24	Brazil	Sudeste	São Paulo	Ubatuba	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022694	ON022694	2018-03-25	Brazil	Sudeste	São Paulo	São Miguel Arcanjo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022669	ON022669	2018-03-26	Brazil	Sudeste	São Paulo	Tambaú	10172	Non-human primate	Callicebus	Hill et al	2022-03-16
+MK583181	MK583181	2018-03-27	Brazil	Sudeste	São Paulo	São Lourenço da Serra	10943	Human	Homo sapiens	Cunha et al	2019-02-28
+ON022351	ON022351	2018-03-27	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022542	ON022542	2018-03-28	Brazil	Sudeste	São Paulo	Guarulhos	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022541	ON022541	2018-03-28	Brazil	Sudeste	São Paulo	São Bento do Sapucaí	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022308	ON022308	2018-04-02	Brazil	Sudeste	São Paulo	São Sebastião	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022457	ON022457	2018-04-03	Brazil	Sudeste	Rio de Janeiro	Cachoeiras de Macacu	10172	Non-human primate	Callithrix	Hill et al	2022-03-16
+ON022465	ON022465	2018-04-03	Brazil	Sudeste	Rio de Janeiro	Vassouras	10172	Non-human primate	Callithrix	Hill et al	2022-03-16
+ON022394	ON022394	2018-04-06	Brazil	Sudeste	Minas Gerais	Tiradentes	10172	Non-human primate	Callithrix penicillata	Hill et al	2022-03-16
+ON022441	ON022441	2018-04-09	Brazil	Sudeste	Rio de Janeiro	Itatiaia	10172	Non-human primate	Callicebus	Hill et al	2022-03-16
+ON022376	ON022376	2018-04-11	Brazil	Sudeste	Minas Gerais	Conceição do Rio Verde	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022309	ON022309	2018-04-11	Brazil	Sudeste	São Paulo	São Sebastião	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022543	ON022543	2018-04-11	Brazil	Sudeste	São Paulo	Ubatuba	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022448	ON022448	2018-04-12	Brazil	Sudeste	Rio de Janeiro	Itatiaia	10172	Non-human primate	Callithrix	Hill et al	2022-03-16
+ON022462	ON022462	2018-04-13	Brazil	Sudeste	Rio de Janeiro	Volta Redonda	10172	Non-human primate	Callithrix	Hill et al	2022-03-16
+ON022544	ON022544	2018-04-15	Brazil	Sudeste	São Paulo	Ubatuba	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022314	ON022314	2018-04-16	Brazil	Sudeste	São Paulo	Valinhos	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022377	ON022377	2018-04-17	Brazil	Sudeste	Minas Gerais	Brás Pires	10172	Non-human primate	Callithrix penicillata	Hill et al	2022-03-16
+ON022442	ON022442	2018-04-17	Brazil	Sudeste	Rio de Janeiro	Cachoeiras de Macacu	10172	Non-human primate	Callithrix	Hill et al	2022-03-16
+ON022352	ON022352	2018-04-18	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022307	ON022307	2018-04-20	Brazil	Sudeste	São Paulo	São Sebastião	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022295	ON022295	2018-04-23	Brazil	Sudeste	São Paulo	Jarinu	10172	Mosquito	Haemagogus leucocelaenus	Hill et al	2022-03-16
+MK882603	MK882603	2018-04-24	Brazil	Sudeste	Rio de Janeiro	Silva Jardim	10169	Human	Homo sapiens	Giovanetti et al	2019-05-03
+MK882600	MK882600	2018-04-24	Brazil	Sudeste	Rio de Janeiro	Silva Jardim	10169	Human	Homo sapiens	Giovanetti et al	2019-05-03
+ON022595	ON022595	2018-05-03	Brazil	Sudeste	São Paulo	São Sebastião	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022306	ON022306	2018-05-13	Brazil	Sudeste	São Paulo	São Miguel Arcanjo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022289	ON022289	2018-05-23	Brazil	Sudeste	São Paulo	Igaratá	10172	Mosquito	Haemagogus janthinomys capricornii	Hill et al	2022-03-16
+ON022290	ON022290	2018-05-23	Brazil	Sudeste	São Paulo	Igaratá	10172	Mosquito	Haemagogus leucocelaenus	Hill et al	2022-03-16
+ON022291	ON022291	2018-05-28	Brazil	Sudeste	São Paulo	Igaratá	10172	Mosquito	Haemagogus leucocelaenus	Hill et al	2022-03-16
+ON022293	ON022293	2018-05-28	Brazil	Sudeste	São Paulo	Jacareí	10172	Mosquito	Haemagogus leucocelaenus	Hill et al	2022-03-16
+ON022294	ON022294	2018-05-28	Brazil	Sudeste	São Paulo	Jacareí	10172	Mosquito	Haemagogus leucocelaenus	Hill et al	2022-03-16
+ON022733	ON022733	2018-06-04	Brazil	Sudeste	Rio de Janeiro	Rio de Janeiro	9884	Non-human primate	Callithrix	Hill et al	2022-03-16
+ON022583	ON022583	2018-06-05	Brazil	Sudeste	São Paulo	São Sebastião	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022577	ON022577	2018-06-08	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022660	ON022660	2018-06-15	Brazil	Sudeste	São Paulo	Caraguatatuba	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022286	ON022286	2018-06-25	Brazil	Sudeste	São Paulo	Caçapava	10172	Mosquito	Haemagogus janthinomys capricornii	Hill et al	2022-03-16
+ON022724	ON022724	2018-07-02	Brazil	Sudeste	Rio de Janeiro	Angra dos Reis	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022305	ON022305	2018-07-04	Brazil	Sudeste	São Paulo	São José dos Campos	10172	Mosquito	Haemagogus janthinomys capricornii	Hill et al	2022-03-16
+ON022304	ON022304	2018-07-04	Brazil	Sudeste	São Paulo	São José dos Campos	10172	Mosquito	Haemagogus leucocelaenus	Hill et al	2022-03-16
+ON022287	ON022287	2018-07-20	Brazil	Sudeste	São Paulo	Caraguatatuba	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022728	ON022728	2018-09-02	Brazil	Sudeste	Rio de Janeiro	Teresópolis	9884	Human	Homo sapiens	Hill et al	2022-03-16
+MK457700	MK457700	2018-10-14	Nigeria				10493	Human	Homo sapiens	Ajogbasile et al	2019-01-28
+MK457701	MK457701	2018-10-22	Nigeria				10684	Human	Homo sapiens	Ajogbasile et al	2019-01-28
+MW308134	MW308134	2018-10-26	Brazil	Sudeste	São Paulo	Cunha	10955	Human	Homo sapiens	Cunha et al	2020-11-27
+MK292067	MK292067	2018-11-19	Netherlands				10770	Human	Homo sapiens	Cotten et al	2018-12-12
+ON022283	ON022283	2018-11-21	Brazil	Sudeste	São Paulo	Águas de Lindóia	10172	Non-human primate	Callicebus	Hill et al	2022-03-16
+ON022746	ON022746	2018-XX-XX	Brazil	Sudeste	São Paulo	São Paulo	10172	Human	Homo sapiens	Hill et al	2022-03-16
+MZ604873	MZ604873	2018-XX-XX	Brazil				10185	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604868	MZ604868	2018-XX-XX	Brazil				10377	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604840	MZ604840	2018-XX-XX	Brazil				10276	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604866	MZ604866	2018-XX-XX	Brazil				10836	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604861	MZ604861	2018-XX-XX	Brazil				10283	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604856	MZ604856	2018-XX-XX	Brazil				10504	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604865	MZ604865	2018-XX-XX	Brazil				10836	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604842	MZ604842	2018-XX-XX	Brazil				10288	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604876	MZ604876	2018-XX-XX	Brazil				10306	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604859	MZ604859	2018-XX-XX	Brazil				10279	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604872	MZ604872	2018-XX-XX	Brazil				9813	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604870	MZ604870	2018-XX-XX	Brazil				10274	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604862	MZ604862	2018-XX-XX	Brazil				10335	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604845	MZ604845	2018-XX-XX	Brazil				10289	Human	Homo sapiens	Salles et al	2021-07-21
+MW960207	MW960207	2018-XX-XX	Central African Republic				10830	Human	Homo sapiens	Simo Tchetgna et al	2021-04-16
+OM938989	OM938989	2018-XX-XX	France				10862	Other	vero cells	Esson et al	2022-03-07
+MN958078	MN958078	2018-XX-XX	Nigeria				10611	Human	Homo sapiens	Ajogbasile et al	2020-01-17
+ON022319	ON022319	2019-01-01	Brazil	Sudeste	São Paulo	Iguape	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022555	ON022555	2019-01-09	Brazil	Sudeste	São Paulo	Osasco	10172	Human	Homo sapiens	Hill et al	2022-03-16
+MK533792	MK533792	2019-01-10	Brazil	Sudeste	Rio de Janeiro	Casimiro de Abreu	11007	Non-human primate	Alouatta guariba clamitans	Abreu et al	2019-02-18
+ON022556	ON022556	2019-01-14	Brazil	Sudeste	São Paulo	Eldorado	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022557	ON022557	2019-01-14	Brazil	Sudeste	São Paulo	Eldorado	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022546	ON022546	2019-01-15	Brazil	Sudeste	São Paulo	Eldorado	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022545	ON022545	2019-01-15	Brazil	Sudeste	São Paulo	Eldorado	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022368	ON022368	2019-01-15	Brazil	Sudeste	São Paulo	Itapeva	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022696	ON022696	2019-01-15	Brazil	Sudeste	São Paulo	São Paulo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+ON022547	ON022547	2019-01-18	Brazil	Sudeste	São Paulo	Eldorado	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022548	ON022548	2019-01-19	Brazil	Sudeste	São Paulo	Cananéia	10172	Human	Homo sapiens	Hill et al	2022-03-16
+MW308135	MW308135	2019-01-20	Brazil	Sudeste	São Paulo	Iporanga	10963	Human	Homo sapiens	Cunha et al	2020-11-27
+ON022558	ON022558	2019-01-20	Brazil	Sudeste	São Paulo	Iporanga	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022563	ON022563	2019-01-20	Brazil	Sudeste	São Paulo	Iporanga	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022367	ON022367	2019-01-21	Brazil	Sudeste	São Paulo	Iporanga	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+OP508593	OP508593	2019-01-22	Brazil				10101	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+ON022549	ON022549	2019-01-29	Brazil	Sudeste	São Paulo	Cajati	9884	Human	Homo sapiens	Hill et al	2022-03-16
+ON022550	ON022550	2019-01-30	Brazil	Sudeste	São Paulo	São Paulo	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022369	ON022369	2019-01-31	Brazil	Sudeste	São Paulo	Barra do Chapéu	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022559	ON022559	2019-01-31	Brazil	Sudeste	São Paulo	Cajati	10172	Human	Homo sapiens	Hill et al	2022-03-16
+OP508590	OP508590	2019-01-31	Brazil				10128	Human	Homo sapiens	Giovanetti et al	2022-09-21
+OP508675	OP508675	2019-02-01	Brazil				10170	Mosquito	Haemagogus janthinomis/capricornii	Giovanetti et al	2022-09-21
+OP508587	OP508587	2019-02-01	Brazil				10055	Human	Homo sapiens	Giovanetti et al	2022-09-21
+ON022560	ON022560	2019-02-06	Brazil	Sudeste	São Paulo	Barra do Turvo	10172	Human	Homo sapiens	Hill et al	2022-03-16
+MN708496	MN708496	2019-02-07	Belgium				10862			Kum et al	2019-11-18
+MN708495	MN708495	2019-02-07	Belgium				10862			Kum et al	2019-11-18
+MN708497	MN708497	2019-02-07	Belgium				10862			Kum et al	2019-11-18
+MN708493	MN708493	2019-02-07	Belgium				10862			Kum et al	2019-11-18
+MN708491	MN708491	2019-02-07	Belgium				10862			Kum et al	2019-11-18
+MN708490	MN708490	2019-02-07	Belgium				10862			Kum et al	2019-11-18
+MN708492	MN708492	2019-02-07	Belgium				10862			Kum et al	2019-11-18
+MN708494	MN708494	2019-02-07	Belgium				10862			Kum et al	2019-11-18
+MN708489	MN708489	2019-02-07	Belgium				10862			Kum et al	2019-11-18
+ON022562	ON022562	2019-02-07	Brazil	Sudeste	São Paulo	Barra do Turvo	10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022561	ON022561	2019-02-07	Brazil	Sudeste	São Paulo	Barra do Turvo	10172	Human	Homo sapiens	Hill et al	2022-03-16
+MW249091	MW249091	2019-02-07	France				10714	Human	Homo sapiens	Bakoa et al	2020-11-10
+MW249074	MW249074	2019-02-07	France				10715	Human	Homo sapiens	Bakoa et al	2020-11-10
+MW249083	MW249083	2019-02-07	France				10715	Human	Homo sapiens	Bakoa et al	2020-11-10
+MW249087	MW249087	2019-02-07	France				10727	Human	Homo sapiens	Bakoa et al	2020-11-10
+MW249077	MW249077	2019-02-07	France				10717	Human	Homo sapiens	Bakoa et al	2020-11-10
+MW249094	MW249094	2019-02-07	France				10715	Human	Homo sapiens	Bakoa et al	2020-11-10
+MW249088	MW249088	2019-02-07	France				10715	Human	Homo sapiens	Bakoa et al	2020-11-10
+MW249086	MW249086	2019-02-07	France				10715	Human	Homo sapiens	Bakoa et al	2020-11-10
+MW249092	MW249092	2019-02-07	France				10715	Human	Homo sapiens	Bakoa et al	2020-11-10
+MW249076	MW249076	2019-02-07	France				10715	Human	Homo sapiens	Bakoa et al	2020-11-10
+MW249079	MW249079	2019-02-07	France				10715	Human	Homo sapiens	Bakoa et al	2020-11-10
+MW249090	MW249090	2019-02-07	France				10714	Human	Homo sapiens	Bakoa et al	2020-11-10
+MW249089	MW249089	2019-02-07	France				10714	Human	Homo sapiens	Bakoa et al	2020-11-10
+MW249093	MW249093	2019-02-07	France				10716	Human	Homo sapiens	Bakoa et al	2020-11-10
+MW249078	MW249078	2019-02-07	France				10727	Human	Homo sapiens	Bakoa et al	2020-11-10
+MW249075	MW249075	2019-02-07	France				10715	Human	Homo sapiens	Bakoa et al	2020-11-10
+MW249084	MW249084	2019-02-07	France				10715	Human	Homo sapiens	Bakoa et al	2020-11-10
+MW249095	MW249095	2019-02-07	France				10715	Human	Homo sapiens	Bakoa et al	2020-11-10
+MW249085	MW249085	2019-02-07	France				10714	Human	Homo sapiens	Bakoa et al	2020-11-10
+MW249082	MW249082	2019-02-07	France				10714	Human	Homo sapiens	Bakoa et al	2020-11-10
+MW249080	MW249080	2019-02-07	France				10862	Human	Homo sapiens	Bakoa et al	2020-11-10
+MW249081	MW249081	2019-02-07	France				10714	Human	Homo sapiens	Bakoa et al	2020-11-10
+MN708488	MN708488	2019-02-07	France				10862			Kum et al	2019-11-18
+ON022551	ON022551	2019-02-17	Brazil	Sudeste	São Paulo	Registro	10172	Human	Homo sapiens	Hill et al	2022-03-16
+OP508592	OP508592	2019-02-18	Brazil				10165	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+ON022370	ON022370	2019-02-19	Brazil				10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+ON022552	ON022552	2019-02-24	Brazil	Sudeste	São Paulo	Barra do Turvo	10172	Human	Homo sapiens	Hill et al	2022-03-16
+OP508676	OP508676	2019-03-01	Brazil	Sul	Paraná	Paranaguá	10141	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508591	OP508591	2019-03-14	Brazil				10086	Human	Homo sapiens	Giovanetti et al	2022-09-21
+OP508682	OP508682	2019-03-20	Brazil	Sul	Paraná	São José dos Pinhais	10208	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508594	OP508594	2019-03-21	Brazil				10050	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508614	OP508614	2019-03-30	Brazil				10083	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+ON022676	ON022676	2019-04-16	Brazil	Sudeste	São Paulo	Itapetininga	10172	Non-human primate	Non-human primate	Hill et al	2022-03-16
+OP508595	OP508595	2019-04-16	Brazil				10085	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508596	OP508596	2019-04-23	Brazil				10077	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508688	OP508688	2019-04-29	Brazil	Sul	Paraná	Carambeí	10529	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508597	OP508597	2019-05-20	Brazil				9981	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508598	OP508598	2019-05-27	Brazil				10106	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508599	OP508599	2019-11-13	Brazil				10090	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508600	OP508600	2019-11-21	Brazil				10076	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+MN737509	MN737509	2019-11-21	Brazil				10862			Andrade et al	2019-11-26
+OP508601	OP508601	2019-11-26	Brazil				10113	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508602	OP508602	2019-11-28	Brazil				10094	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508605	OP508605	2019-12-03	Brazil				9955	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508603	OP508603	2019-12-04	Brazil				9994	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508604	OP508604	2019-12-05	Brazil				9948	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+MZ604838	MZ604838	2019-XX-XX	Brazil				10261	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604854	MZ604854	2019-XX-XX	Brazil				10866	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604875	MZ604875	2019-XX-XX	Brazil				10279	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604847	MZ604847	2019-XX-XX	Brazil				10277	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604863	MZ604863	2019-XX-XX	Brazil				10287	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604852	MZ604852	2019-XX-XX	Brazil				10282	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604848	MZ604848	2019-XX-XX	Brazil				10838	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604871	MZ604871	2019-XX-XX	Brazil				10864	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604851	MZ604851	2019-XX-XX	Brazil				10276	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604850	MZ604850	2019-XX-XX	Brazil				10282	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604843	MZ604843	2019-XX-XX	Brazil				10081	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604874	MZ604874	2019-XX-XX	Brazil				10283	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604849	MZ604849	2019-XX-XX	Brazil				10010	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604869	MZ604869	2019-XX-XX	Brazil				10279	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604841	MZ604841	2019-XX-XX	Brazil				10282	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604846	MZ604846	2019-XX-XX	Brazil				10881	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604855	MZ604855	2019-XX-XX	Brazil				10205	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604853	MZ604853	2019-XX-XX	Brazil				10866	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604858	MZ604858	2019-XX-XX	Brazil				10858	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604844	MZ604844	2019-XX-XX	Brazil				10279	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604864	MZ604864	2019-XX-XX	Brazil				10849	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604860	MZ604860	2019-XX-XX	Brazil				10272	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604839	MZ604839	2019-XX-XX	Brazil				10258	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604857	MZ604857	2019-XX-XX	Brazil				10850	Human	Homo sapiens	Salles et al	2021-07-21
+MZ604867	MZ604867	2019-XX-XX	Brazil				10854	Human	Homo sapiens	Salles et al	2021-07-21
+OM938990	OM938990	2019-XX-XX	France				10862	Other	vero cells	Esson et al	2022-03-07
+OP508606	OP508606	2020-01-04	Brazil				9974	Non-human primate	Alouatta guariba clamitans	Giovanetti et al	2022-09-21
+OP508696	OP508696	2020-01-06	Brazil	Sul	Paraná	Balsa Nova	10158	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508608	OP508608	2020-01-09	Brazil				10012	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508607	OP508607	2020-01-12	Brazil				9889	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508609	OP508609	2020-01-15	Brazil				9949	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508613	OP508613	2020-01-16	Brazil				9968	Non-human primate	Alouatta guariba clamitans	Giovanetti et al	2022-09-21
+OP508700	OP508700	2020-01-20	Brazil	Sul	Paraná	Antônio Olinto	10218	Non-human primate	Alouatta guariba clamitans	Giovanetti et al	2022-09-21
+OP508620	OP508620	2020-01-20	Brazil				10091	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508610	OP508610	2020-01-20	Brazil				10090	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508612	OP508612	2020-01-20	Brazil				10090	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508611	OP508611	2020-01-20	Brazil				10077	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508706	OP508706	2020-01-21	Brazil	Sul	Santa Catarina	Pomerode	10558	Non-human primate	Allouatta clamitans	Giovanetti et al	2022-09-21
+OP508617	OP508617	2020-01-23	Brazil				10051	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508615	OP508615	2020-01-26	Brazil				10054	Non-human primate	Alouatta guariba clamitans	Giovanetti et al	2022-09-21
+OP508616	OP508616	2020-01-28	Brazil				10075	Non-human primate	Alouatta guariba clamitans	Giovanetti et al	2022-09-21
+OP508631	OP508631	2020-01-29	Brazil				10120	Non-human primate	non-human primate (NHP)	Giovanetti et al	2022-09-21
+OP508618	OP508618	2020-01-30	Brazil				10080	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508621	OP508621	2020-01-31	Brazil				10082	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508619	OP508619	2020-02-03	Brazil				10051	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508622	OP508622	2020-02-07	Brazil				10080	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508623	OP508623	2020-02-12	Brazil				10061	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508627	OP508627	2020-02-17	Brazil				10072	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508629	OP508629	2020-02-19	Brazil				10072	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508628	OP508628	2020-02-24	Brazil				10085	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508626	OP508626	2020-02-24	Brazil				9975	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508625	OP508625	2020-02-25	Brazil				10087	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508632	OP508632	2020-02-27	Brazil				10110	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508636	OP508636	2020-02-28	Brazil				10075	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+ON245434	ON245434	2020-02-XX	Nigeria				7875	Human	Homo sapiens	Oguzie et al	2022-04-11
+OP508624	OP508624	2020-03-03	Brazil				10077	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508634	OP508634	2020-03-05	Brazil				10081	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508633	OP508633	2020-03-09	Brazil				10075	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508630	OP508630	2020-03-09	Brazil				10054	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508635	OP508635	2020-04-09	Brazil				10087	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508681	OP508681	2020-04-22	Brazil	Sul	Paraná	Cruz Machado	10466	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508637	OP508637	2020-05-04	Brazil				10104	Non-human primate	Alouatta guariba clamitans	Giovanetti et al	2022-09-21
+MT505351	MT505351	2020-05-19	USA				11519			Baker et al	2020-05-20
+MT505352	MT505352	2020-05-19	USA				11519			Baker et al	2020-05-20
+OP508639	OP508639	2020-06-18	Brazil				10088	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508638	OP508638	2020-06-18	Brazil				10099	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508640	OP508640	2020-08-14	Brazil				10077	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508641	OP508641	2020-08-14	Brazil				10087	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508642	OP508642	2020-11-04	Brazil				10069	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508574	OP508574	2020-11-06	Brazil	Centro-Oeste	Goiás	Goiânia	10311	Non-human primate	Alouatta caraya	Giovanetti et al	2022-09-21
+OP508575	OP508575	2020-11-06	Brazil	Centro-Oeste	Goiás	Goiânia	10318	Non-human primate	Alouatta caraya	Giovanetti et al	2022-09-21
+OP508643	OP508643	2020-11-13	Brazil				10068	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508645	OP508645	2020-11-18	Brazil				10080	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508644	OP508644	2020-11-18	Brazil				10148	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508648	OP508648	2020-11-19	Brazil				10079	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508646	OP508646	2020-11-19	Brazil				10079	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+ON245435	ON245435	2020-11-XX	Nigeria				8558	Human	Homo sapiens	Oguzie et al	2022-04-11
+OP508571	OP508571	2020-12-03	Brazil	Centro-Oeste	Distrito Federal	Brasília	10322	Non-human primate	Callithrix penicillata	Giovanetti et al	2022-09-21
+OP508572	OP508572	2020-12-03	Brazil	Centro-Oeste	Goiás	Luziânia	10288	Non-human primate	Alouatta caraya	Giovanetti et al	2022-09-21
+OP508570	OP508570	2020-12-04	Brazil	Centro-Oeste	Distrito Federal	Brasília	9788	Non-human primate	Callithrix penicillata	Fonseca et al	2022-09-20
+OP508573	OP508573	2020-12-08	Brazil	Centro-Oeste	Goiás	Goiânia	10235	Non-human primate	Alouatta caraya	Giovanetti et al	2022-09-21
+OP508647	OP508647	2020-12-08	Brazil				10100	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508649	OP508649	2020-12-10	Brazil				10103	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508651	OP508651	2020-12-30	Brazil				10079	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+MZ595204	MZ595204	2020-XX-XX	Senegal				10516	Human	Homo sapiens	Diagne et al	2021-07-15
+MZ595203	MZ595203	2020-XX-XX	Senegal				10519	Human	Homo sapiens	Diagne et al	2021-07-15
+MZ595183	MZ595183	2020-XX-XX	Senegal				10619	Mosquito	mosquito	Diagne et al	2021-07-15
+MZ595196	MZ595196	2020-XX-XX	Senegal				10598	Mosquito	mosquito	Diagne et al	2021-07-15
+MZ595191	MZ595191	2020-XX-XX	Senegal				10637	Mosquito	mosquito	Diagne et al	2021-07-15
+MZ595192	MZ595192	2020-XX-XX	Senegal				10601	Mosquito	mosquito	Diagne et al	2021-07-15
+MZ595194	MZ595194	2020-XX-XX	Senegal				10598	Mosquito	mosquito	Diagne et al	2021-07-15
+MZ595198	MZ595198	2020-XX-XX	Senegal				10530	Mosquito	mosquito	Diagne et al	2021-07-15
+MZ595182	MZ595182	2020-XX-XX	Senegal				10643	Mosquito	mosquito	Diagne et al	2021-07-15
+MZ595189	MZ595189	2020-XX-XX	Senegal				10657	Mosquito	mosquito	Diagne et al	2021-07-15
+MZ595188	MZ595188	2020-XX-XX	Senegal				10637	Mosquito	mosquito	Diagne et al	2021-07-15
+MZ595197	MZ595197	2020-XX-XX	Senegal				10643	Mosquito	mosquito	Diagne et al	2021-07-15
+MZ595186	MZ595186	2020-XX-XX	Senegal				10650	Mosquito	mosquito	Diagne et al	2021-07-15
+MZ595185	MZ595185	2020-XX-XX	Senegal				10603	Mosquito	mosquito	Diagne et al	2021-07-15
+MZ595193	MZ595193	2020-XX-XX	Senegal				10651	Mosquito	mosquito	Diagne et al	2021-07-15
+MZ595187	MZ595187	2020-XX-XX	Senegal				10596	Mosquito	mosquito	Diagne et al	2021-07-15
+MZ595184	MZ595184	2020-XX-XX	Senegal				10535	Mosquito	mosquito	Diagne et al	2021-07-15
+MZ595190	MZ595190	2020-XX-XX	Senegal				10637	Mosquito	mosquito	Diagne et al	2021-07-15
+MZ595199	MZ595199	2020-XX-XX	Senegal				10605	Mosquito	mosquito	Diagne et al	2021-07-15
+MZ595195	MZ595195	2020-XX-XX	Senegal				10652	Mosquito	mosquito	Diagne et al	2021-07-15
+OP508714	OP508714	2021-01-12	Brazil	Sul	Santa Catarina	Mafra	10221	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508650	OP508650	2021-01-19	Brazil				9991	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508653	OP508653	2021-01-21	Brazil				10111	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+MZ712140	MZ712140	2021-01-25	Brazil				10164	Non-human primate	Alouatta guariba clamitans	Andrade et al	2021-08-04
+OP508652	OP508652	2021-01-29	Brazil				10086	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508683	OP508683	2021-02-03	Brazil	Sul	Santa Catarina	Curitibanos	10176	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+MZ712141	MZ712141	2021-02-03	Brazil				10172	Non-human primate	Alouatta guariba clamitans	Andrade et al	2021-08-04
+MZ712142	MZ712142	2021-02-03	Brazil				10172	Non-human primate	Alouatta guariba clamitans	Andrade et al	2021-08-04
+OP508689	OP508689	2021-02-05	Brazil	Sul	Rio Grande do Sul	Pinhal da Serra	10175	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508701	OP508701	2021-02-08	Brazil	Sul	Rio Grande do Sul	Pinhal da Serra	10161	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+MZ712136	MZ712136	2021-02-08	Brazil				10172	Non-human primate	Alouatta guariba clamitans	Andrade et al	2021-08-04
+MZ712143	MZ712143	2021-02-08	Brazil				10172	Non-human primate	Alouatta guariba clamitans	Andrade et al	2021-08-04
+OP508655	OP508655	2021-02-08	Brazil				10086	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508658	OP508658	2021-02-10	Brazil				10080	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508654	OP508654	2021-02-10	Brazil				10128	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508707	OP508707	2021-02-11	Brazil	Sul	Santa Catarina	São José do Cerrito	9778	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+MZ712144	MZ712144	2021-02-11	Brazil				10172	Non-human primate	Alouatta guariba clamitans	Andrade et al	2021-08-04
+OP508657	OP508657	2021-02-11	Brazil				10195	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508713	OP508713	2021-02-13	Brazil	Sul	Santa Catarina	Ponte Alta	10196	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508677	OP508677	2021-02-14	Brazil	Sul	Santa Catarina	Capão Alto	10180	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508656	OP508656	2021-02-14	Brazil				10101	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508684	OP508684	2021-02-15	Brazil	Sul	Santa Catarina	Campo Belo do Sul	10155	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508659	OP508659	2021-02-16	Brazil				10164	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508662	OP508662	2021-02-18	Brazil				10084	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508691	OP508691	2021-02-19	Brazil	Sul	Rio Grande do Sul	André da Rocha	10172	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+MZ712131	MZ712131	2021-02-19	Brazil				10172	Non-human primate	Alouatta guariba clamitans	Andrade et al	2021-08-04
+MZ712146	MZ712146	2021-02-19	Brazil				10172	Non-human primate	Alouatta guariba clamitans	Andrade et al	2021-08-04
+MZ712145	MZ712145	2021-02-19	Brazil				10172	Non-human primate	Alouatta guariba clamitans	Andrade et al	2021-08-04
+OP508666	OP508666	2021-02-19	Brazil				10156	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+MZ712139	MZ712139	2021-02-20	Brazil				10172	Non-human primate	Alouatta guariba clamitans	Andrade et al	2021-08-04
+OP508661	OP508661	2021-02-20	Brazil				10135	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508694	OP508694	2021-02-21	Brazil	Sul	Santa Catarina	Campo Belo do Sul	10329	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508703	OP508703	2021-02-22	Brazil	Sul	Santa Catarina	Lages	10159	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508708	OP508708	2021-02-22	Brazil	Sul	Santa Catarina	Rio Fortuna	10212	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508712	OP508712	2021-02-22	Brazil	Sul	Santa Catarina	Santa Rosa de Lima	10173	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+MZ712128	MZ712128	2021-02-22	Brazil				10172	Non-human primate	Alouatta guariba clamitans	Andrade et al	2021-08-04
+MZ712130	MZ712130	2021-02-22	Brazil				9473	Non-human primate	Alouatta guariba clamitans	Andrade et al	2021-08-04
+MZ712129	MZ712129	2021-02-22	Brazil				10172	Non-human primate	Alouatta guariba clamitans	Andrade et al	2021-08-04
+MZ712147	MZ712147	2021-02-22	Brazil				10172	Non-human primate	Alouatta guariba clamitans	Andrade et al	2021-08-04
+MZ712148	MZ712148	2021-02-22	Brazil				10172	Non-human primate	Alouatta guariba clamitans	Andrade et al	2021-08-04
+OP508663	OP508663	2021-02-22	Brazil				10144	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508667	OP508667	2021-02-23	Brazil				10086	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508685	OP508685	2021-02-24	Brazil	Sul	Rio Grande do Sul	Vacaria	10183	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+MZ712132	MZ712132	2021-02-24	Brazil				10172	Non-human primate	Alouatta guariba clamitans	Andrade et al	2021-08-04
+MZ712149	MZ712149	2021-02-24	Brazil				10172	Non-human primate	Alouatta guariba clamitans	Andrade et al	2021-08-04
+MZ712133	MZ712133	2021-02-25	Brazil				10172	Non-human primate	Alouatta guariba clamitans	Andrade et al	2021-08-04
+MZ712134	MZ712134	2021-02-25	Brazil				10172	Non-human primate	Alouatta guariba clamitans	Andrade et al	2021-08-04
+MZ712137	MZ712137	2021-02-26	Brazil				10172	Non-human primate	Alouatta guariba clamitans	Andrade et al	2021-08-04
+OP508664	OP508664	2021-02-27	Brazil				10100	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508697	OP508697	2021-03-02	Brazil	Sul	Rio Grande do Sul	Vacaria	10191	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508704	OP508704	2021-03-03	Brazil	Sul	Rio Grande do Sul	Vacaria	10445	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+MZ712138	MZ712138	2021-03-03	Brazil				10172	Non-human primate	Alouatta guariba clamitans	Andrade et al	2021-08-04
+MZ712127	MZ712127	2021-03-04	Brazil				10172	Non-human primate	Alouatta guariba clamitans	Andrade et al	2021-08-04
+MZ712135	MZ712135	2021-03-08	Brazil				10172	Non-human primate	Alouatta guariba clamitans	Andrade et al	2021-08-04
+OP508665	OP508665	2021-03-08	Brazil				10124	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508668	OP508668	2021-03-09	Brazil				10049	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508709	OP508709	2021-03-11	Brazil	Sul	Rio Grande do Sul	Muitos Capões	10186	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508660	OP508660	2021-03-11	Brazil				10120	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508705	OP508705	2021-03-12	Brazil	Sul	Santa Catarina	São José do Cerrito	10225	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508669	OP508669	2021-03-12	Brazil				10139	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508679	OP508679	2021-03-22	Brazil	Sul	Rio Grande do Sul	Lagoa Vermelha	10216	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508672	OP508672	2021-04-06	Brazil				10133	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508690	OP508690	2021-04-09	Brazil	Sul	Rio Grande do Sul	Campestre da Serra	10185	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508702	OP508702	2021-04-11	Brazil	Sul	Rio Grande do Sul	São Marcos	10158	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508670	OP508670	2021-04-11	Brazil				10179	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508671	OP508671	2021-04-13	Brazil				10108	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508674	OP508674	2021-04-16	Brazil				10090	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508673	OP508673	2021-04-22	Brazil				10134	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508710	OP508710	2021-04-26	Brazil	Sul	Rio Grande do Sul	Bom Jesus	10199	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508678	OP508678	2021-04-28	Brazil	Sul	Rio Grande do Sul	Guabiju	10547	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508687	OP508687	2021-04-28	Brazil	Sul	Rio Grande do Sul	Viamão	10158	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508692	OP508692	2021-05-01	Brazil	Sul	Rio Grande do Sul	Nova Petrópolis	10271	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508698	OP508698	2021-05-02	Brazil	Sul	Rio Grande do Sul	Feliz	10603	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508695	OP508695	2021-05-04	Brazil	Sul	Rio Grande do Sul	Farroupilha	10571	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508680	OP508680	2021-05-04	Brazil	Sul	Rio Grande do Sul	Flores da Cunha	10620	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508693	OP508693	2021-05-11	Brazil	Sul	Rio Grande do Sul	Caxias do Sul	10179	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508699	OP508699	2021-05-12	Brazil	Sul	Rio Grande do Sul	São Francisco de Paula	10202	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508711	OP508711	2021-05-27	Brazil	Sul	Santa Catarina	Blumenau	10185	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OP508686	OP508686	2021-06-01	Brazil	Sul	Rio Grande do Sul	Linha Nova	10493	Non-human primate	Alouatta sp.	Giovanetti et al	2022-09-21
+OL519587	OL519587	2021-08-25	Brazil				10172	Non-human primate	Alouatta caraya	Andrade et al	2021-11-12
+OL519589	OL519589	2021-08-25	Brazil				10172	Non-human primate	Alouatta caraya	Andrade et al	2021-11-12
+OL519588	OL519588	2021-08-25	Brazil				10172	Non-human primate	Alouatta caraya	Andrade et al	2021-11-12
+OP508576	OP508576	2021-09-14	Brazil				10172	Non-human primate	non-human primate (NHP)	Giovanetti et al	2022-09-21
+OM066735	OM066735	2021-10-26	Ghana				10478	Human	Homo sapiens	Bonney et al	2021-12-30
+OM066736	OM066736	2021-11-04	Ghana				10767	Human	Homo sapiens	Bonney et al	2021-12-30
+OM066737	OM066737	2021-11-04	Ghana				10825	Human	Homo sapiens	Bonney et al	2021-12-30
+OP508586	OP508586	2022-01-17	Brazil	Sudeste	Minas Gerais	Brasília de Minas	10194	Non-human primate	non-human primate (NHP)	Giovanetti et al	2022-09-21
+OP508585	OP508585	2022-01-17	Brazil	Sudeste	Minas Gerais	Brasília de Minas	10194	Non-human primate	non-human primate (NHP)	Giovanetti et al	2022-09-21
+OP508589	OP508589	2022-01-17	Brazil	Sudeste	Minas Gerais	Brasília de Minas	10196	Non-human primate	non-human primate (NHP)	Giovanetti et al	2022-09-21
+OP508583	OP508583	2022-01-17	Brazil	Sudeste	Minas Gerais	Brasília de Minas	10195	Non-human primate	non-human primate (NHP)	Giovanetti et al	2022-09-21
+OP508578	OP508578	2022-01-17	Brazil				10172	Non-human primate	non-human primate (NHP)	Giovanetti et al	2022-09-21
+OP508577	OP508577	2022-01-17	Brazil				10172	Non-human primate	non-human primate (NHP)	Giovanetti et al	2022-09-21
+OP508580	OP508580	2022-01-17	Brazil				10172	Non-human primate	non-human primate (NHP)	Giovanetti et al	2022-09-21
+OP508581	OP508581	2022-01-18	Brazil	Sudeste	Minas Gerais	Brasília de Minas	10195	Non-human primate	non-human primate (NHP)	Giovanetti et al	2022-09-21
+OP508582	OP508582	2022-01-18	Brazil	Sudeste	Minas Gerais	Brasília de Minas	10194	Non-human primate	non-human primate (NHP)	Giovanetti et al	2022-09-21
+OP508579	OP508579	2022-01-18	Brazil				10163	Non-human primate	non-human primate (NHP)	Giovanetti et al	2022-09-21
+OP508584	OP508584	2022-01-19	Brazil				10172	Non-human primate	non-human primate (NHP)	Giovanetti et al	2022-09-21
+OP508588	OP508588	2022-03-12	Brazil	Sudeste	Minas Gerais	Ubaí	10194	Non-human primate	non-human primate (NHP)	Giovanetti et al	2022-09-21
+AY968064	AY968064		Angola				10823	Human	Homo sapiens	von Lindern et al	2005-03-18
+KF907504	KF907504		Bolivia				10657	Human	Homo sapiens	Aubry et al	2013-11-26
+ON022678	ON022678		Brazil	Sudeste	São Paulo	Morro Agudo	10172	Non-human primate	Alouatta	Hill et al	2022-03-16
+MH666060	MH666060		Brazil				10233	Mosquito	Haemagogus janthinomys	Cunha et al	2018-07-24
+MH666059	MH666059		Brazil				9678	Mosquito	Haemagogus leucocelaenus	Cunha et al	2018-07-24
+ON022721	ON022721		Brazil				10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022564	ON022564		Brazil				10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022553	ON022553		Brazil				10172	Human	Homo sapiens	Hill et al	2022-03-16
+ON022719	ON022719		Brazil				10172	Human	Homo sapiens	Hill et al	2022-03-16
+DQ100292	DQ100292		Brazil				10862			Engel et al	2005-06-21
+FJ654700	FJ654700		China				10862			Li et al	2009-01-22
+AY603338	AY603338		Cote d'Ivoire				10862			Bae et al	2004-04-20
+DQ235229	DQ235229		Ethiopia				10823			von Lindern et al	2005-10-10
+MH444796	MH444796		France				10846			Beck et al	2018-06-06
+MH444795	MH444795		France				10844			Beck et al	2018-06-06
+MH444797	MH444797		France				10846			Beck et al	2018-06-06
+MH444794	MH444794		France				10841			Beck et al	2018-06-06
+AY572535	AY572535		Gambia				10862			Niedrig et al	2004-03-09
+MN211303	MN211303		Nigeria				10645	Human	Homo sapiens	Ajogbasile et al	2019-07-23
+MN211306	MN211306		Nigeria				10798	Human	Homo sapiens	Ajogbasile et al	2019-07-23
+MN211309	MN211309		Nigeria				10564	Human	Homo sapiens	Ajogbasile et al	2019-07-23
+MN211302	MN211302		Nigeria				10718	Human	Homo sapiens	Ajogbasile et al	2019-07-23
+MN211301	MN211301		Nigeria				10752	Human	Homo sapiens	Ajogbasile et al	2019-07-23
+MN211307	MN211307		Nigeria				10652	Human	Homo sapiens	Ajogbasile et al	2019-07-23
+MN211304	MN211304		Nigeria				10734	Human	Homo sapiens	Ajogbasile et al	2019-07-23
+MN211305	MN211305		Nigeria				10638	Human	Homo sapiens	Ajogbasile et al	2019-07-23
+MN211310	MN211310		Nigeria				10656	Human	Homo sapiens	Ajogbasile et al	2019-07-23
+MN211308	MN211308		Nigeria				10640	Human	Homo sapiens	Ajogbasile et al	2019-07-23
+MN211311	MN211311		Nigeria				10758	Human	Homo sapiens	Ajogbasile et al	2019-07-23
+MT107250	MT107250		Russia				10862			Gmyl et al	2020-02-21
+OP796361	OP796361		Russia				10862			Kuznetsova et al	2022-11-07
+MH444798	MH444798		Senegal				10851	Human	Homo sapiens	Beck et al	2018-06-06
+MF004383	MF004383		Sudan				10822	Human	Homo sapiens	Baronti et al	2017-04-29
+AY968065	AY968065		Uganda				10823	Human	Homo sapiens	von Lindern et al	2005-03-18
+OK573009	OK573009		USA				10635			Mehari et al	2021-09-28
+NC_002031	NC_002031						10862			 et al	2004-09-09
+LP837229	LP837229						10838			BARBERO et al	
+LP981866	LP981866						10838			BARBERO et al	
+JN811141	JN811141						10862			Beasley et al	2011-10-04
+JN811140	JN811140						10862			Beasley et al	2011-10-04
+JN811143	JN811143						10862			Beasley et al	2011-10-04
+JN811142	JN811142						10862			Beasley et al	2011-10-04
+MN106241	MN106241						10772			Beauclair et al	2019-06-26
+MN106242	MN106242						10784			Beauclair et al	2019-06-26
+KF769015	KF769015						10838			Beck et al	2013-10-25
+KF769016	KF769016						10833			Beck et al	2013-10-25
+X15062	X15062						10862			Bouloy et al	1989-04-12
+MG051217	MG051217						10730			Da Costa et al	2017-10-05
+MG051218	MG051218						10727			Da Costa et al	2017-10-05
+MT956628	MT956628						10854			Davis et al	2020-09-02
+MT956630	MT956630						10816			Davis et al	2020-09-02
+MT956629	MT956629						10822			Davis et al	2020-09-02
+JX503529	JX503529						10811			Dugan et al	2012-08-14
+U17067	U17067						10862			Galler et al	1994-11-09
+U17066	U17066						10862			Galler et al	1994-11-09
+LQ460610	LQ460610						8681			HAGEN et al	
+LQ564352	LQ564352						8681			HAGEN et al	
+MA388208	MA388208						8681			Hagen et al	
+LY683293	LY683293						10862			Jones et al	
+LY683279	LY683279						10862			Jones et al	
+JA784080	JA784080						10776			LEE CYNTHIA K et al	
+JA784083	JA784083						10785			LEE CYNTHIA K et al	
+JA784081	JA784081						10788			LEE CYNTHIA K et al	
+JA784082	JA784082						10811			LEE CYNTHIA K et al	
+JA784086	JA784086						10862			LEE CYNTHIA K et al	
+JB319328	JB319328						10776			LEE et al	
+JB319329	JB319329						10788			LEE et al	
+JB319330	JB319330						10811			LEE et al	
+JB319331	JB319331						10785			LEE et al	
+JB319334	JB319334						10862			LEE et al	
+FV537410	FV537410						10862			Millar et al	
+FV537411	FV537411						10862			Millar et al	
+FV537412	FV537412						10862			Millar et al	
+FV537409	FV537409						10862			Millar et al	
+U54798	U54798						10862			Pisano et al	1996-04-12
+AF094612	AF094612						10760			Pisano et al	1998-09-24
+JA630638	JA630638						11564			PUSHKO et al	
+LP010436	LP010436						11564			PUSHKO et al	
+CS805341	CS805341						10862			Quentin-Millet et al	
+FU267585	FU267585						10862			Quentin-millet et al	
+X03700	X03700						10862			Rice et al	
+LP837643	LP837643						10838			SCHLEGL et al	
+LY720078	LY720078						10862			Seo et al	
+JN628280	JN628280						10862			Stock et al	2011-08-29
+JN628279	JN628279						10862			Stock et al	2011-08-29
+JN628281	JN628281						10862			Stock et al	2011-08-29
+AY640589	AY640589						10862			Tsetsarkin et al	2004-05-28
+OF120370	OF120370						10862			Vangelisti et al	
+OF120369	OF120369						10862			Vangelisti et al	
+OF120373	OF120373						10862			Vangelisti et al	
+OF120366	OF120366						10862			Vangelisti et al	
+OF120372	OF120372						10862			Vangelisti et al	
+OF120367	OF120367						10862			Vangelisti et al	
+OF120371	OF120371						10833			Vangelisti et al	
+OF120368	OF120368						10862			Vangelisti et al	
+U21056	U21056						10862			Wang et al	1995-02-14
+U21055	U21055						10862			Wang et al	1995-02-14
+AF052444	AF052444						10862			Xie et al	1998-03-07
+AF052438	AF052438						10862			Xie et al	1998-03-07
+AF052445	AF052445						10862			Xie et al	1998-03-07
+AF052446	AF052446						10862			Xie et al	1998-03-07
+AF052439	AF052439						10862			Xie et al	1998-03-07
+AF052437	AF052437						10862			Xie et al	1998-03-07

@@ -1,0 +1,64 @@
+{
+  "title": "Genomic epidemiology of (add pathogen name here)",
+  "build_url": "https://github.com/username/repo_name",
+  "maintainers": [
+    {"name": "Add your name here",
+     "url": "Add your webpage URL here"}
+  ],
+  "colorings": [
+    {
+      "key": "country",
+      "title": "Country",
+      "type": "categorical"
+    },
+    {
+      "key": "region",
+      "title": "Region",
+      "type": "categorical"
+    },
+    {
+      "key": "division",
+      "title": "Division",
+      "type": "categorical"
+    },
+    {
+      "key": "location",
+      "title": "Location",
+      "type": "categorical"
+    },
+    {
+      "key": "host_type",
+      "title": "Host",
+      "type": "categorical"
+    },
+    {
+      "key": "author",
+      "title": "Authors",
+      "type": "categorical"
+    }
+  ],
+  "geo_resolutions": [
+    "country",
+    "division",
+    "location"
+  ],
+  "display_defaults": {
+    "color_by": "division",
+    "distance_measure": "num_date",
+    "geo_resolution": "location",
+    "map_triplicate": true,
+    "branch_label": "clade"
+  },
+  "filters": [
+    "country",
+    "division",
+    "location",
+    "author",
+    "host_type"
+  ],
+  "panels": [
+    "tree",
+    "map",
+    "entropy"
+  ]
+}

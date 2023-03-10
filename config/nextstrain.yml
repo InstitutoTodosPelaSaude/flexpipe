@@ -1,0 +1,36 @@
+name: nextstrain
+
+channels:
+- conda-forge
+- bioconda
+- defaults
+
+dependencies:
+- augur>=13
+- nextalign=1
+- nextstrain-cli
+- python>=3.6
+- nodejs>=10
+- git
+- pip
+- fiona
+- shapely
+- rasterio
+- pyproj
+- beautifulsoup4
+- geopandas
+- geopy
+- tabulate
+- snakemake-minimal
+- unidecode
+
+- pip:
+  - awscli
+  - rethinkdb==2.3.0.post6
+  - pycountry-convert
+  - pycountry
+  - xlrd
+  - lxml
+  - openpyxl
+  - matplotlib
+  - colour

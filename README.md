@@ -33,7 +33,7 @@ If you need to install nexstrain in your computer, please [click here](https://g
 
 ## Author
 
-* **Anderson Brito, Instituto Todos pela Saúde** - [Website](https://www.itps.org.br/membros) - anderson.brito@itps.org.br
+* **Anderson Brito, Instituto Todos pela Saúde (ITpS)** - [Website](https://www.itps.org.br/membros) - anderson.brito@itps.org.br
 
 ## License
 
