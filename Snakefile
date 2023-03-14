@@ -2,18 +2,13 @@ rule all:
 	input:
 		auspice = "auspice/results.json",
 
-# Triggers the data
+# Triggers the data and metadata preparation steps
 rule prepare:
 	input:
 		"results/final_metadata.tsv",
 		"results/final_dataset.fasta",
 		"config/latlongs.tsv",
 		"config/colour_scheme.tsv"
-
-rule options:
-	params:
-		threads = 1
-options = rules.options.params
 
 
 # Define file names
@@ -45,7 +40,12 @@ rule parameters:
 		clock_rate = 0.0003,
 		clock_std_dev = 0.0001,
 
+rule options:
+	params:
+		threads = 1
 
+
+options = rules.options.params
 files = rules.files.params
 parameters = rules.parameters.params
 

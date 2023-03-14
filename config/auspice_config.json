@@ -1,6 +1,6 @@
 {
-  "title": "Genomic epidemiology of (add pathogen name here)",
-  "build_url": "https://github.com/username/repo_name",
+  "title": "Add your project title here",
+  "build_url": "https://github.com/InstitutoTodosPelaSaude/flexpipe",
   "maintainers": [
     {"name": "Add your name here",
      "url": "Add your webpage URL here"}
