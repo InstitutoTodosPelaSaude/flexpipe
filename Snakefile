@@ -12,7 +12,7 @@ rule prepare:
 
 rule options:
 	params:
-		threads = 12
+		threads = 1
 options = rules.options.params
 
 
