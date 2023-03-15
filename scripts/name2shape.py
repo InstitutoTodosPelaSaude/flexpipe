@@ -1,3 +1,8 @@
+# Created by: Anderson Brito
+# Email: andersonfbrito@gmail.com
+# Release date: 29-12-2021
+# Last update: 2023-03-15
+
 from geopy.geocoders import Nominatim
 from shapely.geometry import Point
 from difflib import SequenceMatcher
