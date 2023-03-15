@@ -1,3 +1,9 @@
+# Created by: Anderson Brito
+# Email: andersonfbrito@gmail.com
+# Release date: 2023-01-11
+# Last update: 2023-03-15
+
+
 import pandas as pd
 import argparse
 from bs4 import BeautifulSoup as BS
