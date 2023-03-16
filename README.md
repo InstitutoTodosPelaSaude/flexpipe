@@ -5,11 +5,11 @@ This repository contains the essential files to create a [nextstrain build](http
 
 
 ## Getting started
-
+<!--- 
 ### For Windows users
 
 Native Linux and Mac Users are all set, and can move on to step #2. Windows users, however, must install a Linux subsystem before being able to install nextstrain. Visit [this website](https://docs.nextstrain.org/en/latest/install.html) and follow its step-by-step guide about how to [setup Linux on Windows](https://docs.microsoft.com/en-us/windows/wsl/install-win10) (please choose 'Ubuntu 18.04 LTS or superior versions'), and how to launch Linux and [create a user account and password](https://learn.microsoft.com/en-us/shows/one-dev-minute/how-do-i-configure-a-wsl-distro-to-launch-in-the-home-directory-in-windows-terminal--one-dev-questio) using command line.
-
+-->
 ### Learning basic UNIX commands
 
 Familiarize yourself with basic UNIX commands for navigating and managing files and folders in a command line interface ("Terminal"). In this platform you can perform all simple tasks you usually do using mouse clicks: to copy, move, delete, access, and create files and folders. All you need to do is to type a few commands. Below you can find the main commands required to operate in a Terminal. Please access [this page](https://commons.wikimedia.org/wiki/File:Unix_command_cheatsheet.pdf) to learn a few more commands. Please practice the use of the commands listed below, so that you are able to navigate from/to directories ("folders") and manage files and folders in command line interfaces.
