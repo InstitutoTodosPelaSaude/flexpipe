@@ -41,9 +41,9 @@ This project is licensed under the MIT License.
 # FAQs
 
 
-1. A checkpoint issue during the `rule tree` prevents the flexpipe run to progress. How do I solve that?
+### 1. A checkpoint issue during the `rule tree` prevents the flexpipe run to progress. How do I solve that?
 
-If the workflow is executed and it fails to complete the `rule tree`, the previously created files will not allow `iqtree` to resume a new run. As a result, you may see the error message like this:
+If the workflow is executed and it fails to complete the `rule tree`, the previously created files will not allow `iqtree` to resume a new run. As a result, you may see an error message like this:
 
 ```
 Checkpoint (results/alignments/masked.fasta.ckp.gz) indicates that a previous run successfully finished
