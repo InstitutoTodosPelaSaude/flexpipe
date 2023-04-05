@@ -36,3 +36,30 @@ If you need to install nexstrain in your computer, please [click here](https://g
 ## License
 
 This project is licensed under the MIT License.
+
+
+# FAQs
+
+
+1. A checkpoint issue during the `rule tree` prevents the flexpipe run to progress. How do I solve that?
+
+If the workflow is executed and it fails to complete the `rule tree`, the previously created files will not allow `iqtree` to resume a new run. As a result, you may see the error message like this:
+
+```
+Checkpoint (results/alignments/masked.fasta.ckp.gz) indicates that a previous run successfully finished
+Use `--redo` option if you really want to redo the analysis and overwrite all output files.
+Use `--redo-tree` option if you want to restore ModelFinder and only redo tree search.
+Use `--undo` option if you want to continue previous run when changing/adding options.
+```
+
+To resume the run and solve that issue you need to explicitly asks `iqtree` to `-redo` the phylogenetic inference. To do so, add an argument `--redo` argument in the `iqtree` command line in `rule tree`:
+
+```
+iqtree \
+	-s {input.alignment} \
+	-bb {params.bootstrap} \
+	-nt {params.threads} \
+	-m {params.model} \
+	--redo
+```
+
