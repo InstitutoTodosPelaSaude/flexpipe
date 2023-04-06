@@ -38,7 +38,7 @@ If you need to install nexstrain in your computer, please [click here](https://g
 This project is licensed under the MIT License.
 
 
-# FAQs
+## FAQs
 
 
 ### 1. A checkpoint issue during the `rule tree` prevents the flexpipe run to progress. How do I solve that?
