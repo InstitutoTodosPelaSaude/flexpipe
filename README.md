@@ -65,7 +65,7 @@ iqtree \
 
 ### 2. Why `rule refine` stops with "ERROR: unsupported rooting mechanisms or root not found"?
 
-This error is mostly likely by missing root genome(s). For example, if the phylogeny has to be rooted based on the branch leading to the genome 'JF912185', such genome must be listed among the ones listed in `config/keep.txt`. If the rooting genomes are not included in that file, they will not be included in the alignment, and this error message with be display:
+This error is mostly likely caused by missing root genome(s). For example, if the phylogeny has to be rooted based on the branch leading to the genome 'JF912185', such genome must be listed among the ones listed in `config/keep.txt`. If the rooting genomes are not included in that file, they will not be included in the alignment, and this error message with be displayed:
 
 ```
 augur refine is using TreeTime version 0.9.4
@@ -74,7 +74,7 @@ augur refine is using TreeTime version 0.9.4
 ERROR: unsupported rooting mechanisms or root not found
 ```
 
-'JF912185' is a Yellow Fever Virus genome. If you are not running a YFV analysis, you need to add an appropriate genome in `config/keep.txt`, and also change the root [genome(s)](https://github.com/InstitutoTodosPelaSaude/flexpipe/blob/main/Snakefile#L39) listed in `rule parameters`:
+'JF912185' is a Yellow Fever Virus (YFV) genome. If you are not running a YFV analysis, you need to add an appropriate genome in `config/keep.txt`, and also change the root [genome(s)](https://github.com/InstitutoTodosPelaSaude/flexpipe/blob/main/Snakefile#L39) listed in `rule parameters`:
 
 ```
 rule parameters:
