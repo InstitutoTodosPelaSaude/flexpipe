@@ -83,7 +83,9 @@ rule parameters:
 		mask_3prime = 548,
 		bootstrap = 1, # default = 1, but ideally it should be >= 100
 		model = "GTR",
-		**root = "JF912185"**, # set one or more genomes to root the phylogeny
+		
+		root = "JF912185", # <<< set one or more genomes to root the phylogeny
+		
 		clock_rate = 0.0003,
 		clock_std_dev = 0.0001,
 ```
