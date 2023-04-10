@@ -67,11 +67,23 @@ iqtree \
 
 This error is mostly likely by missing root genome(s). For example, if the phylogeny has to be rooted based on the branch leading to the genome 'JF912185', such genome must be listed among the ones listed in `config/keep.txt`. If the rooting genomes are not included in that file, they will not be included in the alignment, and this error message with be display:
 
-
+```
 augur refine is using TreeTime version 0.9.4
 0.82        TreeTime.reroot: with method or node: JF912185
 
 ERROR: unsupported rooting mechanisms or root not found
+```
 
-'JF912185' is an Yellow Fever Virus genome. If you are not running an YFV analysis, you need to add an appropriate genome in `config/keep.txt`, and also change the root [genome(s)](https://github.com/InstitutoTodosPelaSaude/flexpipe/blob/main/Snakefile#L39) listed in `rule parameters`:
+'JF912185' is a Yellow Fever Virus genome. If you are not running a YFV analysis, you need to add an appropriate genome in `config/keep.txt`, and also change the root [genome(s)](https://github.com/InstitutoTodosPelaSaude/flexpipe/blob/main/Snakefile#L39) listed in `rule parameters`:
 
+```
+rule parameters:
+	params:
+		mask_5prime = 142,
+		mask_3prime = 548,
+		bootstrap = 1, # default = 1, but ideally it should be >= 100
+		model = "GTR",
+		**root = "JF912185"**, # set one or more genomes to root the phylogeny
+		clock_rate = 0.0003,
+		clock_std_dev = 0.0001,
+```
