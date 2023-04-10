@@ -65,7 +65,7 @@ iqtree \
 
 ### 2. Why does `rule refine` display the message "ERROR: unsupported rooting mechanisms or root not found"?
 
-This error is mostly likely caused by missing root genome(s). For example, if the phylogeny has to be rooted based on the branch leading to the genome 'JF912185', such genome must be listed among the ones in `config/keep.txt`. If the rooting genomes are not included in that file, they will not be included in the alignment, and this error message with be displayed:
+This error is mostly likely caused by missing root genome(s). For example, if the phylogeny has to be rooted based on the branch leading to the genome 'JF912185', such genome must be listed among the ones in `config/keep.txt`. If the rooting genomes are not included in that file, they will not be included in the alignment, and this error message will be prompted:
 
 ```
 augur refine is using TreeTime version 0.9.4
