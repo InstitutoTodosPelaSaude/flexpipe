@@ -63,3 +63,6 @@ iqtree \
 	--redo
 ```
 
+### 2. Why `rule refine` stops with "ERROR: unsupported rooting mechanisms or root not found"?
+
+This error is mostly likely related to the lack of the rooting genome(s) in the 
