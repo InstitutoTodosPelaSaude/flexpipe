@@ -31,15 +31,6 @@ If you need to install nexstrain in your computer, please [click here](https://g
 ### Creating a nextstrain build
 [Click here](https://github.com/InstitutoTodosPelaSaude/flexpipe/blob/master/nextstrain_tutorial.pdf) to download a tutorial with a step-by-step tutorial on how to prepare your working directory (files and folders), run `augur`, and visualize the results with `auspice`. Please check [this webiste](https://neherlab.org/201910_RIVM_nextstrain.html) for more information about the distinct functionalities of nextstrain.
 
-## Author
-
-* **Anderson Brito, Instituto Todos pela Saúde (ITpS)** - [Website](https://www.itps.org.br/membros) - anderson.brito@itps.org.br
-
-## License
-
-This project is licensed under the MIT License.
-
-
 ## FAQs
 
 
@@ -91,3 +82,12 @@ rule parameters:
 		clock_rate = 0.0003,
 		clock_std_dev = 0.0001,
 ```
+
+
+## Author
+
+* **Anderson Brito, Instituto Todos pela Saúde (ITpS)** - [Website](https://www.itps.org.br/membros) - anderson.brito@itps.org.br
+
+## License
+
+This project is licensed under the MIT License.
