@@ -4,7 +4,7 @@ Flexible nextstrain pipeline for genomic epidemiology of pathogens.
 This repository contains the essential files to create a [nextstrain build](https://nextstrain.org/). By using this pipeline users can to perform genomic epidemiology analyses and visualize phylogeographic results to track pathogen spread using genomic data and their associated metadata.
 
 ![alt text](https://github.com/InstitutoTodosPelaSaude/flexpipe/blob/main/overview.png)
-__Nextstrain panel with results overview__ 
+Nextstrain panel with results overview
 
 ## Getting started
 <!--- 
