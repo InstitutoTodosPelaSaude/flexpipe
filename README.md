@@ -55,6 +55,7 @@ iqtree \
 	-m {params.model} \
 	--redo
 ```
+---
 
 ### 2. Why does `rule refine` display the message "ERROR: unsupported rooting mechanisms or root not found"?
 
@@ -82,7 +83,120 @@ rule parameters:
 		clock_rate = 0.0003,
 		clock_std_dev = 0.0001,
 ```
+---
 
+### 3. How does the hierarchical colour system work in flexpipe?
+
+The `colour_maker.py` script allows you to define colours for categories and subcategories in a hierarchical way. You only need to manually define the hue for the **top-level categories**, and the script automatically generates gradient shades for the lower levels.
+
+**Practical example:**
+- Level 1 (category): `continent` → you define the hue (e.g. blue for Europe)
+- Level 2 (subcategory): `country` → the script automatically generates blue shades for each European country
+
+**Columns in the metadata**
+
+The metadata must have **one column per hierarchical level** you want to colour. For example:
+
+| continent | country |
+|-----------|---------|
+| Europe | France |
+| Europe | Germany |
+| Americas | Brazil |
+
+**The `name2hue.tsv` file (colour scheme)**
+
+You need to create a TSV file with **only the top-level categories** and their corresponding hues. Hues are numbers from 0 to 350 (colour wheel) or matplotlib colormap names (e.g. `Blues_r`).
+
+```tsv
+category	hue
+Europe	210
+Americas	120
+Asia	30
+Africa	50
+Oceania	270
+```
+
+> **Tip:** Hues follow the colour wheel in increments of 10 (0 = red, 120 = green, 210 = blue, 270 = purple, etc.).
+
+**Configuring `colour_maker.py` in a rule in the Snakefile**
+
+The correct approach is to set the column groups in the `params` of the `colours` rule, **not directly in `--levels`** inside the shell block. This keeps the shell commands clean and makes the configuration easier to maintain.
+
+**Recommended structure**
+
+```python
+rule colours:
+    message:
+        """
+        Assigning colour scheme for defined columns in {input.matrix}
+        """
+    input:
+        matrix = rules.process_metadata.output.final_metadata,
+        scheme = files.colscheme,
+    params:
+        host = "host_type host",              # top level → lower level
+        geo  = "region division location",    # top → mid → lower level
+    output:
+        colours1      = temp("config/col_hosts.tsv"),
+        colours2      = temp("config/col_geo.tsv"),
+        colour_scheme = "config/colour_scheme.tsv",
+    shell:
+        """
+        python scripts/colour_maker.py \
+            --input {input.matrix} \
+            --colours {input.scheme} \
+            --levels {params.host} \
+            --output {output.colours1}
+
+        python scripts/colour_maker.py \
+            --input {input.matrix} \
+            --colours {input.scheme} \
+            --levels {params.geo} \
+            --output {output.colours2}
+
+        python scripts/multi_merger.py \
+            --path "./config" \
+            --regex "col_*" \
+            --columns "field, value, hex_color" \
+            --output {output.colour_scheme}
+        """
+```
+
+**What each param means**
+
+| Param | Example value | Interpretation |
+|-------|--------------|----------------|
+| `host` | `"host_type host"` | `host_type` is the top level (e.g. *human*, *avian*); `host` is the actual species |
+| `geo` | `"region division location"` | `region` → `division` → `location`, from broadest to most specific |
+
+> **Rule:** The **first column** in each param must be the one with entries defined in `name2hue.tsv`. The remaining columns receive derived colours automatically.
+
+**Other use case examples**
+
+Any pair (or trio) of hierarchical columns works the same way:
+
+```python
+params:
+    lineage = "lineage_major lineage_minor"
+    geo     = "continent country"
+    clade   = "clade subclade variant"
+```
+
+**Summary workflow**
+
+```
+metadata.tsv             name2hue.tsv
+(with hierarchical   →   (hues for top-level
+ columns)                 categories only)
+        ↓
+   colour_maker.py --levels [top_col] [lower_col]
+        ↓
+  col_*.tsv (temporary files per group)
+        ↓
+   multi_merger.py
+        ↓
+  colour_scheme.tsv  ← used by Auspice/Nextstrain
+```
 
 ## Author
 
