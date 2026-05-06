@@ -6,6 +6,7 @@ channels:
 - defaults
 
 dependencies:
+- awscli
 - augur>=13
 - nextalign=1
 - nextstrain-cli
@@ -25,7 +26,6 @@ dependencies:
 - unidecode
 
 - pip:
-  - awscli
   - rethinkdb==2.3.0.post6
   - pycountry-convert
   - pycountry
