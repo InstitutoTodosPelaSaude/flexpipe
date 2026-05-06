@@ -1,0 +1,42 @@
+files:
+  contextual_sequences: "data/sequences.fasta"
+  new_sequences: "data/new_sequences.fasta"
+  aligned: "config/aligned.fasta"
+  metadata: "data/metadata.tsv"
+  new_metadata: "data/new_metadata.xlsx"
+  cache: "config/cache_coordinates.tsv"
+  lat_longs: "config/latlongs.tsv"
+  colscheme: "config/name2hue.tsv"
+  keep: "config/keep.txt"
+  ignore: "config/ignore.txt"
+  reference: "config/reference.gb"
+  clades: "config/clades.tsv"
+  auspice_config: "config/auspice_config.json"
+
+parameters:
+  mask_5prime: 142
+  mask_3prime: 548
+  mask_sites: "1"
+  bootstrap: 1
+  model: "GTR"
+  root: "JF912185"
+  clock_rate: 0.0003
+  clock_std_dev: 0.0001
+  coalescent: "skyline"
+  date_inference: "marginal"
+  divergence_units: "mutations"
+  clock_filter_iqd: 4
+  ancestral_inference: "joint"
+
+options:
+  threads: 1
+
+coordinates:
+  columns: "country division location"
+
+colours:
+  host: "host_type host"
+  geo: "region division location"
+
+traits:
+  columns: "division location host_type"

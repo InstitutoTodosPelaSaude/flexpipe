@@ -1,6 +1,18 @@
+configfile: "config/config.yaml"
+
+# Configuration dictionaries loaded from config/config.yaml
+files = config["files"]
+parameters = config["parameters"]
+options = config["options"]
+coordinates_config = config["coordinates"]
+colours_config = config["colours"]
+traits_config = config["traits"]
+
+
 rule all:
 	input:
 		auspice = "auspice/results.json",
+
 
 # Triggers the data and metadata preparation steps
 rule prepare:
@@ -11,44 +23,6 @@ rule prepare:
 		"config/colour_scheme.tsv"
 
 
-# Define file names
-rule files:
-	params:
-		contextual_sequences = "data/sequences.fasta",
-		new_sequences = "data/new_sequences.fasta",
-		aligned = "config/aligned.fasta",
-		metadata = "data/metadata.tsv",
-		new_metadata = "data/new_metadata.xlsx",
-		cache = "config/cache_coordinates.tsv",
-		lat_longs = "config/latlongs.tsv",
-		colscheme = "config/name2hue.tsv",
-		keep = "config/keep.txt",
-		ignore = "config/ignore.txt",
-		reference = "config/reference.gb",
-		clades = "config/clades.tsv",
-		auspice_config = "config/auspice_config.json",
-
-
-# Define parameters
-rule parameters:
-	params:
-		mask_5prime = 142,
-		mask_3prime = 548,
-		bootstrap = 1, # default = 1, but ideally it should be >= 100
-		model = "GTR",
-		root = "JF912185", # set one or more genomes to root the phylogeny
-		clock_rate = 0.0003,
-		clock_std_dev = 0.0001,
-
-rule options:
-	params:
-		threads = 1
-
-
-options = rules.options.params
-files = rules.files.params
-parameters = rules.parameters.params
-
 rule add_sequences:
 	message:
 		"""
@@ -57,10 +31,10 @@ rule add_sequences:
 		- Prevent unwanted sequences from being incorporated in the initial dataset.
 		"""
 	input:
-		genomes = files.contextual_sequences,
-		new_sequences = files.new_sequences,
-		include = files.keep,
-		exclude = files.ignore
+		genomes = files["contextual_sequences"],
+		new_sequences = files["new_sequences"],
+		include = files["keep"],
+		exclude = files["ignore"]
 	output:
 		sequences = temp("results/temp_dataset.fasta")
 	shell:
@@ -83,8 +57,8 @@ rule process_metadata:
 		"""
 	input:
 		genomes = rules.add_sequences.output.sequences,
-		metadata1 = files.metadata,
-		metadata2 = files.new_metadata
+		metadata1 = files["metadata"],
+		metadata2 = files["new_metadata"]
 	output:
 		final_metadata = "results/final_metadata.tsv",
 		final_sequences = "results/final_dataset.fasta",
@@ -109,11 +83,11 @@ rule coordinates:
 		"""
 	input:
 		metadata = rules.process_metadata.output.final_metadata,
-		cache = files.cache
+		cache = files["cache"]
 	params:
-		columns = "country division location"
+		columns = coordinates_config["columns"]
 	output:
-		latlongs = "config/latlongs.tsv"
+		latlongs = files["lat_longs"]
 	shell:
 		"""
 		python scripts/get_coordinates.py \
@@ -122,9 +96,8 @@ rule coordinates:
 			--cache {input.cache} \
 			--output {output.latlongs}
 
-		cp {output.latlongs} config/cache_coordinates.tsv
+		cp {output.latlongs} {input.cache}
 		"""
-
 
 
 rule colours:
@@ -134,14 +107,14 @@ rule colours:
 		"""
 	input:
 		matrix = rules.process_metadata.output.final_metadata,
-		scheme = files.colscheme,
+		scheme = files["colscheme"]
 	params:
-		host = "host_type host",
-		geo = "region division location",
+		host = colours_config["host"],
+		geo = colours_config["geo"]
 	output:
 		colours1 = temp("config/col_hosts.tsv"),
 		colours2 = temp("config/col_geo.tsv"),
-		colour_scheme = "config/colour_scheme.tsv",
+		colour_scheme = "config/colour_scheme.tsv"
 	shell:
 		"""
 		python scripts/colour_maker.py \
@@ -164,9 +137,7 @@ rule colours:
 		"""
 
 
-
 ### STARTING NEXTSTRAIN ANALYSES ###
-
 
 
 ### Aligning the sequences using MAFFT
@@ -178,10 +149,10 @@ rule align:
 		"""
 	input:
 		sequences = rules.process_metadata.output.final_sequences,
-		aligned = files.aligned,
-		reference = files.reference,
+		aligned = files["aligned"],
+		reference = files["reference"]
 	params:
-		threads = options.threads
+		threads = options["threads"]
 	output:
 		alignment = "results/alignments/aligned.fasta"
 	shell:
@@ -196,6 +167,7 @@ rule align:
 
 			# --existing-alignment {input.aligned} \
 
+
 ### Masking alignment sites
 rule mask:
 	message:
@@ -208,9 +180,9 @@ rule mask:
 	input:
 		alignment = rules.align.output.alignment
 	params:
-		mask_from_beginning = parameters.mask_5prime,
-		mask_from_end = parameters.mask_3prime,
-		mask_sites = "1" # set here any extra sites to be masked
+		mask_from_beginning = parameters["mask_5prime"],
+		mask_from_end = parameters["mask_3prime"],
+		mask_sites = parameters["mask_sites"]
 	output:
 		alignment = "results/alignments/masked.fasta"
 	shell:
@@ -230,7 +202,7 @@ rule mask:
 # 	input:
 # 		alignment = rules.mask.output.alignment
 # 	params:
-# 		threads = options.threads,
+# 		threads = options["threads"],
 # 	output:
 # 		tree = "results/trees/masked.tree"
 # 	shell:
@@ -241,6 +213,7 @@ rule mask:
 # 			--output {output.tree}
 # 		"""
 
+
 rule tree:
 	message:
 		"""
@@ -249,9 +222,9 @@ rule tree:
 	input:
 		alignment = rules.mask.output.alignment
 	params:
-		threads = options.threads,
-		bootstrap = parameters.bootstrap,
-		model = parameters.model,
+		threads = options["threads"],
+		bootstrap = parameters["bootstrap"],
+		model = parameters["model"]
 	output:
 		tree = "results/trees/masked.tree"
 	shell:
@@ -267,7 +240,6 @@ rule tree:
 
 
 ## Renaming taxa in bootstrap tree
-
 rule rename:
 	message:
 		"""
@@ -275,7 +247,7 @@ rule rename:
 		"""
 	input:
 		tree = rules.tree.output.tree,
-		names = rules.process_metadata.output.rename,
+		names = rules.process_metadata.output.rename
 	params:
 		format = "tree",
 		action = "rename"
@@ -293,7 +265,6 @@ rule rename:
 
 
 ### Running TreeTime to estimate time for ancestral genomes
-
 rule refine:
 	message:
 		"""
@@ -307,12 +278,13 @@ rule refine:
 		alignment = rules.mask.output.alignment,
 		metadata = rules.process_metadata.output.final_metadata
 	params:
-		root = parameters.root,
-		coalescent = "skyline",
-		clock_rate = parameters.clock_rate,
-		clock_std_dev = parameters.clock_std_dev,
-		date_inference = "marginal",
-		unit = "mutations"
+		root = parameters["root"],
+		coalescent = parameters["coalescent"],
+		clock_rate = parameters["clock_rate"],
+		clock_std_dev = parameters["clock_std_dev"],
+		date_inference = parameters["date_inference"],
+		unit = parameters["divergence_units"],
+		clock_filter_iqd = parameters["clock_filter_iqd"]
 	output:
 		tree = "results/trees/tree.nwk",
 		node_data = "results/trees/branch_lengths.json"
@@ -328,7 +300,7 @@ rule refine:
 			--timetree \
 			--coalescent {params.coalescent} \
 			--date-confidence \
-			--clock-filter-iqd 4 \
+			--clock-filter-iqd {params.clock_filter_iqd} \
 			--clock-rate {params.clock_rate} \
 			--clock-std-dev {params.clock_std_dev} \
 			--divergence-units {params.unit} \
@@ -337,7 +309,6 @@ rule refine:
 
 
 ### Reconstructing ancestral sequences and mutations
-
 rule ancestral:
 	message:
 		"""
@@ -349,7 +320,7 @@ rule ancestral:
 	output:
 		node_data = "results/trees/nt_muts.json"
 	params:
-		inference = "joint"
+		inference = parameters["ancestral_inference"]
 	shell:
 		"""
 		augur ancestral \
@@ -361,7 +332,6 @@ rule ancestral:
 
 
 ## Performing amino acid translation
-
 rule translate:
 	message:
 		"""
@@ -370,7 +340,7 @@ rule translate:
 	input:
 		tree = rules.refine.output.tree,
 		node_data = rules.ancestral.output.node_data,
-		reference = files.reference,
+		reference = files["reference"]
 	output:
 		node_data = "results/trees/aa_muts.json"
 	shell:
@@ -384,14 +354,13 @@ rule translate:
 
 
 ### Inferring ancestral locations of genomes
-
 rule traits:
 	message: "Inferring ancestral traits for {params.columns!s}"
 	input:
 		tree = rules.refine.output.tree,
 		metadata = rules.process_metadata.output.final_metadata,
 	params:
-		columns = "division location host_type"
+		columns = traits_config["columns"]
 	output:
 		node_data = "results/trees/traits.json",
 	shell:
@@ -406,14 +375,13 @@ rule traits:
 
 
 ### Define clades based on sets of mutations
-
 rule clades:
 	message: " Labeling clades as specified in config/clades.tsv"
 	input:
 		tree = rules.refine.output.tree,
 		aa_muts = rules.translate.output.node_data,
 		nuc_muts = rules.ancestral.output.node_data,
-		clades = files.clades
+		clades = files["clades"]
 	output:
 		clade_data = "results/trees/clades.json"
 	shell:
@@ -427,7 +395,6 @@ rule clades:
 
 
 ### Generating final results for visualisation with auspice
-
 rule export:
 	message: "Exporting data files for for auspice"
 	input:
@@ -440,7 +407,7 @@ rule export:
 		colors = rules.colours.output.colour_scheme,
 		lat_longs = rules.coordinates.output.latlongs,
 		clades = rules.clades.output.clade_data,
-		auspice_config = files.auspice_config,
+		auspice_config = files["auspice_config"]
 	output:
 		auspice = rules.all.input.auspice,
 	shell:
@@ -457,7 +424,6 @@ rule export:
 
 
 ### Clearing the working directory (only executed when needed)
-
 rule clean:
 	message: "Removing directories: {params}"
 	params:
@@ -466,11 +432,11 @@ rule clean:
 		"config/aligned.fasta.ref.fasta",
 		"results",
 		"auspice"
-
 	shell:
 		"""
 		rm -rfv {params}
 		"""
+
 
 rule reset:
 	message: "Removing directories: {params}"
@@ -486,6 +452,7 @@ rule reset:
 		"""
 		rm -rfv {params}
 		"""
+
 
 rule delete:
 	message: "Deleting directory: {params}"
