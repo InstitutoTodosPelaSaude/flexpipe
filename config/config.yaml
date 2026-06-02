@@ -7,8 +7,8 @@ files:
   auspice_config: "config/auspice_config.json"
 
 parameters:
-  mask_5prime: 0          # YFV: no masking at 5' end for full-genome builds
-  mask_3prime: 0          # YFV: no masking at 3' end
+  mask_5prime: 142
+  mask_3prime: 548
   mask_sites: "1"
   ufboot: 1000
   model: "MFP"

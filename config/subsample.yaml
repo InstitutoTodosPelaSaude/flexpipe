@@ -25,4 +25,4 @@ samples:
     group_by:
       - division
       - year
-    sequences_per_group: 10
+    sequences_per_group: 20
