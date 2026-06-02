@@ -16,9 +16,8 @@ samples:
     query: "country == 'Brazil'"
     include: config/keep.txt
     exclude_where:
-      - "division="
       - "date="
     group_by:
       - division
       - year
-    sequences_per_group: 20
+    sequences_per_group: 100
