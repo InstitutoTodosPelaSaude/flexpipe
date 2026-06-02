@@ -96,6 +96,9 @@ HOST_HUES = {
     "black tufted-ear marmoset": _PRIMATE,
     "geoffroy's marmoset": _PRIMATE,
     "common marmoset":     _PRIMATE,
+    "azara's night monkey": _PRIMATE,
+    "owl monkey":          _PRIMATE,
+    "night monkey":        _PRIMATE,
     # ── Other mammals ────────────────────────────────────────────────────────
     "Mus musculus": 280, "mouse": 280, "house mouse": 280, "house mouse; mouse": 280,
     "Unknown": 340,
