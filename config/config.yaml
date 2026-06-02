@@ -1,0 +1,90 @@
+files:
+  keep:           "config/keep.txt"
+  ignore:         "config/ignore.txt"
+  cache:          "config/cache_coordinates.tsv"
+  reference:      "config/reference.gb"
+  clades:         "config/clades.tsv"
+  auspice_config: "config/auspice_config.json"
+
+parameters:
+  mask_5prime: 0          # YFV: no masking at 5' end for full-genome builds
+  mask_3prime: 0          # YFV: no masking at 3' end
+  mask_sites: "1"
+  ufboot: 1000
+  model: "MFP"
+  root: "least-squares"
+  coalescent: "skyline"
+  date_inference: "marginal"
+  divergence_units: "mutations"
+  clock_filter_iqd: 4
+  ancestral_inference: "joint"
+
+options:
+  threads: 4
+
+coordinates:
+  columns: "division location"   # Brazil-only build: no country-level coordinates
+
+colours:
+  clade:    "clade"
+  geo:      "region division location"
+  source:   "source"
+  data_use: "data_use"
+
+traits:
+  columns: "division location clade"
+
+subsampling:
+  random_seed: 42
+
+curation:
+  clade_levels: 1      # YFV genotypes are single-level (I, II, III, ...)
+  clade_separator: "."
+
+# ── Region source ────────────────────────────────────────────────────────────
+# "country"  : maps country → continent (global builds)
+# "division" : maps Brazilian state → macro-region (Brazil-only builds)
+region_source: "country"
+
+# ── Data source ──────────────────────────────────────────────────────────────
+# Use "pathoplexus" OR "ncbi" — never both at the same time.
+data_source: "pathoplexus"
+
+pathoplexus:
+  organism: "yellow-fever"
+  base_url: "https://lapis.pathoplexus.org"
+  metadata_endpoint: "details"
+  sequences_endpoint: "unalignedNucleotideSequences"
+  min_completeness: 0.70
+  # auth_token: ""       # leave blank for open-access data
+
+ncbi:
+  taxid: 11089             # Yellow fever virus; RSV-A: 12234, RSV-B: 12233, Flu A: 11320
+  genome_size: 10862       # bp (reference X03700.1 — 17D vaccine strain)
+  min_length: 0.7          # minimum as a fraction of genome_size
+  max_length: 1.1          # maximum as a fraction of genome_size
+  email: ""                # NCBI Entrez email (recommended; avoids rate-limiting)
+  api_key: ""              # optional; raises rate limit to 10 req/s
+
+viralqc:
+  conda_env: "viralQC"
+  clade_column: "clade"
+  datasets_dir: "/home/thales/datasets"
+  blast_database: "/home/thales/datasets/blast.fasta"
+  blast_database_metadata: "/home/thales/datasets/blast.tsv"
+
+qc:
+  genome_quality:
+    - "A"
+    - "B"
+  min_coverage: 0.70
+  required_columns:
+    - "strain"
+    - "date"
+    - "country"
+    - "clade"
+
+local_sequences:
+  enabled: false         # set to true to merge local surveillance sequences
+  metadata: "data/metadata.xlsx"
+  sequences: "data/new_sequences.fasta"

@@ -1,0 +1,28 @@
+# Subsampling for YFV Brazil build
+#
+# focal  : local ITpS surveillance sequences — always kept in full (no subsampling)
+# brazil : sequences from Pathoplexus — subsampled by state and year
+#
+# query (focal) restricts to ONLY matching sequences
+# include       forces strains regardless of other filters (config/keep.txt)
+# exclude       removes strains from all samples (config/ignore.txt)
+
+defaults:
+  min_date: 2015
+  exclude: config/ignore.txt
+
+samples:
+  focal:
+    query: "source == 'ITpS'"
+    include: config/keep.txt
+
+  brazil:
+    exclude_where:
+      - "source=ITpS"
+      - "country="
+      - "division="
+      - "date="
+    group_by:
+      - division
+      - year
+    sequences_per_group: 10

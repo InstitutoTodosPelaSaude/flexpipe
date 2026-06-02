@@ -1,2 +1,15 @@
 
 .DS_Store
+
+# Generated config files (recreated on each run)
+config/name2hue.tsv
+config/colour_scheme.tsv
+config/latlongs.tsv
+
+# Pipeline outputs
+results/
+auspice/
+.snakemake/
+
+# Temp files
+data/~$*
