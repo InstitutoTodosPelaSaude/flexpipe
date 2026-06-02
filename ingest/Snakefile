@@ -1,0 +1,312 @@
+configfile: "config/config.yaml"
+
+from types import SimpleNamespace
+
+_local   = config.get("local_sequences", {})
+_vqc     = config.get("viralqc", {})
+_sub     = config.get("subsampling", {})
+_coords    = config.get("coordinates", {})
+_colours   = config.get("colours", {})
+_ncbi      = config.get("ncbi", {})
+
+# "pathoplexus" (default) or "ncbi" — never both simultaneously
+_source = config.get("data_source", "pathoplexus")
+
+# Paths that downstream rules consume regardless of which source is active
+_RAW_METADATA  = f"results/ingest/{_source}_metadata.tsv"
+_RAW_SEQUENCES = f"results/ingest/{_source}_sequences.fasta"
+
+files = SimpleNamespace(**config["files"])
+
+
+rule all:
+    input:
+        sequences     = "results/subsampled/sequences.fasta",
+        metadata      = "results/subsampled/metadata.tsv",
+        latlongs      = "config/latlongs.tsv",
+        colour_scheme = "config/colour_scheme.tsv"
+
+
+# ─── Fetch + merge ────────────────────────────────────────────────────────────
+
+rule fetch_pathoplexus:
+    output:
+        metadata  = "results/ingest/pathoplexus_metadata.tsv",
+        sequences = "results/ingest/pathoplexus_sequences.fasta"
+    shell:
+        """
+        python scripts/fetch_pathoplexus.py \
+            --config           config/config.yaml \
+            --metadata-output  {output.metadata} \
+            --sequences-output {output.sequences}
+        """
+
+
+rule fetch_ncbi:
+    output:
+        metadata  = "results/ingest/ncbi_metadata.tsv",
+        sequences = "results/ingest/ncbi_sequences.fasta"
+    shell:
+        """
+        python scripts/fetch_ncbi.py \
+            --config           config/config.yaml \
+            --metadata-output  {output.metadata} \
+            --sequences-output {output.sequences}
+        """
+
+
+rule merge_local_sequences:
+    input:
+        ppx_metadata  = _RAW_METADATA,
+        ppx_sequences = _RAW_SEQUENCES
+    params:
+        local_metadata  = _local.get("metadata",  ""),
+        local_sequences = _local.get("sequences", ""),
+        enabled         = _local.get("enabled",   False)
+    output:
+        metadata  = "results/ingest/merged_metadata.tsv",
+        sequences = "results/ingest/merged_sequences.fasta"
+    shell:
+        """
+        python scripts/merge_local_sequences.py \
+            --pathoplexus-metadata  {input.ppx_metadata} \
+            --pathoplexus-sequences {input.ppx_sequences} \
+            --local-metadata        {params.local_metadata} \
+            --local-sequences       {params.local_sequences} \
+            --enabled               {params.enabled} \
+            --metadata-output       {output.metadata} \
+            --sequences-output      {output.sequences}
+        """
+
+
+# ─── QC + curation ───────────────────────────────────────────────────────────
+
+# ViralQC roda em todas as sequências (Pathoplexus + locais).
+# Usa BLAST + Nextclade internamente → genomeQuality (A/B/C/D) + coverage + clade.
+# Pathoplexus clade é preservado quando o ViralQC não atribui um.
+rule viralqc:
+    input:
+        sequences = rules.merge_local_sequences.output.sequences
+    params:
+        datasets_dir = _vqc.get("datasets_dir", "/home/thales/datasets"),
+        blast_db     = _vqc.get("blast_database", "/home/thales/datasets/blast.fasta"),
+        blast_meta   = _vqc.get("blast_database_metadata", "/home/thales/datasets/blast.tsv"),
+        conda_env    = _vqc.get("conda_env", "viralQC"),
+        cores        = config.get("options", {}).get("threads", 4)
+    output:
+        tsv = "results/viralqc/outputs/results.tsv"
+    shell:
+        """
+        mkdir -p results/viralqc
+        n=$(grep -c '^>' {input.sequences})
+        echo "Running ViralQC on $n sequences..."
+        conda run -n {params.conda_env} vqc run \
+            --input                   {input.sequences} \
+            --output-dir              results/viralqc \
+            --output-file             results.tsv \
+            --datasets-dir            {params.datasets_dir} \
+            --blast-database          {params.blast_db} \
+            --blast-database-metadata {params.blast_meta} \
+            --cores                   {params.cores} \
+            -v
+        """
+
+
+rule curate_qc:
+    input:
+        metadata  = rules.merge_local_sequences.output.metadata,
+        sequences = rules.merge_local_sequences.output.sequences,
+        viralqc   = rules.viralqc.output.tsv
+    output:
+        renamed   = temp("results/ingest/renamed_metadata.tsv"),
+        dated     = temp("results/ingest/dated_metadata.tsv"),
+        curated   = temp("results/ingest/curated_metadata.tsv"),
+        metadata  = "results/final_metadata.tsv",
+        sequences = "results/final_sequences.fasta"
+    params:
+        min_coverage = config.get("qc", {}).get("min_coverage", 0.70)
+    shell:
+        """
+        augur curate rename \
+            --metadata    {input.metadata} \
+            --id-column   accessionVersion \
+            --field-map   accessionVersion=strain \
+                          sampleCollectionDate=date \
+                          geoLocCountry=country \
+                          geoLocAdmin1=division \
+                          geoLocAdmin2=location \
+                          dataUseTerms=data_use \
+                          lineage=clade \
+            --output-metadata {output.renamed}
+
+        augur curate format-dates \
+            --metadata              {output.renamed} \
+            --date-fields           date \
+            --expected-date-formats '%Y-%m-%d' '%Y-%m' '%Y' '%d-%b-%Y' '%b-%Y' \
+            --output-metadata       {output.dated}
+
+        python scripts/curate.py \
+            --config    config/config.yaml \
+            --metadata  {output.dated} \
+            --nextclade {input.viralqc} \
+            --output    {output.curated}
+
+        augur filter \
+            --metadata        {output.curated} \
+            --sequences       {input.sequences} \
+            --query-columns   coverage:float \
+            --query           "coverage.isna() or coverage >= {params.min_coverage}" \
+            --exclude-where   "strain=" "date=" "genome_quality=C" "genome_quality=D" "genome_quality=" \
+            --output-metadata  {output.metadata} \
+            --output-sequences {output.sequences}
+        """
+
+
+# ─── Subsampling ──────────────────────────────────────────────────────────────
+
+rule prepare:
+    message:
+        "Subsampling: focal (ITpS + Brazil) always kept; context by country/year/clade_truncated"
+    input:
+        sequences = rules.curate_qc.output.sequences,
+        metadata  = rules.curate_qc.output.metadata,
+        config    = "config/subsample.yaml"
+    params:
+        seed = _sub.get("random_seed", 42)
+    output:
+        sequences = "results/subsampled/sequences.fasta",
+        metadata  = "results/subsampled/metadata.tsv"
+    shell:
+        """
+        mkdir -p results/subsampled
+        augur subsample \
+            --sequences        {input.sequences} \
+            --metadata         {input.metadata} \
+            --config           {input.config} \
+            --seed             {params.seed} \
+            --output-sequences {output.sequences} \
+            --output-metadata  {output.metadata}
+        echo "[subsample] total: $(grep -c '^>' {output.sequences}) sequences"
+        """
+
+
+# ─── Colours + coordinates ────────────────────────────────────────────────────
+
+rule generate_name2hue:
+    input:
+        metadata = rules.prepare.output.metadata
+    output:
+        name2hue = "config/name2hue.tsv"
+    shell:
+        """
+        python scripts/generate_name2hue.py \
+            --metadata {input.metadata} \
+            --config   config/config.yaml \
+            --output   {output.name2hue}
+        """
+
+
+rule coordinates:
+    message:
+        "Searching for coordinates for samples in {input.metadata}"
+    input:
+        metadata = rules.prepare.output.metadata,
+    params:
+        columns = _coords.get("columns", "country division location"),
+        cache   = files.cache
+    output:
+        latlongs = "config/latlongs.tsv"
+    shell:
+        """
+        python scripts/get_coordinates.py \
+            --metadata {input.metadata} \
+            --columns  {params.columns} \
+            --cache    {params.cache} \
+            --output   {output.latlongs}
+
+        python3 -c "
+import os, pandas as pd
+cols = ['level', 'name', 'lat', 'lon']
+new   = pd.read_csv('{output.latlongs}', sep='\t', header=None, names=cols).dropna(subset=['name'])
+cache = pd.read_csv('{params.cache}', sep='\t', header=None, names=cols).dropna(subset=['name']) if os.path.exists('{params.cache}') else pd.DataFrame(columns=cols)
+merged = pd.concat([cache, new]).drop_duplicates(subset=['level', 'name'], keep='first')
+merged.to_csv('{params.cache}', sep='\t', index=False, header=False)
+print(f'Cache updated: {{len(merged)}} entries in {params.cache}')
+"
+        """
+
+
+rule colours:
+    message:
+        "Assigning colour scheme for columns in {input.matrix}"
+    input:
+        matrix = rules.prepare.output.metadata,
+        scheme = rules.generate_name2hue.output.name2hue
+    params:
+        host     = _colours.get("host",     "host"),
+        clade    = _colours.get("clade",    "clade_truncated clade"),
+        geo      = _colours.get("geo",      "region country"),
+        source   = _colours.get("source",   "source"),
+        data_use = _colours.get("data_use", "data_use")
+    output:
+        colours1      = temp("config/col_hosts.tsv"),
+        colours2      = temp("config/col_geo.tsv"),
+        colours3      = temp("config/col_clade.tsv"),
+        colours4      = temp("config/col_source.tsv"),
+        colours5      = temp("config/col_data_use.tsv"),
+        colour_scheme = "config/colour_scheme.tsv"
+    shell:
+        """
+        python scripts/colour_maker.py \
+            --input   {input.matrix} \
+            --colours {input.scheme} \
+            --levels  {params.host} \
+            --output  {output.colours1}
+
+        python scripts/colour_maker.py \
+            --input   {input.matrix} \
+            --colours {input.scheme} \
+            --levels  {params.geo} \
+            --output  {output.colours2}
+
+        python scripts/colour_maker.py \
+            --input   {input.matrix} \
+            --colours {input.scheme} \
+            --levels  {params.clade} \
+            --output  {output.colours3}
+
+        python scripts/colour_maker.py \
+            --input   {input.matrix} \
+            --colours {input.scheme} \
+            --levels  {params.source} \
+            --output  {output.colours4}
+
+        python scripts/colour_maker.py \
+            --input   {input.matrix} \
+            --colours {input.scheme} \
+            --levels  {params.data_use} \
+            --output  {output.colours5}
+
+        head -1 {output.colours1} > {output.colour_scheme}
+        tail -q -n+2 \
+            {output.colours1} {output.colours2} {output.colours3} \
+            {output.colours4} {output.colours5} \
+            >> {output.colour_scheme}
+        """
+
+
+# ─── Utility ──────────────────────────────────────────────────────────────────
+
+rule clean:
+    message: "Remove subsampled outputs only — viralqc e ingest preservados"
+    shell:
+        "rm -rfv results/subsampled config/colour_scheme.tsv config/latlongs.tsv config/name2hue.tsv"
+
+
+rule reset:
+    message: "Full reset — remove tudo em results/ e configs gerados"
+    shell:
+        """
+        rm -rfv results/ \
+            config/colour_scheme.tsv config/latlongs.tsv config/name2hue.tsv
+        """

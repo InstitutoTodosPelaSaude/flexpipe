@@ -1,0 +1,261 @@
+configfile: "config/config.yaml"
+
+from types import SimpleNamespace
+
+files      = SimpleNamespace(**config["files"])
+parameters = SimpleNamespace(**config["parameters"])
+options    = SimpleNamespace(**config["options"])
+_traits    = config.get("traits", {})
+_sub       = config.get("subsampling", {})
+
+# Preprocessed outputs produced by ingest/Snakefile — treated as static inputs.
+# Run ingest first: snakemake --snakefile ingest/Snakefile --cores N
+SUBSAMPLED_METADATA  = "results/subsampled/metadata.tsv"
+SUBSAMPLED_SEQUENCES = "results/subsampled/sequences.fasta"
+
+
+rule all:
+    input:
+        auspice = "auspice/results.json"
+
+
+# ─── Phylogenetics ────────────────────────────────────────────────────────────
+
+rule align:
+    message:
+        "Aligning sequences to {input.reference}"
+    input:
+        sequences = SUBSAMPLED_SEQUENCES,
+        reference = files.reference
+    params:
+        threads = options.threads
+    output:
+        alignment = "results/alignments/aligned.fasta"
+    shell:
+        """
+        n=$(grep -c '^>' {input.sequences})
+        echo ""
+        echo "=== MAFFT: aligning $n sequences — this may take 5-20+ minutes ==="
+        echo ""
+
+        augur align \
+            --sequences          {input.sequences} \
+            --reference-sequence {input.reference} \
+            --nthreads           {params.threads} \
+            --output             {output.alignment} \
+            --remove-reference
+        """
+
+
+rule mask:
+    message:
+        "Masking {params.mask_from_beginning} bp from start, {params.mask_from_end} bp from end"
+    input:
+        alignment = rules.align.output.alignment
+    params:
+        mask_from_beginning = parameters.mask_5prime,
+        mask_from_end       = parameters.mask_3prime,
+        mask_sites          = parameters.mask_sites
+    output:
+        alignment = "results/alignments/masked.fasta"
+    shell:
+        """
+        augur mask \
+            --sequences           {input.alignment} \
+            --mask-from-beginning {params.mask_from_beginning} \
+            --mask-from-end       {params.mask_from_end} \
+            --mask-sites          {params.mask_sites} \
+            --output              {output.alignment}
+        """
+
+
+rule tree:
+    message:
+        "Building tree with UFBoot (model={params.model}, bootstrap={params.bootstrap})"
+    input:
+        alignment = rules.mask.output.alignment
+    params:
+        threads   = options.threads,
+        model     = parameters.model,
+        bootstrap = parameters.ufboot,
+        prefix    = "results/trees/iqtree"
+    output:
+        tree = "results/trees/tree.nwk"
+    shell:
+        """
+        mkdir -p results/trees
+        iqtree3 \
+            -s     {input.alignment} \
+            -m     {params.model} \
+            -B     {params.bootstrap} \
+            -T     AUTO \
+            --threads-max {params.threads} \
+            --redo \
+            --prefix {params.prefix}
+
+        mv {params.prefix}.treefile {output.tree}
+        """
+
+
+rule refine:
+    message:
+        "Refining tree (root={params.root}, coalescent={params.coalescent})"
+    input:
+        tree      = rules.tree.output.tree,
+        alignment = rules.mask.output.alignment,
+        metadata  = SUBSAMPLED_METADATA
+    params:
+        root           = parameters.root,
+        coalescent     = parameters.coalescent,
+        date_inference = parameters.date_inference,
+        unit           = parameters.divergence_units,
+        clock_filter   = parameters.clock_filter_iqd
+    output:
+        tree      = "results/trees/timetree.nwk",
+        node_data = "results/trees/branch_lengths.json"
+    shell:
+        """
+        augur refine \
+            --tree             {input.tree} \
+            --alignment        {input.alignment} \
+            --metadata         {input.metadata} \
+            --output-tree      {output.tree} \
+            --output-node-data {output.node_data} \
+            --root             {params.root} \
+            --timetree \
+            --coalescent       {params.coalescent} \
+            --date-confidence \
+            --clock-filter-iqd {params.clock_filter} \
+            --divergence-units {params.unit} \
+            --date-inference   {params.date_inference}
+        """
+
+
+rule ancestral:
+    message:
+        "Reconstructing ancestral sequences and mutations"
+    input:
+        tree      = rules.refine.output.tree,
+        alignment = rules.mask.output.alignment
+    params:
+        inference = parameters.ancestral_inference
+    output:
+        node_data = "results/trees/nt_muts.json"
+    shell:
+        """
+        augur ancestral \
+            --tree             {input.tree} \
+            --alignment        {input.alignment} \
+            --inference        {params.inference} \
+            --output-node-data {output.node_data}
+        """
+
+
+rule translate:
+    message:
+        "Translating amino acid sequences"
+    input:
+        tree      = rules.refine.output.tree,
+        node_data = rules.ancestral.output.node_data,
+        reference = files.reference
+    output:
+        node_data = "results/trees/aa_muts.json"
+    shell:
+        """
+        augur translate \
+            --tree                {input.tree} \
+            --ancestral-sequences {input.node_data} \
+            --reference-sequence  {input.reference} \
+            --output              {output.node_data}
+        """
+
+
+rule traits:
+    message:
+        "Inferring ancestral traits for {params.columns}"
+    input:
+        tree     = rules.refine.output.tree,
+        metadata = SUBSAMPLED_METADATA
+    params:
+        columns = _traits.get("columns", "country division location clade")
+    output:
+        node_data = "results/trees/traits.json"
+    shell:
+        """
+        augur traits \
+            --tree       {input.tree} \
+            --metadata   {input.metadata} \
+            --output     {output.node_data} \
+            --columns    {params.columns} \
+            --confidence
+        """
+
+
+rule clades:
+    message:
+        "Labeling clades as specified in {input.clades}"
+    input:
+        tree     = rules.refine.output.tree,
+        aa_muts  = rules.translate.output.node_data,
+        nuc_muts = rules.ancestral.output.node_data,
+        clades   = files.clades
+    output:
+        clade_data = "results/trees/clades.json"
+    shell:
+        """
+        augur clades \
+            --tree             {input.tree} \
+            --mutations        {input.nuc_muts} {input.aa_muts} \
+            --clades           {input.clades} \
+            --membership-name  None \
+            --output           {output.clade_data}
+        """
+
+
+rule export:
+    message:
+        "Exporting data files for auspice"
+    input:
+        tree           = rules.refine.output.tree,
+        metadata       = SUBSAMPLED_METADATA,
+        branch_lengths = rules.refine.output.node_data,
+        traits         = rules.traits.output.node_data,
+        nt_muts        = rules.ancestral.output.node_data,
+        aa_muts        = rules.translate.output.node_data,
+        colors         = "config/colour_scheme.tsv",
+        lat_longs      = "config/latlongs.tsv",
+        clades         = rules.clades.output.clade_data,
+        auspice_config = files.auspice_config
+    output:
+        auspice = rules.all.input.auspice
+    shell:
+        """
+        augur export v2 \
+            --tree           {input.tree} \
+            --metadata       {input.metadata} \
+            --node-data      {input.branch_lengths} {input.traits} \
+                             {input.nt_muts} {input.aa_muts} {input.clades} \
+            --colors         {input.colors} \
+            --lat-longs      {input.lat_longs} \
+            --auspice-config  {input.auspice_config} \
+            --metadata-columns 'Originating Lab' 'Submitting Lab' \
+            --output          {output.auspice}
+        """
+
+
+# ─── Utility ──────────────────────────────────────────────────────────────────
+
+rule clean:
+    message: "Removing phylogenetic outputs (keeps ingest/subsampled outputs and config files)"
+    shell:
+        "rm -rfv results/alignments results/trees auspice/"
+
+
+rule reset:
+    message: "Full phylogenetic reset — removes all outputs including subsampled data and config files"
+    shell:
+        """
+        rm -rfv results/ auspice/ \
+            config/colour_scheme.tsv config/latlongs.tsv config/name2hue.tsv \
+            config/cache_coordinates.tsv
+        """
