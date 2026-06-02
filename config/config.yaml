@@ -44,7 +44,7 @@ curation:
 # ── Region source ────────────────────────────────────────────────────────────
 # "country"  : maps country → continent (global builds)
 # "division" : maps Brazilian state → macro-region (Brazil-only builds)
-region_source: "country"
+region_source: "division"
 
 # ── Data source ──────────────────────────────────────────────────────────────
 # Use "pathoplexus" OR "ncbi" — never both at the same time.

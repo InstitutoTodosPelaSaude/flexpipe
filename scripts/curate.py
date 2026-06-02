@@ -101,6 +101,25 @@ REGION_MAP = {
     "Tuvalu": "Oceania", "Vanuatu": "Oceania",
 }
 
+BRAZIL_REGION_MAP = {
+    # Norte
+    "Amazonas": "Norte", "Pará": "Norte", "Roraima": "Norte",
+    "Amapá": "Norte", "Acre": "Norte", "Rondônia": "Norte", "Tocantins": "Norte",
+    # Nordeste
+    "Maranhão": "Nordeste", "Piauí": "Nordeste", "Ceará": "Nordeste",
+    "Rio Grande do Norte": "Nordeste", "Paraíba": "Nordeste",
+    "Pernambuco": "Nordeste", "Alagoas": "Nordeste", "Sergipe": "Nordeste",
+    "Bahia": "Nordeste",
+    # Centro-Oeste
+    "Mato Grosso": "Centro-Oeste", "Mato Grosso do Sul": "Centro-Oeste",
+    "Goiás": "Centro-Oeste", "Distrito Federal": "Centro-Oeste",
+    # Sudeste
+    "São Paulo": "Sudeste", "Rio de Janeiro": "Sudeste",
+    "Minas Gerais": "Sudeste", "Espírito Santo": "Sudeste",
+    # Sul
+    "Paraná": "Sul", "Santa Catarina": "Sul", "Rio Grande do Sul": "Sul",
+}
+
 
 def truncate_clade(clade, levels, sep="."):
     parts = [p for p in str(clade).strip().split(sep) if p]
@@ -294,7 +313,15 @@ def main():
     df.drop(columns=[c for c in DROP if c in df.columns], inplace=True)
 
     # ── region ────────────────────────────────────────────────────────────────
-    if "country" in df.columns:
+    region_source = cfg.get("region_source", "country")
+    if region_source == "division" and "division" in df.columns:
+        df["region"] = df["division"].apply(
+            lambda d: BRAZIL_REGION_MAP.get(str(d).strip(), "")
+        )
+        missing = df[df["region"] == ""]["division"].unique()
+        if len(missing):
+            print(f"WARNING: no Brazil region mapping for divisions: {list(missing)}")
+    elif "country" in df.columns:
         df["region"] = df["country"].apply(
             lambda c: REGION_MAP.get(str(c).strip(), "")
         )
