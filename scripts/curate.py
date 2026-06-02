@@ -11,6 +11,7 @@ import argparse
 import os
 import re
 import sys
+import unicodedata
 
 import pandas as pd
 import yaml
@@ -119,6 +120,85 @@ BRAZIL_REGION_MAP = {
     # Sul
     "Paraná": "Sul", "Santa Catarina": "Sul", "Rio Grande do Sul": "Sul",
 }
+
+# State abbreviations used in some Pathoplexus division strings (e.g. "ES, Serra [IBGE7...]")
+_BRAZIL_ABBREV = {
+    "AC": "Acre", "AL": "Alagoas", "AM": "Amazonas", "AP": "Amapá",
+    "BA": "Bahia", "CE": "Ceará", "DF": "Distrito Federal", "ES": "Espírito Santo",
+    "GO": "Goiás", "MA": "Maranhão", "MG": "Minas Gerais", "MS": "Mato Grosso do Sul",
+    "MT": "Mato Grosso", "PA": "Pará", "PB": "Paraíba", "PE": "Pernambuco",
+    "PI": "Piauí", "PR": "Paraná", "RJ": "Rio de Janeiro", "RN": "Rio Grande do Norte",
+    "RO": "Rondônia", "RR": "Roraima", "RS": "Rio Grande do Sul",
+    "SC": "Santa Catarina", "SE": "Sergipe", "SP": "São Paulo", "TO": "Tocantins",
+}
+
+def _normalize(s):
+    return unicodedata.normalize("NFD", str(s)).encode("ascii", "ignore").decode().lower().strip()
+
+# Pre-build normalized lookups for fast matching
+_BRAZIL_NORM       = {_normalize(k): v for k, v in BRAZIL_REGION_MAP.items()}
+_ABBREV_TO_REGION  = {abbr: BRAZIL_REGION_MAP.get(state, "") for abbr, state in _BRAZIL_ABBREV.items()}
+_BRAZIL_CANONICAL  = {_normalize(k): k for k in BRAZIL_REGION_MAP}
+
+def _parse_brazil_division(division_str):
+    """Parse a compound Pathoplexus division string into (canonical_state, city).
+
+    Handles formats produced by Pathoplexus YFV:
+      "Espírito Santo"                     → ("Espírito Santo", "")
+      "Espirito Santo, Domingos Martins"   → ("Espírito Santo", "Domingos Martins")
+      "ES, Serra [IBGE7 3205002]"          → ("Espírito Santo", "Serra")
+      "Nova Lima, Minas Gerais"            → ("Minas Gerais", "Nova Lima")
+      "Domingos Martins-ES"                → ("Espírito Santo", "Domingos Martins")
+      "Casimiro de Abreu-RJ"              → ("Rio de Janeiro", "Casimiro de Abreu")
+    """
+    d = str(division_str).strip()
+    if not d:
+        return "", ""
+
+    # Remove IBGE codes: "[IBGE7 3205002]"
+    d_clean = re.sub(r'\s*\[.*?\]', '', d).strip()
+
+    # Special case: "City-UF" (no spaces, 2-letter UF suffix)
+    uf_suffix = re.match(r'^(.+?)-([A-Z]{2})$', d_clean)
+    if uf_suffix:
+        city_part, uf = uf_suffix.group(1).strip(), uf_suffix.group(2)
+        if uf in _BRAZIL_ABBREV:
+            return _BRAZIL_ABBREV[uf], city_part
+
+    # Split on ", " or " - "
+    tokens = [t.strip() for t in re.split(r',\s*|\s+-\s+', d_clean) if t.strip()]
+
+    state_name, state_idx = "", -1
+    for i, token in enumerate(tokens):
+        # 2-letter abbreviation (e.g. "ES", "MG")
+        if re.match(r'^[A-Z]{2}$', token) and token in _BRAZIL_ABBREV:
+            state_name = _BRAZIL_ABBREV[token]
+            state_idx  = i
+            break
+        # Normalized state name (handles missing accents)
+        canonical = _BRAZIL_CANONICAL.get(_normalize(token), "")
+        if canonical:
+            state_name = canonical
+            state_idx  = i
+            break
+
+    if not state_name:
+        return d, ""  # unrecognised — return original, no city extracted
+
+    city_tokens = [t for i, t in enumerate(tokens) if i != state_idx]
+    city = city_tokens[0] if city_tokens else ""
+    return state_name, city
+
+
+def _lookup_brazil_region(division):
+    """Return the Brazilian macro-region for a (possibly already normalised) division."""
+    if not division or str(division).strip() in ("", "NA"):
+        return ""
+    d = str(division).strip()
+    r = BRAZIL_REGION_MAP.get(d, "")
+    if r:
+        return r
+    return _BRAZIL_NORM.get(_normalize(d), "")
 
 
 def truncate_clade(clade, levels, sep="."):
@@ -312,12 +392,21 @@ def main():
     }
     df.drop(columns=[c for c in DROP if c in df.columns], inplace=True)
 
-    # ── region ────────────────────────────────────────────────────────────────
+    # ── normalise compound division strings (Brazil-only builds) ─────────────
     region_source = cfg.get("region_source", "country")
     if region_source == "division" and "division" in df.columns:
-        df["region"] = df["division"].apply(
-            lambda d: BRAZIL_REGION_MAP.get(str(d).strip(), "")
-        )
+        parsed        = df["division"].apply(_parse_brazil_division)
+        df["division"] = parsed.apply(lambda x: x[0])
+        # Enrich location from the city part of compound division strings
+        if "location" in df.columns:
+            city_from_div = parsed.apply(lambda x: x[1])
+            empty_loc     = df["location"].str.strip() == ""
+            has_city      = city_from_div.str.strip() != ""
+            df.loc[empty_loc & has_city, "location"] = city_from_div[empty_loc & has_city]
+
+    # ── region ────────────────────────────────────────────────────────────────
+    if region_source == "division" and "division" in df.columns:
+        df["region"] = df["division"].apply(_lookup_brazil_region)
         missing = df[df["region"] == ""]["division"].unique()
         if len(missing):
             print(f"WARNING: no Brazil region mapping for divisions: {list(missing)}")

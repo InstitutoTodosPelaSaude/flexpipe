@@ -37,6 +37,7 @@ import pandas as pd
 
 # ── geo (region = top-level of geo hierarchy) ────────────────────────────────
 REGION_HUES = {
+    # Continents (global builds)
     "Africa":         20,
     "Asia":           70,
     "Europe":        140,
@@ -44,6 +45,12 @@ REGION_HUES = {
     "North America": 240,
     "Oceania":       290,
     "South America": 340,
+    # Brazilian macro-regions (region_source: division builds)
+    "Norte":         100,   # green  — Amazon
+    "Nordeste":       30,   # orange — semi-arid / coast
+    "Centro-Oeste":   70,   # yellow-green — cerrado
+    "Sudeste":         0,   # red    — urban / industrial
+    "Sul":           200,   # blue   — cooler climate
 }
 
 # ── lineage (lineage_truncated = top-level of lineage hierarchy) ──────────────
@@ -53,40 +60,51 @@ REGION_HUES = {
 LINEAGE_HUES = {}   # intentionally empty — hash fallback handles everything
 
 # ── host ──────────────────────────────────────────────────────────────────────
+_MOSQUITO = 30    # orange  — vector/insect
+_PRIMATE  = 100   # green   — non-human primates (NHP)
+_HUMAN    = 200   # blue    — human
+
 HOST_HUES = {
-    # scientific names
-    "Homo sapiens":       200,
-    "Mus musculus":       280,
-    "Unknown":            340,
-    # common names (Pathoplexus hostNameCommon field)
-    "human":              200,
-    "avian":               60,
-    "swine":               40,
-    "ferret":             150,
-    "camel":              110,
-    "acinonyx jubatus":   230,
-    "giant anteater":     240,
-    "mouse":              280,
-    "house mouse":        280,
-    "house mouse; mouse": 280,
-    "pangolins":           70,
-    "bovine":              30,
-    "cattle":              30,
-    "sheep":               50,
-    "goat":                50,
-    "horse":               20,
-    "dog":                160,
-    "cat":                170,
-    "cairina moschata":      60,
-    "swan":                  60,
-    "turkey":                60,
-    "domestic turkey":       60,
-    "wild turkey":           60,
-    "canine":               160,
-    "canis lupus familiaris": 160,
-    "home sapiens":          200,
-    "people":                200,
-    "person":                200,
+    # ── Human ────────────────────────────────────────────────────────────────
+    "Homo sapiens": _HUMAN, "home sapiens": _HUMAN,
+    "human": _HUMAN, "people": _HUMAN, "person": _HUMAN,
+    # ── Mosquito / insect (YFV vectors) ──────────────────────────────────────
+    "mosquito":            _MOSQUITO,
+    "mosquitos":           _MOSQUITO,
+    "asian tiger mosquito": _MOSQUITO,
+    "aedes aegypti":       _MOSQUITO,
+    "aedes albopictus":    _MOSQUITO,
+    "haemagogus":          _MOSQUITO,
+    "haemagogus janthinomys": _MOSQUITO,
+    "haemagogus leucocelaenus": _MOSQUITO,
+    "sabethes":            _MOSQUITO,
+    "culex":               _MOSQUITO,
+    # ── Non-human primates (YFV sentinel hosts) ───────────────────────────────
+    "primate":             _PRIMATE,
+    "primates":            _PRIMATE,
+    "new world monkeys":   _PRIMATE,
+    "howler monkey":       _PRIMATE,
+    "howler monkeys":      _PRIMATE,
+    "brown howler monkey": _PRIMATE,
+    "black howler monkey": _PRIMATE,
+    "capuchin monkeys":    _PRIMATE,
+    "black-capped capuchin": _PRIMATE,
+    "black-striped capuchin": _PRIMATE,
+    "black-fronted titi":  _PRIMATE,
+    "titi monkeys":        _PRIMATE,
+    "marmosets and tamarins": _PRIMATE,
+    "black tufted-ear marmoset": _PRIMATE,
+    "geoffroy's marmoset": _PRIMATE,
+    "common marmoset":     _PRIMATE,
+    # ── Other mammals ────────────────────────────────────────────────────────
+    "Mus musculus": 280, "mouse": 280, "house mouse": 280, "house mouse; mouse": 280,
+    "Unknown": 340,
+    "avian": 60, "swine": 40, "ferret": 150, "camel": 110,
+    "acinonyx jubatus": 230, "giant anteater": 240, "pangolins": 70,
+    "bovine": 30, "cattle": 30, "sheep": 50, "goat": 50, "horse": 20,
+    "dog": 160, "cat": 170, "canine": 160, "canis lupus familiaris": 160,
+    "cairina moschata": 60, "swan": 60, "turkey": 60,
+    "domestic turkey": 60, "wild turkey": 60,
 }
 
 # ── source ────────────────────────────────────────────────────────────────────
