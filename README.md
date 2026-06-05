@@ -1,207 +1,251 @@
 # flexpipe
-Flexible nextstrain pipeline for genomic epidemiology of pathogens.
 
-This repository contains the essential files to create a [nextstrain build](https://nextstrain.org/). By using this pipeline users can to perform genomic epidemiology analyses and visualize phylogeographic results to track pathogen spread using genomic data and their associated metadata.
+A flexible Nextstrain pipeline for genomic epidemiology of viral pathogens. Supports data ingestion from [Pathoplexus](https://pathoplexus.org/) or [NCBI](https://www.ncbi.nlm.nih.gov/labs/virus/vssi/), optional integration of local surveillance sequences, automated QC via [ViralQC](https://github.com/InstitutoTodosPelaSaude/viralQC), and a complete phylogenetic workflow ending in an [Auspice](https://auspice.us/)-compatible JSON.
 
-![alt text](https://github.com/InstitutoTodosPelaSaude/flexpipe/blob/main/overview.png)
-Nextstrain panel with results overview
+This repository includes a working example build for **Yellow Fever Virus (YFV) in Brazil**, covering sequences from 2015 to the present using Pathoplexus as the data source.
 
-## Getting started
-<!--- 
-### For Windows users
-
-Native Linux and Mac Users are all set, and can move on to step #2. Windows users, however, must install a Linux subsystem before being able to install nextstrain. Visit [this website](https://docs.nextstrain.org/en/latest/install.html) and follow its step-by-step guide about how to [setup Linux on Windows](https://docs.microsoft.com/en-us/windows/wsl/install-win10) (please choose 'Ubuntu 18.04 LTS or superior versions'), and how to launch Linux and [create a user account and password](https://learn.microsoft.com/en-us/shows/one-dev-minute/how-do-i-configure-a-wsl-distro-to-launch-in-the-home-directory-in-windows-terminal--one-dev-questio) using command line.
--->
-### Learning basic UNIX commands
-
-Familiarize yourself with basic UNIX commands for navigating and managing files and folders in a command line interface ("Terminal"). In this platform you can perform all simple tasks you usually do using mouse clicks: to copy, move, delete, access, and create files and folders. All you need to do is to type a few commands. Below you can find the main commands required to operate in a Terminal. Please access [this page](https://commons.wikimedia.org/wiki/File:Unix_command_cheatsheet.pdf) to learn a few more commands. Please practice the use of the commands listed below, so that you are able to navigate from/to directories ("folders") and manage files and folders in command line interfaces.
-
-Creating, Moving and Deleting | Navigating directories | Checking content
------------- | ------------- | -------------
-**mkdir** folderX → *create folderX* | **cd** folderX → *move into folderX* | **ls** → *list files and folders*
-**mv** → *move files/folder from/to another directory* | **cd ..** → *go back to previous folder* | **head** → *see the first 10 lines of a file*
-**rm** → *delete files/folders from a directory* | **pwd** → *check you current directory* | **tail** → *see the last 10 lines of a file*
-
-<!--- 
-### Installing nextstrain
-
-If you need to install nexstrain in your computer, please [click here](https://github.com/InstitutoTodosPelaSaude/flexpipe/blob/master/nextstrain_installation.pdf) to download the guidelines to install it. That document provides instructions on how to install `augur` (bioinformatics pipeline) and `auspice` (visualization tool). For more information about the installation process, visit this [nextstrain page](https://docs.nextstrain.org/en/latest/install.html).
--->
-
-### Creating a nextstrain build
-[Click here](https://github.com/InstitutoTodosPelaSaude/flexpipe/blob/master/nextstrain_tutorial.pdf) to download a tutorial with a step-by-step tutorial on how to prepare your working directory (files and folders), run `augur`, and visualize the results with `auspice`. Please check [this webiste](https://neherlab.org/201910_RIVM_nextstrain.html) for more information about the distinct functionalities of nextstrain.
-
-## FAQs
-
-
-### 1. A checkpoint issue during the `rule tree` prevents the flexpipe run to progress. How do I solve that?
-
-If the workflow is executed and it fails to complete the `rule tree`, the previously created files will not allow `iqtree` to resume a new run. As a result, you may see an error message like this:
-
-```
-Checkpoint (results/alignments/masked.fasta.ckp.gz) indicates that a previous run successfully finished
-Use `--redo` option if you really want to redo the analysis and overwrite all output files.
-Use `--redo-tree` option if you want to restore ModelFinder and only redo tree search.
-Use `--undo` option if you want to continue previous run when changing/adding options.
-```
-
-To resume the run and solve that issue you need to explicitly asks `iqtree` to `-redo` the phylogenetic inference. To do so, add an argument `--redo` argument in the `iqtree` command line in `rule tree`:
-
-```
-iqtree \
-	-s {input.alignment} \
-	-bb {params.bootstrap} \
-	-nt {params.threads} \
-	-m {params.model} \
-	--redo
-```
 ---
 
-### 2. Why does `rule refine` display the message "ERROR: unsupported rooting mechanisms or root not found"?
+## Getting Started
 
-This error is mostly likely caused by missing root genome(s). For example, if the phylogeny has to be rooted based on the branch leading to the genome 'JF912185', such genome must be listed among the ones in `config/keep.txt`. If the rooting genomes are not included in that file, they will not be included in the alignment, and this error message will be prompted:
+### Requirements
 
+- [conda](https://docs.conda.io/) or [mamba](https://mamba.readthedocs.io/)
+- A `nextstrain` conda environment with `augur ≥ 13`, `snakemake`, `iqtree3`, and the dependencies listed in `config/nextstrain.yml`
+- [ViralQC](https://github.com/InstitutoTodosPelaSaude/viralQC) installed in a separate conda environment (`viralQC`)
+
+### Running the example (YFV Brazil)
+
+The pipeline is split into two independent workflows. Run them in sequence from the repository root:
+
+**Stage 1 — Ingest**
+```bash
+conda run -n nextstrain snakemake \
+    --snakefile ingest/Snakefile \
+    --cores 4
 ```
-augur refine is using TreeTime version 0.9.4
-0.82        TreeTime.reroot: with method or node: JF912185
 
-ERROR: unsupported rooting mechanisms or root not found
+**Stage 2 — Phylogenetic**
+```bash
+conda run -n nextstrain snakemake \
+    --snakefile phylogenetic/Snakefile \
+    --cores 4
 ```
 
-'JF912185' is a Yellow Fever Virus (YFV) genome. If you are not running a YFV analysis, you need to add an appropriate genome in `config/keep.txt`, and also change the [root genome(s)](https://github.com/InstitutoTodosPelaSaude/flexpipe/blob/main/Snakefile#L39) listed in `rule parameters` of the Snakefile:
+**Visualise**
+```bash
+conda run -n nextstrain auspice view --datasetDir auspice/
+```
 
-```
-rule parameters:
-	params:
-		mask_5prime = 142,
-		mask_3prime = 548,
-		bootstrap = 1, # default = 1, but ideally it should be >= 100
-		model = "GTR",
-		
-		root = "JF912185", # <<< set one or more genomes to root the phylogeny
-		
-		clock_rate = 0.0003,
-		clock_std_dev = 0.0001,
-```
+Open `http://localhost:4000` in your browser.
+
 ---
 
-### 3. How does the hierarchical colour system work in flexpipe?
-
-The `colour_maker.py` script allows you to define colours for categories and subcategories in a hierarchical way. You only need to manually define the hue for the **top-level categories**, and the script automatically generates gradient shades for the lower levels.
-
-**Practical example:**
-- Level 1 (category): `continent` → you define the hue (e.g. blue for Europe)
-- Level 2 (subcategory): `country` → the script automatically generates blue shades for each European country
-
-**Columns in the metadata**
-
-The metadata must have **one column per hierarchical level** you want to colour. For example:
-
-| continent | country |
-|-----------|---------|
-| Europe | France |
-| Europe | Germany |
-| Americas | Brazil |
-
-**The `name2hue.tsv` file (colour scheme)**
-
-You need to create a TSV file with **only the top-level categories** and their corresponding hues. Hues are numbers from 0 to 350 (colour wheel) or matplotlib colormap names (e.g. `Blues_r`).
-
-```tsv
-category	hue
-Europe	210
-Americas	120
-Asia	30
-Africa	50
-Oceania	270
-```
-
-> **Tip:** Hues follow the colour wheel in increments of 10 (0 = red, 120 = green, 210 = blue, 270 = purple, etc.).
-
-**Configuring `colour_maker.py` in a rule in the Snakefile**
-
-The correct approach is to set the column groups in the `params` of the `colours` rule, **not directly in `--levels`** inside the shell block. This keeps the shell commands clean and makes the configuration easier to maintain.
-
-**Recommended structure**
-
-```python
-rule colours:
-    message:
-        """
-        Assigning colour scheme for defined columns in {input.matrix}
-        """
-    input:
-        matrix = rules.process_metadata.output.final_metadata,
-        scheme = files.colscheme,
-    params:
-        host = "host_type host",              # top level → lower level
-        geo  = "region division location",    # top → mid → lower level
-    output:
-        colours1      = temp("config/col_hosts.tsv"),
-        colours2      = temp("config/col_geo.tsv"),
-        colour_scheme = "config/colour_scheme.tsv",
-    shell:
-        """
-        python scripts/colour_maker.py \
-            --input {input.matrix} \
-            --colours {input.scheme} \
-            --levels {params.host} \
-            --output {output.colours1}
-
-        python scripts/colour_maker.py \
-            --input {input.matrix} \
-            --colours {input.scheme} \
-            --levels {params.geo} \
-            --output {output.colours2}
-
-        python scripts/multi_merger.py \
-            --path "./config" \
-            --regex "col_*" \
-            --columns "field, value, hex_color" \
-            --output {output.colour_scheme}
-        """
-```
-
-**What each param means**
-
-| Param | Example value | Interpretation |
-|-------|--------------|----------------|
-| `host` | `"host_type host"` | `host_type` is the top level (e.g. *human*, *avian*); `host` is the actual species |
-| `geo` | `"region division location"` | `region` → `division` → `location`, from broadest to most specific |
-
-> **Rule:** The **first column** in each param must be the one with entries defined in `name2hue.tsv`. The remaining columns receive derived colours automatically.
-
-**Other use case examples**
-
-Any pair (or trio) of hierarchical columns works the same way:
-
-```python
-params:
-    lineage = "lineage_major lineage_minor"
-    geo     = "continent country"
-    clade   = "clade subclade variant"
-```
-
-**Summary workflow**
+## Pipeline Overview
 
 ```
-metadata.tsv             name2hue.tsv
-(with hierarchical   →   (hues for top-level
- columns)                 categories only)
-        ↓
-   colour_maker.py --levels [top_col] [lower_col]
-        ↓
-  col_*.tsv (temporary files per group)
-        ↓
-   multi_merger.py
-        ↓
-  colour_scheme.tsv  ← used by Auspice/Nextstrain
+fetch_pathoplexus  (or fetch_ncbi)
+    └── merge_local_sequences  (optional local sequences + Pathoplexus/NCBI)
+            └── viralqc        (BLAST + Nextclade: QC grades + clade assignment)
+                    └── curate_qc  (normalisation, dedup, augur filter)
+                            └── prepare  (augur subsample)
+                                    ├── coordinates  (geocoding → latlongs.tsv)
+                                    ├── generate_name2hue  (colour palette)
+                                    └── colours  (colour_scheme.tsv)
+                                            └── [phylogenetic/Snakefile]
+                                                    align → mask → tree → refine
+                                                    → ancestral → translate → traits
+                                                    → clades → export → auspice/results.json
 ```
 
-## Author
+---
 
-* **Anderson Brito, Instituto Todos pela Saúde (ITpS)** - [Website](https://www.itps.org.br/membros) - anderson.brito@itps.org.br
+## Stage 1 — Ingest
+
+Sequences and metadata are fetched from **Pathoplexus** (default) or **NCBI**, controlled by `data_source` in `config/config.yaml`. Only one source is active per run.
+
+### Example — YFV Brazil
+
+| Parameter | Value |
+|-----------|-------|
+| `data_source` | `pathoplexus` |
+| `pathoplexus.organism` | `yellow-fever` |
+| `pathoplexus.min_completeness` | `0.70` |
+| `ncbi.taxid` (fallback) | `11089` |
+| `ncbi.genome_size` (bp) | `10862` |
+
+Local surveillance sequences (in `data/new_sequences.fasta` + `data/metadata.xlsx`) are merged with remote data via `merge_local_sequences.py`. Set `local_sequences.enabled: true` in `config.yaml` to activate.
+
+---
+
+## Stage 2 — QC and Curation
+
+**ViralQC** (BLAST + Nextclade) assigns genome quality grades (A–D) and clade labels. The `curate.py` script then:
+
+- Renames and standardises metadata fields (`strain`, `date`, `country`, `division`, `location`, `data_use`, `clade`)
+- Computes `clade_truncated` by trimming hierarchical clade names to `clade_levels` levels
+- Assigns a `region` column from either country names (global builds) or state names (Brazil-only builds — see `region_source` below)
+- Marks each sequence with a `source` label (`Pathoplexus`, `NCBI`, or `ITpS`)
+- Deduplicates sequences, preferring local ITpS records
+
+**QC filters** applied by `augur filter`:
+
+| Parameter | Value |
+|-----------|-------|
+| `qc.genome_quality` | `A`, `B` (grades C and D discarded) |
+| `qc.min_coverage` | `0.70` |
+| Required columns | `strain`, `date`, `country`, `clade` |
+
+### Region mapping
+
+The `region_source` field in `config.yaml` controls how the `region` column is derived:
+
+| `region_source` | Behaviour | Use case |
+|----------------|-----------|----------|
+| `"country"` | Maps country name → continent via `REGION_MAP` | Global builds |
+| `"division"` | Maps Brazilian state → macro-region via `BRAZIL_REGION_MAP` | Brazil-only builds |
+
+Brazilian macro-regions: **Norte**, **Nordeste**, **Centro-Oeste**, **Sudeste**, **Sul**.
+
+The YFV example uses `region_source: "division"` so that `region` represents intra-country geographic structure rather than a continent label.
+
+---
+
+## Stage 3 — Subsampling
+
+Controlled by `config/subsample.yaml`, which is read by `augur subsample`. The YFV Brazil strategy:
+
+```yaml
+defaults:
+  min_date: 2015
+
+samples:
+  focal:
+    query: "source == 'ITpS'"       # local sequences always kept in full
+
+  brazil:
+    group_by: [division, year]      # subsample by state and year
+    sequences_per_group: 10
+    exclude_where:
+      - "source=ITpS"
+      - "division="
+      - "date="
+```
+
+For global builds (RSV, Flu), replace `division` with `country` and add `clade_truncated` to `group_by` and `exclude_where`.
+
+---
+
+## Stage 4 — Coordinates and Colours
+
+**Coordinates**: `get_coordinates.py` queries Nominatim (OpenStreetMap) to geocode the columns listed in `coordinates.columns` (default: `division location` for the YFV example). Results are cached in `config/cache_coordinates.tsv`; the output `config/latlongs.tsv` is consumed by `augur export`. The script applies Nominatim featuretype hints per level (`division → state`, `location → city`) and writes incrementally after each new find to avoid data loss on interruption.
+
+**Colours**: `generate_name2hue.py` assigns hues from the subsampled metadata. `colour_maker.py` produces `config/colour_scheme.tsv`. Both are configured via `colours` in `config.yaml`:
+
+```yaml
+colours:
+  clade:    "clade"
+  geo:      "region division location"
+  source:   "source"
+  data_use: "data_use"
+```
+
+---
+
+## Stage 5 — Phylogenetic
+
+Run separately after ingest completes (`snakemake --snakefile phylogenetic/Snakefile --cores N`).
+
+Steps: `align` (MAFFT) → `mask` → `tree` (IQ-TREE 3 UFBoot) → `refine` (TreeTime) → `ancestral` → `translate` → `traits` → `clades` → `export` → `auspice/results.json`
+
+### Key phylogenetic parameters — YFV example
+
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| `parameters.model` | `MFP` | ModelFinder Plus — auto-selects best substitution model |
+| `parameters.ufboot` | `1000` | Ultrafast bootstrap replicates |
+| `parameters.root` | `least-squares` | Root method for time-calibrated tree |
+| `parameters.coalescent` | `skyline` | Effective population size model in TreeTime |
+| `parameters.date_inference` | `marginal` | Marginal date inference for ambiguous dates |
+| `parameters.divergence_units` | `mutations` | Branch length units in timetree |
+| `parameters.clock_filter_iqd` | `4` | IQD filter for clock outliers |
+| `parameters.ancestral_inference` | `joint` | Joint ancestral reconstruction |
+| `parameters.mask_5prime` | `142` | Bases masked at 5′ end (X03700.1-specific) |
+| `parameters.mask_3prime` | `548` | Bases masked at 3′ end (X03700.1-specific) |
+| `options.threads` | `4` | Threads for MAFFT and IQ-TREE |
+| `traits.columns` | `division location clade` | Columns for ancestral trait inference |
+
+### Clade annotation
+
+Clade labels on tree branches are defined in `config/clades.tsv` and applied by `augur clades`. For YFV, genotype information is already present in the metadata `clade` field (sourced from Pathoplexus). The `clades.tsv` defines mutation-based branch labels to annotate internal nodes where a genotype lineage originates.
+
+YFV genotypes are single-level (`I`, `II`, `III`…), so `clade_levels: 1` in `config.yaml` keeps `clade_truncated` equal to `clade`.
+
+---
+
+## Adapting to Another Pathogen
+
+To create a new build, copy `config/` and `data/`, then edit `config/config.yaml` and `config/subsample.yaml`. Scripts and Snakefiles are shared and require no modification for supported pathogens.
+
+Key fields to update in `config.yaml`:
+
+| Field | Description |
+|-------|-------------|
+| `data_source` | `"pathoplexus"` or `"ncbi"` |
+| `pathoplexus.organism` | Pathoplexus organism slug (e.g. `rsv-a`, `yellow-fever`) |
+| `ncbi.taxid` | NCBI taxonomy ID |
+| `ncbi.genome_size` | Reference genome size in bp |
+| `parameters.mask_5prime/3prime` | Terminal masking in bp (0 for full-genome builds) |
+| `curation.clade_levels` | Hierarchy depth for `clade_truncated` |
+| `region_source` | `"country"` for global builds; `"division"` for Brazil-only |
+| `viralqc.*` | ViralQC dataset and paths (must be configured per pathogen) |
+| `traits.columns` | Columns for ancestral trait reconstruction |
+
+---
+
+## Configuration Files
+
+| File | Purpose |
+|------|---------|
+| `config/config.yaml` | All pipeline parameters |
+| `config/subsample.yaml` | Subsampling strategy (read by `augur subsample`) |
+| `config/auspice_config.json` | Auspice display settings (colorings, filters, panels) |
+| `config/reference.gb` | Reference genome in GenBank format (X03700.1 for YFV) |
+| `config/clades.tsv` | Clade definitions for `augur clades` |
+| `config/cache_coordinates.tsv` | Geocoding cache (updated incrementally each run) |
+| `config/keep.txt` | Strains to always include (one accession per line) |
+| `config/ignore.txt` | Strains to always exclude (reference accession goes here) |
+| `data/new_sequences.fasta` | Local sequences (used when `local_sequences.enabled: true`) |
+| `data/metadata.xlsx` | Local metadata (used when `local_sequences.enabled: true`) |
+
+---
+
+## Scripts
+
+| Script | Role |
+|--------|------|
+| `fetch_pathoplexus.py` | Downloads metadata + sequences from Pathoplexus/LAPIS |
+| `fetch_ncbi.py` | Downloads from NCBI Entrez by taxid |
+| `merge_local_sequences.py` | Merges remote data with local surveillance sequences |
+| `curate.py` | ViralQC join, region, clade_truncated, source, dedup |
+| `get_coordinates.py` | Geocodes locations via Nominatim with rate-limiting and caching |
+| `generate_name2hue.py` | Generates colour hue mapping from subsampled metadata |
+| `colour_maker.py` | Assigns hex colours per metadata value |
+| `name2shape.py` | Assigns shapes for Auspice display |
+| `calculate_delta_frequency.py` | Computes clade frequency changes over time |
+
+---
+
+## Authors
+
+**Anderson Brito** — Instituto Todos pela Saúde (ITpS)
+✉️ [andersonbrito@itps.org.br](mailto:andersonbrito@itps.org.br)
+
+**Thales Bermann** — Instituto Todos pela Saúde (ITpS)
+✉️ [thalesbermann@gmail.com](mailto:thalesbermann@gmail.com)
+
+---
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the [MIT License](LICENSE).
