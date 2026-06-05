@@ -127,9 +127,13 @@ class TestNormalizeHostEdgeCases:
         assert normalize_host("Sus scrofa; farm pig") == "swine"
 
     def test_fallback_lowercases(self):
-        """Unknown hosts are returned lowercased (the base before ';')."""
-        result = normalize_host("Aotus azarae")
-        assert result == "aotus azarae"
+        """Genuinely unknown hosts are returned lowercased."""
+        result = normalize_host("Panthera leo")
+        assert result == "panthera leo"
+
+    def test_aotus_is_primate(self):
+        """Aotus (night monkey) matches the primate genus rule."""
+        assert normalize_host("Aotus azarae") == "primate"
 
     def test_human_precedence_over_swine(self):
         """Human rule fires before swine — 'human swine flu' should be human.

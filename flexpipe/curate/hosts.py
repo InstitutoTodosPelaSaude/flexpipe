@@ -58,15 +58,30 @@ def _compile_rules(rules_data: list) -> list:
 
 
 _rules_yaml = load_data_yaml("flexpipe.data.hosts", "host_rules.yaml")
-_COMPILED_RULES = _compile_rules(_rules_yaml["rules"])
+_COMPILED_RULES = _compile_rules(_rules_yaml["rules"])  # type: ignore[index]
 
 
-def normalize_host(raw: str) -> str:
+def build_rules(override: str | None = None) -> list:
+    """Compile host-normalization rules from a YAML file.
+
+    Args:
+        override: Optional path to a replacement ``host_rules.yaml``.  When
+            ``None`` the bundled default is used.
+
+    Returns:
+        List of ``(target, [condition_callables])`` tuples suitable for use as
+        the *rules* argument of :func:`normalize_host`.
+    """
+
+    rules_data = load_data_yaml("flexpipe.data.hosts", "host_rules.yaml", override=override)
+    return _compile_rules(rules_data["rules"])  # type: ignore[index]
+
+
+def normalize_host(raw: str, rules: list | None = None) -> str:
     """Normalize a free-text host name to a standard category.
 
-    Rules are loaded from ``flexpipe/data/hosts/host_rules.yaml`` and
-    evaluated in order; the first matching rule wins.  A rule matches if ANY
-    of its conditions is satisfied (OR semantics within a rule).
+    Rules are evaluated in order; the first matching rule wins.  A rule
+    matches if ANY of its conditions is satisfied (OR semantics within a rule).
 
     Special targets:
     - ``""`` (empty string): sequence should be dropped.
@@ -74,6 +89,8 @@ def normalize_host(raw: str) -> str:
 
     Args:
         raw: Raw host string from metadata (may contain semicolons or scientific names).
+        rules: Optional compiled rules list (from :func:`build_rules`).  Falls
+            back to the module-level default when ``None``.
 
     Returns:
         Normalized category string, or ``""`` for hosts to be dropped.
@@ -84,11 +101,12 @@ def normalize_host(raw: str) -> str:
     base = s.split(";")[0].strip()
     bl = base.lower()
 
-    for target, conds in _COMPILED_RULES:
+    compiled = rules if rules is not None else _COMPILED_RULES
+    for target, conds in compiled:
         if any(cond(bl) for cond in conds):
             return target
     return bl
 
 
-# Alias used in curate.pipeline for backward compatibility
+# Alias retained for any external callers
 _norm_host = normalize_host

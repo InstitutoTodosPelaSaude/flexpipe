@@ -67,6 +67,7 @@ class OptionsConfig(BaseModel):
 class CoordinatesConfig(BaseModel):
     model_config = ConfigDict(extra="allow")
     columns: str = "country"  # space-separated list of columns to geocode
+    force_file: str | None = None  # path to TSV with manual overrides: place\tlat\tlon
 
 
 class ColoursHueTablesConfig(BaseModel):

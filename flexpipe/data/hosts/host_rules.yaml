@@ -90,6 +90,20 @@ rules:
       - type: literal
         values: ["reverse genetics", "cell line", "env", "environmental"]
 
+  - target: mosquito
+    conditions:
+      - type: regex
+        pattern: "^(aedes|culex|anopheles|haemagogus|sabethes|mansonia|psorophora|culicidae|ochlerotatus)\\b"
+      - type: contains_any
+        keywords: ["mosquito", "mosquitos"]
+
+  - target: primate
+    conditions:
+      - type: regex
+        pattern: "^(alouatta|cebus|sapajus|callithrix|mico|ateles|lagothrix|saimiri|aotus|pithecia|chiropotes|cacajao|callicebus|plecturocebus|cheracebus|leontocebus|saguinus|leontopithecus|cebuella|callimico|brachyteles|pan|gorilla|pongo|hylobates|macaca|papio|cercocebus|mandrillus|colobus)\\b"
+      - type: contains_any
+        keywords: ["monkey", "marmoset", "tamarin", "capuchin", "howler", "titi", "night monkey", "owl monkey", "new world"]
+
   - target: dog
     conditions:
       - type: contains
