@@ -42,10 +42,11 @@ class FilesConfig(BaseModel):
     reference: str = "config/reference.gb"
     clades: str = "config/clades.tsv"
     auspice_config: str = "config/auspice_config.json"
+    subsample_config: str = "config/subsample.yaml"
 
 
 class ParametersConfig(BaseModel):
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow")  # allow augur-specific extensions
     mask_5prime: int = 0
     mask_3prime: int = 0
     mask_sites: str = ""
@@ -60,20 +61,20 @@ class ParametersConfig(BaseModel):
 
 
 class OptionsConfig(BaseModel):
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="forbid")
     threads: int = 4
 
 
 class CoordinatesConfig(BaseModel):
-    model_config = ConfigDict(extra="allow")
-    columns: str = "country"  # space-separated list of columns to geocode
-    force_file: str | None = None  # path to TSV with manual overrides: place\tlat\tlon
+    model_config = ConfigDict(extra="forbid")
+    columns: str = "country"
+    force_file: str | None = None
 
 
 class ColoursHueTablesConfig(BaseModel):
     """Optional override paths for bundled *_hues.tsv files."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="forbid")
     region: str | None = None
     host: str | None = None
     source: str | None = None
@@ -81,7 +82,7 @@ class ColoursHueTablesConfig(BaseModel):
 
 
 class ColoursConfig(BaseModel):
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow")  # allow per-build color category extensions
     clade: str = "clade_truncated clade"
     geo: str = "region division location"
     source: str = "source"
@@ -90,34 +91,34 @@ class ColoursConfig(BaseModel):
 
 
 class TraitsConfig(BaseModel):
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="forbid")
     columns: str = "division location clade"
 
 
 class SubsamplingConfig(BaseModel):
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="forbid")
     random_seed: int = 42
 
 
 class CurationConfig(BaseModel):
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="forbid")
     clade_levels: int = 1
     clade_separator: str = "."
-    host_rules: str | None = None  # override path for host_rules.yaml
+    host_rules: str | None = None
 
 
 class RegionsConfig(BaseModel):
     """Override paths for bundled region-mapping TSV files."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="forbid")
     country_map: str | None = None
     division_map: str | None = None
     division_abbreviations: str | None = None
-    division_parser: str = "brazil"  # "brazil" | "none"
+    division_parser: str = "brazil"
 
 
 class PathoplexusConfig(BaseModel):
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow")  # allow LAPIS-specific query params
     organism: str = ""
     base_url: str = "https://lapis.pathoplexus.org"
     metadata_endpoint: str = "details"
@@ -126,40 +127,43 @@ class PathoplexusConfig(BaseModel):
 
 
 class NcbiConfig(BaseModel):
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="forbid")
     taxid: int = 0
     genome_size: int = 0
     min_length: float = 0.7
     max_length: float = 1.1
     email: str = ""
     api_key: str = ""
+    min_date: str = ""
+    extra_search_term: str = ""
 
 
 class ViralqcConfig(BaseModel):
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="forbid")
     conda_env: str = "viralQC"
     clade_column: str = "clade"
     datasets_dir: str = ""
     blast_database: str = ""
     blast_database_metadata: str = ""
+    expected_virus: str | None = None
 
 
 class QcConfig(BaseModel):
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="forbid")
     genome_quality: list[str] = ["A", "B"]
     min_coverage: float = 0.70
     required_columns: list[str] = Field(default_factory=lambda: ["strain", "date", "clade"])
 
 
 class LocalSequencesConfig(BaseModel):
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="forbid")
     enabled: bool = False
     metadata: str = "data/metadata.xlsx"
     sequences: str = "data/new_sequences.fasta"
 
 
 class PathsConfig(BaseModel):
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="forbid")
     workdir: str = "workdir"
 
 

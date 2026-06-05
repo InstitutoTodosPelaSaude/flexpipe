@@ -27,6 +27,17 @@ import sys
 import pandas as pd
 from Bio import SeqIO
 
+from flexpipe.data import load_data_yaml
+from flexpipe.io import read_fasta_ids  # avoids duplicating the same helper
+
+
+def _load_viralqc_cols() -> set[str]:
+    data = load_data_yaml("flexpipe.data.curation", "viralqc_itps_columns.yaml")
+    return set(data.get("viralqc_columns", []))  # type: ignore[arg-type]
+
+
+_VQC_COLS: set[str] = _load_viralqc_cols()
+
 logger = logging.getLogger(__name__)
 
 
@@ -81,11 +92,6 @@ ITPS_TSV_TO_PPX = {
 }
 
 
-def read_fasta_ids(path: str) -> set:
-    """Return the set of sequence IDs (first whitespace-delimited token) in a FASTA file."""
-    return {rec.id.split()[0] for rec in SeqIO.parse(path, "fasta")}
-
-
 def read_fasta_records(path: str) -> dict:
     """Return ``{seq_id: sequence_str}`` from a FASTA file."""
     records = {}
@@ -131,53 +137,7 @@ def read_itps_tsv_metadata(path: str) -> pd.DataFrame:
     if "dataUseTerms" in df.columns:
         df["dataUseTerms"] = df["dataUseTerms"].str.strip().str.upper()
     # Drop ViralQC output columns (they'll be re-added by curate after the pipeline run)
-    vqc_cols = {
-        "Segment",
-        "Clade",
-        "TargetGene",
-        "GenomeQuality",
-        "TargetRegionsQuality",
-        "TargetGeneQuality",
-        "CodingDNASequenceCoverageQuality",
-        "MissingDataQuality",
-        "PrivateMutationsQuality",
-        "MixedSitesQuality",
-        "SingleNucleotidePolymorphismsClustersQuality",
-        "FrameShiftsQuality",
-        "StopCodonsQuality",
-        "Coverage",
-        "CodingDNASequenceCoverage",
-        "QualityOverallStatus",
-        "NucleotideSubstitutions",
-        "NucleotideDeletions",
-        "NucleotideInsertions",
-        "FrameShifts",
-        "AminoacidSubstitutions",
-        "AminoacidDeletions",
-        "AminoacidInsertions",
-        "TotalSubstitutions",
-        "TotalDeletions",
-        "TotalInsertions",
-        "TotalFrameShifts",
-        "TotalMissing",
-        "TotalNonACGTNs",
-        "TotalAminoacidSubstitutions",
-        "TotalAminoacidDeletions",
-        "TotalAminoacidInsertions",
-        "TotalUnknownAminoacids",
-        "PrivateNucleotideMutationsTotalReversionSubstitutions",
-        "PrivateNucleotideMutationsTotalPrivateSubstitutions",
-        "MissingDataStatus",
-        "SingleNucleotidePolymorphismsClustersStatus",
-        "FrameShiftsStatus",
-        "StopCodonsStatus",
-        "Dataset",
-        "DatasetVersion",
-        "clade",
-        "genomeQuality",
-        "coverage",
-    }
-    df.drop(columns=[c for c in vqc_cols if c in df.columns], inplace=True)
+    df.drop(columns=[c for c in _VQC_COLS if c in df.columns], inplace=True)
     return df
 
 
@@ -255,8 +215,8 @@ def main() -> None:
             logger.warning("Local sequences not found: %s", args.local_sequences)
         else:
             logger.info("Loading local sequences: %s", args.local_sequences)
+            fasta_ids = read_fasta_ids(args.local_sequences)
             local_seqs = read_fasta_records(args.local_sequences)
-            fasta_ids = set(local_seqs)
             logger.info("  %d sequences in FASTA", len(fasta_ids))
 
             logger.info("Loading local metadata: %s", args.local_metadata)

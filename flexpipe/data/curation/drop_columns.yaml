@@ -1,0 +1,119 @@
+# Columns to discard from Pathoplexus/NCBI/ITpS metadata during curation.
+# These are columns that are either redundant, always empty, internal
+# pipeline fields, or have no value for downstream phylogenetic analysis.
+drop:
+  # Internal Pathoplexus structure
+  - submissionId
+  - isRevocation
+  - version
+  - versionStatus
+  - versionComment
+  - pipelineVersion
+  - displayName
+  - submittedAtTimestamp
+  - releasedAtTimestamp
+  - groupId
+  - earliestReleaseDate
+  - dataBecameOpenAt
+  - dataUseTermsUrl
+  - dataUseTermsRestrictedUntil
+  # Redundant accessions
+  - insdcAccessionFull
+  - insdcVersion
+  # Redundant host fields (merged via harmonize_column)
+  - hostNameScientific
+  - hostTaxonId
+  # Redundant coverage (merged above)
+  - breadthOfCoverage
+  # Geography computed by flexpipe-coordinates
+  - geoLocLatitude
+  - geoLocLongitude
+  - geoLocCity
+  - geoLocSite
+  # Very sparse / low-value LAPIS technical
+  - ampliconPcrPrimerScheme
+  - ampliconSize
+  - assemblyReferenceGenomeAccession
+  - consensusSequenceSoftwareName
+  - consensusSequenceSoftwareVersion
+  - collectionDevice
+  - collectionMethod
+  - hostRole
+  - hostVaccinationStatus
+  - isLabHost
+  - sequencingAssayType
+  # Detailed mutation lists (redundant with counts)
+  - frameShifts
+  - stopCodons
+  - totalDeletedNucs
+  - totalInsertedNucs
+  - totalFrameShifts
+  - totalStopCodons
+  - totalUnknownNucs
+  # NCBI cross-refs (low value, partially filled)
+  - ncbiReleaseDate
+  - ncbiSourceDb
+  - ncbiUpdateDate
+  - ncbiVirusName
+  - ncbiVirusTaxId
+  - ncbiSubmitterCountry
+  - gcaAccession
+  # ITpS-specific already harmonized or not needed
+  - pathogen_common_name
+  - sample_code
+  - orig_lab_address
+  - subm_lab_address
+  # Always-empty clinical / environmental fields
+  - anatomicalMaterial
+  - anatomicalPart
+  - bodyProduct
+  - cellLine
+  - comment
+  - cultureId
+  - dehostingMethod
+  - diagnosticMeasurementMethod
+  - diagnosticMeasurementUnit
+  - diagnosticMeasurementValue
+  - diagnosticTargetGeneName
+  - diagnosticTargetPresence
+  - environmentalMaterial
+  - environmentalSite
+  - experimentalSpecimenRoleType
+  - exposureDetails
+  - exposureEvent
+  - exposureSetting
+  - foodProduct
+  - foodProductProperties
+  - hostAgeBin
+  - hostDisease
+  - hostHealthOutcome
+  - hostHealthState
+  - hostOriginCountry
+  - passageMethod
+  - passageNumber
+  - presamplingActivity
+  - previousInfectionDisease
+  - previousInfectionOrganism
+  - purposeOfSampling
+  - purposeOfSequencing
+  - qualityControlDetails
+  - qualityControlDetermination
+  - qualityControlIssues
+  - qualityControlMethodName
+  - qualityControlMethodVersion
+  - rawSequenceDataProcessingMethod
+  - sampleReceivedDate
+  - sequencedByContactEmail
+  - sequencedByContactName
+  - sequencedByOrganization
+  - sequencingDate
+  - signsAndSymptoms
+  - specimenProcessing
+  - specimenProcessingDetails
+  - travelHistory
+  - travel_history
+  # ITpS health fields (no PPX equivalent, very sparse)
+  - health_state
+  - health_outcome
+  - signs_and_symptoms
+  - host_disease
