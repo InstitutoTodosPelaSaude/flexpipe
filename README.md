@@ -319,16 +319,6 @@ docker run --rm \
 
 ---
 
-## Authors
-
-**Anderson Brito** — Instituto Todos pela Saúde (ITpS)
-✉️ [andersonbrito@itps.org.br](mailto:andersonbrito@itps.org.br)
-
-**Thales Bermann** — Instituto Todos pela Saúde (ITpS)
-✉️ [thalesbermann@gmail.com](mailto:thalesbermann@gmail.com)
-
----
-
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
