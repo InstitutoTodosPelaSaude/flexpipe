@@ -28,6 +28,7 @@ import hashlib
 import json
 import logging
 import subprocess
+import time
 from pathlib import Path
 from typing import Optional, Union
 
@@ -63,10 +64,19 @@ def _run_version(cmd: list) -> str:
 
 
 def _hash_config(config_path: Union[str, Path]) -> str:
-    """Return the SHA-256 hex digest of a config file."""
+    """Return a short SHA-256 digest covering config.yaml and adjacent build files."""
     try:
-        data = Path(config_path).read_bytes()
-        return hashlib.sha256(data).hexdigest()[:16]
+        config_path = Path(config_path)
+        build_dir = config_path.parent
+        h = hashlib.sha256()
+        # Always include the config file itself (may be named config.yaml or otherwise)
+        h.update(config_path.read_bytes())
+        # Include other deterministic build inputs if present
+        for name in sorted(["subsample.yaml", "clades.tsv", "reference.gb"]):
+            candidate = build_dir / name
+            if candidate.exists():
+                h.update(candidate.read_bytes())
+        return h.hexdigest()[:16]
     except Exception:
         return "unknown"
 
@@ -91,6 +101,7 @@ class Manifest:
         self.config_hash = _hash_config(config_path) if config_path else "unknown"
         self.counts: dict[str, int] = {}
         self.extra: dict[str, object] = {}
+        self._start_time: float = time.time()
 
     @property
     def run_id(self) -> str:
@@ -145,11 +156,14 @@ class Manifest:
 
     def to_dict(self) -> dict:
         """Serialize the manifest to a plain dictionary."""
+        elapsed = time.time() - self._start_time
         return {
             "run_id": self.run_id,
             "run_date": self.run_date,
             "build_name": self.build_name,
             "config_hash": self.config_hash,
+            "elapsed_seconds": round(elapsed, 1),
+            "status": self.extra.get("status", "unknown"),
             "counts": self.counts,
             "tool_versions": self.collect_tool_versions(),
             **self.extra,

@@ -44,6 +44,22 @@ _INGEST_SNAKEFILE = _REPO_ROOT / "ingest" / "Snakefile"
 _PHYLO_SNAKEFILE = _REPO_ROOT / "phylogenetic" / "Snakefile"
 
 
+def _record_row_counts(manifest: Manifest, paths: WorkdirPaths) -> None:
+    """Read row counts from ingest outputs and record them in the manifest."""
+    candidates = [
+        ("merged", paths.ingest_dir / "merged_metadata.tsv"),
+        ("curated", paths.ingest_dir / "final_metadata.tsv"),
+        ("subsampled", paths.subsampled_metadata),
+    ]
+    for stage, tsv_path in candidates:
+        if tsv_path.exists():
+            try:
+                count = sum(1 for _ in open(tsv_path)) - 1  # exclude header
+                manifest.record_counts(stage, max(count, 0))
+            except Exception:
+                pass
+
+
 def _seed_coordinate_cache(build_dir: Path, paths: WorkdirPaths) -> None:
     """Copy the read-only seed cache from the build directory to the workdir on first run."""
     seed = build_dir / "cache_coordinates.tsv"
@@ -123,11 +139,13 @@ def run_pipeline(
     if stage in ("ingest", "all"):
         logger.info("=== Stage: ingest ===")
         rc = _run_snakemake(_INGEST_SNAKEFILE, config_path, paths, cores)
+        manifest.record("ingest_exit_code", rc)
         if rc != 0:
             logger.error("Ingest stage failed (exit code %d)", rc)
-            manifest.record("ingest_exit_code", rc)
+            manifest.record("status", "ingest_failed")
             manifest.save(paths.manifest)
             return rc
+        _record_row_counts(manifest, paths)
 
     if stage in ("phylo", "all"):
         # Boundary check before phylogenetics
@@ -136,12 +154,20 @@ def run_pipeline(
                 manifest.validate_boundary(paths.subsampled_metadata)
             except SystemExit as exc:
                 logger.error("Boundary check failed: %s", exc)
+                manifest.record("status", "boundary_failed")
                 manifest.save(paths.manifest)
                 return 1
         logger.info("=== Stage: phylogenetic ===")
         rc = _run_snakemake(_PHYLO_SNAKEFILE, config_path, paths, cores)
+        manifest.record("phylo_exit_code", rc)
         if rc != 0:
             logger.error("Phylogenetic stage failed (exit code %d)", rc)
+            manifest.record("status", "phylo_failed")
+        else:
+            manifest.record("status", "success")
+
+    if stage == "ingest" and rc == 0:
+        manifest.record("status", "success")
 
     manifest.record("stage", stage)
     manifest.record("cores", cores)

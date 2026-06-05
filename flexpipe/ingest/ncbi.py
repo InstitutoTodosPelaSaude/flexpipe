@@ -193,8 +193,8 @@ def main() -> None:
 
     taxid = ncbi.get("taxid")
     genome_size = ncbi.get("genome_size")
-    email = ncbi.get("email", "") or "pipeline@example.com"
-    api_key = ncbi.get("api_key", "") or None
+    email = ncbi.get("email", "") or os.environ.get("NCBI_EMAIL") or "pipeline@example.com"
+    api_key = ncbi.get("api_key", "") or os.environ.get("NCBI_API_KEY") or None
     min_frac = float(ncbi.get("min_length", 0.7))
     max_frac = float(ncbi.get("max_length", 1.1))
 
