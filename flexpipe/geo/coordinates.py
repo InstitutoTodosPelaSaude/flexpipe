@@ -59,7 +59,7 @@ def find_coordinates(
     Returns:
         ``(latitude_str, longitude_str)`` or ``("NA", "NA")`` on failure.
     """
-    featuretype = FEATURETYPE.get(level)
+    featuretype = FEATURETYPE.get(level or "")
     for attempt in range(retries):
         try:
             time.sleep(RATE_LIMIT_SLEEP)
@@ -194,7 +194,7 @@ def geocode_metadata(
     """
     force_coordinates = force_coordinates or {}
     geolocator = _make_geolocator(user_agent=user_agent)
-    results = load_cache(cache_path, columns)
+    results = load_cache(cache_path or "", columns)
     unique_queries = build_queries(df, columns)
     not_found = []
 

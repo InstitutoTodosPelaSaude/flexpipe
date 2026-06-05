@@ -28,8 +28,11 @@ jobs:
       - name: Format check (black)
         run: black --check .
 
-      - name: Unit tests
-        run: pytest
+      - name: Type check (mypy)
+        run: mypy flexpipe/ --ignore-missing-imports
+
+      - name: Unit tests with coverage
+        run: pytest --cov=flexpipe --cov-report=term-missing --cov-fail-under=60
 
   integration:
     name: Integration Tests
