@@ -1,27 +1,21 @@
 """Unit tests for flexpipe.config — FlexpipeConfig pydantic model."""
 
-import pytest
 from pathlib import Path
 
 import pydantic
+import pytest
 
 from flexpipe.config import (
     FlexpipeConfig,
-    FilesConfig,
-    ParametersConfig,
-    ColoursConfig,
-    ColoursHueTablesConfig,
-    RegionsConfig,
-    CurationConfig,
-    PathsConfig,
     ViralqcConfig,
     load_config,
+    resolve_viralqc_paths,
 )
-
 
 # ---------------------------------------------------------------------------
 # Default construction
 # ---------------------------------------------------------------------------
+
 
 class TestDefaults:
     def test_empty_config_uses_defaults(self):
@@ -84,6 +78,7 @@ class TestDefaults:
 # ---------------------------------------------------------------------------
 # Cross-field validators
 # ---------------------------------------------------------------------------
+
 
 class TestCrossFieldValidators:
     def test_pathoplexus_missing_organism_raises(self):
@@ -150,6 +145,7 @@ class TestCrossFieldValidators:
 # load_config() with fixture YAML
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def yfv_config_path():
     return Path(__file__).parent.parent / "fixtures" / "config_division_build.yaml"
@@ -201,6 +197,7 @@ class TestLoadConfig:
 # ViralqcConfig standalone
 # ---------------------------------------------------------------------------
 
+
 class TestViralqcConfig:
     def test_default_fields(self):
         v = ViralqcConfig()
@@ -214,3 +211,86 @@ class TestViralqcConfig:
         assert d["datasets_dir"] == "/data/vqc"
         v2 = ViralqcConfig(**d)
         assert v2.blast_database == "/data/vqc/blast.fasta"
+
+
+# ---------------------------------------------------------------------------
+# resolve_viralqc_paths — datasets_dir resolution order
+# ---------------------------------------------------------------------------
+
+
+class TestResolveViralqcPaths:
+    """Tests for the three-step resolution: config key → env var → submodule fallback."""
+
+    def _make_fake_datasets(self, tmp_path: Path) -> Path:
+        """Create a minimal fake datasets directory with the expected blast files."""
+        d = tmp_path / "datasets"
+        d.mkdir()
+        (d / "blast.fasta").write_text(">seq1\nATCG\n")
+        (d / "blast.tsv").write_text("accession\torganism\nNC_001\tyellow-fever\n")
+        return d
+
+    def test_explicit_config_key_wins(self, tmp_path, monkeypatch):
+        """viralqc.datasets_dir in config takes highest precedence."""
+        ds = self._make_fake_datasets(tmp_path)
+        monkeypatch.delenv("VIRALQC_DATASETS_DIR", raising=False)
+        v = resolve_viralqc_paths(ViralqcConfig(datasets_dir=str(ds)))
+        assert v.datasets_dir == str(ds)
+        assert v.blast_database == str(ds / "blast.fasta")
+        assert v.blast_database_metadata == str(ds / "blast.tsv")
+
+    def test_env_var_wins_over_submodule(self, tmp_path, monkeypatch):
+        """$VIRALQC_DATASETS_DIR overrides the submodule fallback."""
+        ds = self._make_fake_datasets(tmp_path)
+        # Simulate submodule datasets present at a *different* path
+        fake_submodule = tmp_path / "fake_repo" / "viralQC" / "datasets"
+        fake_submodule.mkdir(parents=True)
+        (fake_submodule / "blast.fasta").write_text(">should_not_use\n")
+        (fake_submodule / "blast.tsv").write_text("")
+        monkeypatch.setenv("VIRALQC_DATASETS_DIR", str(ds))
+        v = resolve_viralqc_paths(ViralqcConfig(datasets_dir=""))
+        assert v.datasets_dir == str(ds)
+
+    def test_submodule_fallback_used_when_nothing_else_set(self, tmp_path, monkeypatch):
+        """Auto-discovers viralQC/datasets relative to the package when it exists."""
+        import flexpipe.config as cfg_module
+
+        monkeypatch.delenv("VIRALQC_DATASETS_DIR", raising=False)
+        # Patch __file__ of the config module to point inside our tmp_path tree so
+        # parents[1] / "viralQC" / "datasets" resolves to our fake datasets dir.
+        fake_config_py = tmp_path / "flexpipe" / "config.py"
+        fake_config_py.parent.mkdir(parents=True)
+        fake_config_py.write_text("")
+        # The submodule fallback computes: Path(__file__).resolve().parents[1] / "viralQC" / "datasets"
+        # parents[1] of <tmp>/flexpipe/config.py  →  <tmp>
+        # <tmp>/viralQC/datasets  →  ds (which is tmp_path/datasets — we need to move it)
+        viralqc_datasets = tmp_path / "viralQC" / "datasets"
+        viralqc_datasets.mkdir(parents=True)
+        (viralqc_datasets / "blast.fasta").write_text(">seq\nATCG\n")
+        (viralqc_datasets / "blast.tsv").write_text("accession\torganism\n")
+        monkeypatch.setattr(cfg_module, "__file__", str(fake_config_py))
+        v = resolve_viralqc_paths(ViralqcConfig(datasets_dir=""))
+        assert str(viralqc_datasets) in v.datasets_dir
+
+    def test_no_config_no_env_no_submodule_raises(self, monkeypatch):
+        """SystemExit with a helpful message when nothing resolves."""
+        import flexpipe.config as cfg_module
+
+        monkeypatch.delenv("VIRALQC_DATASETS_DIR", raising=False)
+        # Point __file__ to a dir where viralQC/datasets does not exist
+        monkeypatch.setattr(cfg_module, "__file__", "/nonexistent/path/flexpipe/config.py")
+        with pytest.raises(SystemExit, match="install_viralqc.sh"):
+            resolve_viralqc_paths(ViralqcConfig(datasets_dir=""))
+
+    def test_explicit_blast_paths_not_overridden(self, tmp_path, monkeypatch):
+        """Explicit blast_database / blast_database_metadata survive resolution."""
+        ds = self._make_fake_datasets(tmp_path)
+        custom_blast = tmp_path / "custom.fasta"
+        custom_blast.write_text(">x\nA\n")
+        monkeypatch.delenv("VIRALQC_DATASETS_DIR", raising=False)
+        v = resolve_viralqc_paths(
+            ViralqcConfig(
+                datasets_dir=str(ds),
+                blast_database=str(custom_blast),
+            )
+        )
+        assert v.blast_database == str(custom_blast)

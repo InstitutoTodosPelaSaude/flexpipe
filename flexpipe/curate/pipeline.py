@@ -22,7 +22,6 @@ from flexpipe.curate.clades import truncate_clade
 from flexpipe.curate.columns import apply_harmonization, drop_columns
 from flexpipe.curate.hosts import normalize_host
 from flexpipe.curate.regions import (
-    BRAZIL_REGION_MAP,
     REGION_MAP,
     _lookup_brazil_region,
     _parse_brazil_division,
@@ -123,10 +122,13 @@ def run_curate(
         df["host"] = df["host"].apply(normalize_host)
 
     # ── rename lab columns to display-friendly names ─────────────────────────
-    df.rename(columns={
-        "orig_lab_name": "Originating Lab",
-        "subm_lab_name": "Submitting Lab",
-    }, inplace=True)
+    df.rename(
+        columns={
+            "orig_lab_name": "Originating Lab",
+            "subm_lab_name": "Submitting Lab",
+        },
+        inplace=True,
+    )
 
     # ── normalise data_use to uppercase (OPEN / RESTRICTED) ───────────────────
     if "data_use" in df.columns:
@@ -144,16 +146,15 @@ def run_curate(
 
 def main() -> None:
     """Entry point for ``flexpipe-curate``."""
-    parser = argparse.ArgumentParser(
-        description="Nextclade join + region + clade_truncated"
-    )
-    parser.add_argument("--config",    required=True)
-    parser.add_argument("--metadata",  required=True)
+    parser = argparse.ArgumentParser(description="Nextclade join + region + clade_truncated")
+    parser.add_argument("--config", required=True)
+    parser.add_argument("--metadata", required=True)
     parser.add_argument("--nextclade", required=False, default=None)
-    parser.add_argument("--output",    required=True)
+    parser.add_argument("--output", required=True)
     args = parser.parse_args()
 
     from flexpipe.logging_setup import configure_logging
+
     configure_logging()
 
     run_curate(

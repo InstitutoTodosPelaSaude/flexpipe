@@ -52,7 +52,9 @@ _BRAZIL_NORM = {
     unicodedata.normalize("NFD", k).encode("ascii", "ignore").decode().lower().strip(): v
     for k, v in BRAZIL_REGION_MAP.items()
 }
-_ABBREV_TO_REGION = {abbr: BRAZIL_REGION_MAP.get(state, "") for abbr, state in _BRAZIL_ABBREV.items()}
+_ABBREV_TO_REGION = {
+    abbr: BRAZIL_REGION_MAP.get(state, "") for abbr, state in _BRAZIL_ABBREV.items()
+}
 _BRAZIL_CANONICAL = {
     unicodedata.normalize("NFD", k).encode("ascii", "ignore").decode().lower().strip(): k
     for k in BRAZIL_REGION_MAP
@@ -85,22 +87,22 @@ def _parse_brazil_division(division_str: str):
         return "", ""
 
     # Remove IBGE codes: "[IBGE7 3205002]"
-    d_clean = re.sub(r'\s*\[.*?\]', '', d).strip()
+    d_clean = re.sub(r"\s*\[.*?\]", "", d).strip()
 
     # Special case: "City-UF" (no spaces, 2-letter UF suffix)
-    uf_suffix = re.match(r'^(.+?)-([A-Z]{2})$', d_clean)
+    uf_suffix = re.match(r"^(.+?)-([A-Z]{2})$", d_clean)
     if uf_suffix:
         city_part, uf = uf_suffix.group(1).strip(), uf_suffix.group(2)
         if uf in _BRAZIL_ABBREV:
             return _BRAZIL_ABBREV[uf], city_part
 
     # Split on ", " or " - "
-    tokens = [t.strip() for t in re.split(r',\s*|\s+-\s+', d_clean) if t.strip()]
+    tokens = [t.strip() for t in re.split(r",\s*|\s+-\s+", d_clean) if t.strip()]
 
     state_name, state_idx = "", -1
     for i, token in enumerate(tokens):
         # 2-letter abbreviation (e.g. "ES", "MG")
-        if re.match(r'^[A-Z]{2}$', token) and token in _BRAZIL_ABBREV:
+        if re.match(r"^[A-Z]{2}$", token) and token in _BRAZIL_ABBREV:
             state_name = _BRAZIL_ABBREV[token]
             state_idx = i
             break

@@ -11,7 +11,6 @@ lines 312–393).
 """
 
 import logging
-from typing import Set
 
 import pandas as pd
 
@@ -50,17 +49,17 @@ def harmonize_column(df: pd.DataFrame, src: str, dst: str) -> pd.DataFrame:
 # Columns are renamed in this order; the same dst may appear multiple times
 # (the second src fills values still empty after the first).
 HARMONIZE_PAIRS = [
-    ("hostNameCommon",            "host"),
-    ("hostGender",                "sex"),
-    ("hostAge",                   "age"),
-    ("author",                    "authors"),
-    ("authorAffiliations",        "affiliations"),
+    ("hostNameCommon", "host"),
+    ("hostGender", "sex"),
+    ("hostAge", "age"),
+    ("author", "authors"),
+    ("authorAffiliations", "affiliations"),
     ("specimenCollectorSampleId", "sample_id"),
-    ("specimen_id",               "sample_id"),
-    ("depthOfCoverage",           "depth_of_coverage"),
-    ("sampleType",                "sample_type"),
-    ("sequencingInstrument",      "seq_instrument"),
-    ("sequencingProtocol",        "seq_tech"),
+    ("specimen_id", "sample_id"),
+    ("depthOfCoverage", "depth_of_coverage"),
+    ("sampleType", "sample_type"),
+    ("sequencingInstrument", "seq_instrument"),
+    ("sequencingProtocol", "seq_tech"),
 ]
 
 
@@ -82,59 +81,126 @@ def apply_harmonization(df: pd.DataFrame) -> pd.DataFrame:
 
 # ── Columns to drop ──────────────────────────────────────────────────────────
 
-DROP: Set[str] = {
+DROP: set[str] = {
     # Internal Pathoplexus structure
-    "submissionId", "isRevocation", "version", "versionStatus", "versionComment",
-    "pipelineVersion", "displayName", "submittedAtTimestamp", "releasedAtTimestamp",
-    "groupId", "earliestReleaseDate", "dataBecameOpenAt", "dataUseTermsUrl",
+    "submissionId",
+    "isRevocation",
+    "version",
+    "versionStatus",
+    "versionComment",
+    "pipelineVersion",
+    "displayName",
+    "submittedAtTimestamp",
+    "releasedAtTimestamp",
+    "groupId",
+    "earliestReleaseDate",
+    "dataBecameOpenAt",
+    "dataUseTermsUrl",
     "dataUseTermsRestrictedUntil",
     # Redundant accessions
-    "insdcAccessionFull", "insdcVersion",
+    "insdcAccessionFull",
+    "insdcVersion",
     # Redundant host fields (merged above)
-    "hostNameScientific", "hostTaxonId",
+    "hostNameScientific",
+    "hostTaxonId",
     # Redundant coverage (merged above)
     "breadthOfCoverage",
     # Geography computed by get_coordinates.py
-    "geoLocLatitude", "geoLocLongitude", "geoLocCity", "geoLocSite",
+    "geoLocLatitude",
+    "geoLocLongitude",
+    "geoLocCity",
+    "geoLocSite",
     # Very sparse / low-value LAPIS technical
-    "ampliconPcrPrimerScheme", "ampliconSize", "assemblyReferenceGenomeAccession",
-    "consensusSequenceSoftwareName", "consensusSequenceSoftwareVersion",
-    "collectionDevice", "collectionMethod", "hostRole", "hostVaccinationStatus",
-    "isLabHost", "sequencingAssayType",
+    "ampliconPcrPrimerScheme",
+    "ampliconSize",
+    "assemblyReferenceGenomeAccession",
+    "consensusSequenceSoftwareName",
+    "consensusSequenceSoftwareVersion",
+    "collectionDevice",
+    "collectionMethod",
+    "hostRole",
+    "hostVaccinationStatus",
+    "isLabHost",
+    "sequencingAssayType",
     # Detailed mutation lists (redundant with counts)
-    "frameShifts", "stopCodons",
-    "totalDeletedNucs", "totalInsertedNucs", "totalFrameShifts",
-    "totalStopCodons", "totalUnknownNucs",
+    "frameShifts",
+    "stopCodons",
+    "totalDeletedNucs",
+    "totalInsertedNucs",
+    "totalFrameShifts",
+    "totalStopCodons",
+    "totalUnknownNucs",
     # NCBI cross-refs (low value, partially filled)
-    "ncbiReleaseDate", "ncbiSourceDb", "ncbiUpdateDate",
-    "ncbiVirusName", "ncbiVirusTaxId", "ncbiSubmitterCountry", "gcaAccession",
+    "ncbiReleaseDate",
+    "ncbiSourceDb",
+    "ncbiUpdateDate",
+    "ncbiVirusName",
+    "ncbiVirusTaxId",
+    "ncbiSubmitterCountry",
+    "gcaAccession",
     # ITpS-specific already harmonized or not needed
-    "pathogen_common_name", "sample_code",
-    "orig_lab_address", "subm_lab_address",
+    "pathogen_common_name",
+    "sample_code",
+    "orig_lab_address",
+    "subm_lab_address",
     # Always-empty clinical / environmental fields
-    "anatomicalMaterial", "anatomicalPart", "bodyProduct", "cellLine", "comment",
-    "cultureId", "dehostingMethod", "diagnosticMeasurementMethod",
-    "diagnosticMeasurementUnit", "diagnosticMeasurementValue",
-    "diagnosticTargetGeneName", "diagnosticTargetPresence",
-    "environmentalMaterial", "environmentalSite", "experimentalSpecimenRoleType",
-    "exposureDetails", "exposureEvent", "exposureSetting",
-    "foodProduct", "foodProductProperties", "hostAgeBin", "hostDisease",
-    "hostHealthOutcome", "hostHealthState", "hostOriginCountry",
-    "passageMethod", "passageNumber", "presamplingActivity",
-    "previousInfectionDisease", "previousInfectionOrganism",
-    "purposeOfSampling", "purposeOfSequencing", "qualityControlDetails",
-    "qualityControlDetermination", "qualityControlIssues",
-    "qualityControlMethodName", "qualityControlMethodVersion",
-    "rawSequenceDataProcessingMethod", "sampleReceivedDate",
-    "sequencedByContactEmail", "sequencedByContactName", "sequencedByOrganization",
-    "sequencingDate", "signsAndSymptoms", "specimenProcessing",
-    "specimenProcessingDetails", "travelHistory", "travel_history",
+    "anatomicalMaterial",
+    "anatomicalPart",
+    "bodyProduct",
+    "cellLine",
+    "comment",
+    "cultureId",
+    "dehostingMethod",
+    "diagnosticMeasurementMethod",
+    "diagnosticMeasurementUnit",
+    "diagnosticMeasurementValue",
+    "diagnosticTargetGeneName",
+    "diagnosticTargetPresence",
+    "environmentalMaterial",
+    "environmentalSite",
+    "experimentalSpecimenRoleType",
+    "exposureDetails",
+    "exposureEvent",
+    "exposureSetting",
+    "foodProduct",
+    "foodProductProperties",
+    "hostAgeBin",
+    "hostDisease",
+    "hostHealthOutcome",
+    "hostHealthState",
+    "hostOriginCountry",
+    "passageMethod",
+    "passageNumber",
+    "presamplingActivity",
+    "previousInfectionDisease",
+    "previousInfectionOrganism",
+    "purposeOfSampling",
+    "purposeOfSequencing",
+    "qualityControlDetails",
+    "qualityControlDetermination",
+    "qualityControlIssues",
+    "qualityControlMethodName",
+    "qualityControlMethodVersion",
+    "rawSequenceDataProcessingMethod",
+    "sampleReceivedDate",
+    "sequencedByContactEmail",
+    "sequencedByContactName",
+    "sequencedByOrganization",
+    "sequencingDate",
+    "signsAndSymptoms",
+    "specimenProcessing",
+    "specimenProcessingDetails",
+    "travelHistory",
+    "travel_history",
     # ITpS health fields (no PPX equivalent, very sparse)
-    "health_state", "health_outcome", "signs_and_symptoms", "host_disease",
+    "health_state",
+    "health_outcome",
+    "signs_and_symptoms",
+    "host_disease",
 }
 
 
-def drop_columns(df: pd.DataFrame, drop_set: Set[str] = DROP) -> pd.DataFrame:
+def drop_columns(df: pd.DataFrame, drop_set: set[str] = DROP) -> pd.DataFrame:
     """Drop any column in *drop_set* that is present in *df*.
 
     Args:

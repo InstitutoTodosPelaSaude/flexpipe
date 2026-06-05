@@ -15,7 +15,7 @@ import argparse
 import logging
 import os
 import time
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 # Nominatim ToS: unique user_agent + max 1 req/sec
 _USER_AGENT = "flexpipe_nextstrain_build"
-RATE_LIMIT_SLEEP = 2.0     # seconds between requests (conservative)
+RATE_LIMIT_SLEEP = 2.0  # seconds between requests (conservative)
 RATE_LIMIT_429_WAIT = 90.0  # seconds to wait after a 429 before retrying
 
 # Map column level → Nominatim featuretype so division queries return states,
@@ -46,7 +46,7 @@ def find_coordinates(
     level: Optional[str],
     geolocator: Nominatim,
     retries: int = 6,
-) -> Tuple[str, str]:
+) -> tuple[str, str]:
     """Query Nominatim with rate-limiting and retries.
 
     Args:
@@ -71,17 +71,22 @@ def find_coordinates(
                 return (str(location.latitude), str(location.longitude))
             return ("NA", "NA")
         except Exception as exc:
-            is_429 = "429" in str(exc) or "Too Many" in str(exc) or "RateLimited" in type(exc).__name__
-            wait = RATE_LIMIT_429_WAIT if is_429 else RATE_LIMIT_SLEEP * (2 ** attempt)
+            is_429 = (
+                "429" in str(exc) or "Too Many" in str(exc) or "RateLimited" in type(exc).__name__
+            )
+            wait = RATE_LIMIT_429_WAIT if is_429 else RATE_LIMIT_SLEEP * (2**attempt)
             logger.warning(
                 'Attempt %d failed for "%s": %s. Retrying in %.1fs...',
-                attempt + 1, place, exc, wait,
+                attempt + 1,
+                place,
+                exc,
+                wait,
             )
             time.sleep(wait)
     return ("NA", "NA")
 
 
-def load_cache(cache_path: str, columns: List[str]) -> Dict[str, Dict[str, Tuple[str, str]]]:
+def load_cache(cache_path: str, columns: list[str]) -> dict[str, dict[str, tuple[str, str]]]:
     """Load a coordinate cache TSV into a nested ``{trait: {place: (lat, lon)}}`` dict.
 
     Args:
@@ -91,7 +96,7 @@ def load_cache(cache_path: str, columns: List[str]) -> Dict[str, Dict[str, Tuple
     Returns:
         Nested dict initialised with keys for each column in *columns*.
     """
-    results: Dict[str, Dict] = {trait: {} for trait in columns}
+    results: dict[str, dict] = {trait: {} for trait in columns}
     if cache_path and os.path.exists(cache_path):
         with open(cache_path) as fh:
             for line in fh:
@@ -106,9 +111,9 @@ def load_cache(cache_path: str, columns: List[str]) -> Dict[str, Dict[str, Tuple
 
 
 def write_output(
-    results: Dict[str, Dict],
+    results: dict[str, dict],
     output_path: str,
-    force_coordinates: Optional[Dict[str, Tuple[str, str]]] = None,
+    force_coordinates: Optional[dict[str, tuple[str, str]]] = None,
 ) -> None:
     """Write geocoded results to the latlongs TSV file.
 
@@ -130,7 +135,7 @@ def write_output(
             fh.write("\n")
 
 
-def build_queries(df: pd.DataFrame, columns: List[str]):
+def build_queries(df: pd.DataFrame, columns: list[str]):
     """Build the ordered list of ``(level, query_parts)`` tuples from metadata.
 
     Deduplicates while preserving order.
@@ -165,12 +170,12 @@ def build_queries(df: pd.DataFrame, columns: List[str]):
 
 def geocode_metadata(
     df: pd.DataFrame,
-    columns: List[str],
+    columns: list[str],
     cache_path: Optional[str],
     output_path: str,
     workdir_cache_path: Optional[str] = None,
     user_agent: str = _USER_AGENT,
-    force_coordinates: Optional[Dict[str, Tuple[str, str]]] = None,
+    force_coordinates: Optional[dict[str, tuple[str, str]]] = None,
 ) -> None:
     """Geocode all locations in *df* for the given *columns*.
 
@@ -250,13 +255,20 @@ def main() -> None:
     )
     parser.add_argument("--metadata", required=True, help="Nextstrain metadata TSV")
     parser.add_argument("--columns", nargs="+", type=str, help="Columns that need coordinates")
-    parser.add_argument("--cache", required=False, default=None, help="Pre-processed coordinates TSV")
+    parser.add_argument(
+        "--cache", required=False, default=None, help="Pre-processed coordinates TSV"
+    )
     parser.add_argument("--output", required=True, help="Output TSV with geographic coordinates")
-    parser.add_argument("--workdir-cache", required=False, default=None,
-                        help="Writable workdir cache path (appended incrementally)")
+    parser.add_argument(
+        "--workdir-cache",
+        required=False,
+        default=None,
+        help="Writable workdir cache path (appended incrementally)",
+    )
     args = parser.parse_args()
 
     from flexpipe.logging_setup import configure_logging
+
     configure_logging()
 
     df = pd.read_csv(args.metadata, sep="\t", dtype=str).fillna("")

@@ -1,18 +1,17 @@
 """Unit tests for flexpipe.colors.hues — spread_hues and collect."""
 
-import pytest
 import pandas as pd
 
 from flexpipe.colors.hues import (
+    CLADE_HUES,
+    DATA_USE_HUES,
+    HOST_HUES,
     REGION_HUES,
     SOURCE_HUES,
-    HOST_HUES,
-    DATA_USE_HUES,
-    CLADE_HUES,
     VALID_HUES,
     _natural_key,
-    spread_hues,
     collect,
+    spread_hues,
 )
 
 
@@ -100,7 +99,9 @@ class TestCollect:
 
     def test_unknown_uses_hash_spread(self):
         df = pd.DataFrame({"clade_truncated": ["I", "II", "III"]})
-        result, warns = collect(df, "clade_truncated", CLADE_HUES, "clade", use_hash_for_unknown=True)
+        result, warns = collect(
+            df, "clade_truncated", CLADE_HUES, "clade", use_hash_for_unknown=True
+        )
         assert len(result) == 3
         # All hues should be valid multiples of 10
         for hue in result.values():

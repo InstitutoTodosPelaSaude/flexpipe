@@ -10,22 +10,29 @@ This repository includes a working example build for **Yellow Fever Virus (YFV) 
 
 ### Requirements
 
-- [conda](https://docs.conda.io/) or [mamba](https://mamba.readthedocs.io/)
+- [conda](https://docs.conda.io/) / [mamba](https://mamba.readthedocs.io/) / [micromamba](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html)
 - A `nextstrain` conda environment (see below)
-- [ViralQC](https://github.com/InstitutoTodosPelaSaude/viralQC) installed in a separate conda environment (`viralQC`)
+- [ViralQC](https://github.com/InstitutoTodosPelaSaude/viralQC) — vendored as a git submodule; set up with the install script below
 
 ### Installation
 
 ```bash
-# 1. Create the nextstrain conda environment
+# 1. Clone the repo with the viralQC submodule
+git clone --recurse-submodules https://github.com/InstitutoTodosPelaSaude/flexpipe.git
+cd flexpipe
+
+# If you already cloned without --recurse-submodules:
+#   git submodule update --init --recursive
+
+# 2. Create the nextstrain conda environment
 conda env create -f config/nextstrain.yml
 conda activate nextstrain
 
-# 2. Install the flexpipe package into the same environment
+# 3. Install the flexpipe package
 pip install -e '.[test,dev]'
 
-# 3. (Separately) install ViralQC
-conda create -n viralQC -c conda-forge -c bioconda viralqc
+# 4. Set up ViralQC (creates env, downloads Nextclade datasets + BLAST DB, runs tests)
+bash scripts/install_viralqc.sh
 ```
 
 ### Running the example (YFV Brazil)
@@ -69,13 +76,27 @@ snakemake --snakefile phylogenetic/Snakefile --config workdir=/tmp/run --cores 4
 
 ### ViralQC datasets
 
-ViralQC requires pre-built BLAST databases and Nextclade datasets. Point flexpipe to them via
-the `VIRALQC_DATASETS_DIR` environment variable or the `viralqc.datasets_dir` key in your
-build's `config.yaml`:
+`scripts/install_viralqc.sh` downloads the Nextclade datasets and BLAST database into
+`viralQC/datasets/`. flexpipe auto-discovers that path — **no extra configuration needed**
+after running the install script.
+
+If you prefer to store datasets elsewhere (e.g. shared across projects), override the
+auto-discovery with an environment variable or a `config.yaml` key (higher precedence):
 
 ```bash
+# Option A: environment variable
 export VIRALQC_DATASETS_DIR=/path/to/viralqc-datasets
 flexpipe-run --config builds/yfv-brazil/config.yaml --workdir /tmp/run
+
+# Option B: config.yaml key
+# viralqc:
+#   datasets_dir: /path/to/viralqc-datasets
+```
+
+To re-download just the datasets without reinstalling the environment:
+
+```bash
+bash scripts/install_viralqc.sh --skip-tests
 ```
 
 ---

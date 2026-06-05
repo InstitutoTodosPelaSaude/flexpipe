@@ -29,7 +29,7 @@ import json
 import logging
 import subprocess
 from pathlib import Path
-from typing import Dict, Optional, Union
+from typing import Optional, Union
 
 import pandas as pd
 
@@ -89,8 +89,8 @@ class Manifest:
         self.run_date = run_date
         self.build_name = build_name
         self.config_hash = _hash_config(config_path) if config_path else "unknown"
-        self.counts: Dict[str, int] = {}
-        self.extra: Dict[str, object] = {}
+        self.counts: dict[str, int] = {}
+        self.extra: dict[str, object] = {}
 
     @property
     def run_id(self) -> str:
@@ -106,7 +106,7 @@ class Manifest:
         """Record an arbitrary key/value pair in the manifest."""
         self.extra[key] = value
 
-    def collect_tool_versions(self) -> Dict[str, str]:
+    def collect_tool_versions(self) -> dict[str, str]:
         """Attempt to collect versions of external tools."""
         return {
             "flexpipe": __version__,

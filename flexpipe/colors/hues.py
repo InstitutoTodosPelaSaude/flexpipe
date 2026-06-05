@@ -96,7 +96,9 @@ def spread_hues(names: list) -> dict:
     return {name: (i * step) % 360 for i, name in enumerate(ordered)}
 
 
-def collect(df: pd.DataFrame, col: str, fixed_hues: dict, label: str, use_hash_for_unknown: bool = False):
+def collect(
+    df: pd.DataFrame, col: str, fixed_hues: dict, label: str, use_hash_for_unknown: bool = False
+):
     """Return ``({value: hue}, warnings)`` for all non-empty values in ``df[col]``.
 
     Known values (in *fixed_hues*) get their fixed hue.  Unknown values either
@@ -117,16 +119,15 @@ def collect(df: pd.DataFrame, col: str, fixed_hues: dict, label: str, use_hash_f
         logger.warning("Column '%s' not found — skipping %s", col, label)
         return {}, []
 
-    values = sorted(set(
-        v for v in df[col].tolist()
-        if str(v).strip() not in ("", "nan", "NA", "NaN")
-    ))
+    values = sorted(
+        set(v for v in df[col].tolist() if str(v).strip() not in ("", "nan", "NA", "NaN"))
+    )
 
-    result   = {}
+    result = {}
     warnings = []
-    used     = set(fixed_hues.values())
+    used = set(fixed_hues.values())
 
-    known   = [v for v in values if v in fixed_hues]
+    known = [v for v in values if v in fixed_hues]
     unknown = [v for v in values if v not in fixed_hues]
 
     for v in known:
@@ -162,15 +163,14 @@ def collect(df: pd.DataFrame, col: str, fixed_hues: dict, label: str, use_hash_f
 
 def main() -> None:
     """Entry point for ``flexpipe-name2hue``."""
-    parser = argparse.ArgumentParser(
-        description="Generate name2hue.tsv from curated metadata"
-    )
+    parser = argparse.ArgumentParser(description="Generate name2hue.tsv from curated metadata")
     parser.add_argument("--metadata", required=True, help="Curated metadata TSV")
-    parser.add_argument("--config",   required=False, default=None)
-    parser.add_argument("--output",   required=True, help="Output name2hue.tsv")
+    parser.add_argument("--config", required=False, default=None)
+    parser.add_argument("--output", required=True, help="Output name2hue.tsv")
     args = parser.parse_args()
 
     from flexpipe.logging_setup import configure_logging
+
     configure_logging()
 
     logger.info("Loading metadata: %s", args.metadata)
@@ -184,12 +184,17 @@ def main() -> None:
         sections.append((comment, result))
         all_warnings.extend(warns)
 
-    run("# geo (top-level = region)",         "region",          REGION_HUES,   "region")
-    run("# clade (top-level = clade_truncated) — unknown = hash-based",
-        "clade_truncated", CLADE_HUES,    "clade_truncated", use_hash=True)
-    run("# host",                              "host",            HOST_HUES,     "host")
-    run("# source",                            "source",          SOURCE_HUES,   "source")
-    run("# data_use",                          "data_use",        DATA_USE_HUES, "data_use")
+    run("# geo (top-level = region)", "region", REGION_HUES, "region")
+    run(
+        "# clade (top-level = clade_truncated) — unknown = hash-based",
+        "clade_truncated",
+        CLADE_HUES,
+        "clade_truncated",
+        use_hash=True,
+    )
+    run("# host", "host", HOST_HUES, "host")
+    run("# source", "source", SOURCE_HUES, "source")
+    run("# data_use", "data_use", DATA_USE_HUES, "data_use")
 
     os.makedirs(os.path.dirname(os.path.abspath(args.output)), exist_ok=True)
     total = 0

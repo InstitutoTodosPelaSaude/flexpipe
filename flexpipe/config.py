@@ -21,7 +21,7 @@ from __future__ import annotations
 import logging
 import os
 from pathlib import Path
-from typing import List, Literal, Optional, Union
+from typing import Literal
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -33,29 +33,30 @@ logger = logging.getLogger(__name__)
 # Section models
 # ---------------------------------------------------------------------------
 
+
 class FilesConfig(BaseModel):
     model_config = ConfigDict(extra="allow")
-    keep:           str = "config/keep.txt"
-    ignore:         str = "config/ignore.txt"
-    cache:          str = "config/cache_coordinates.tsv"
-    reference:      str = "config/reference.gb"
-    clades:         str = "config/clades.tsv"
+    keep: str = "config/keep.txt"
+    ignore: str = "config/ignore.txt"
+    cache: str = "config/cache_coordinates.tsv"
+    reference: str = "config/reference.gb"
+    clades: str = "config/clades.tsv"
     auspice_config: str = "config/auspice_config.json"
 
 
 class ParametersConfig(BaseModel):
     model_config = ConfigDict(extra="allow")
-    mask_5prime:         int   = 0
-    mask_3prime:         int   = 0
-    mask_sites:          str   = ""
-    ufboot:              int   = 1000
-    model:               str   = "MFP"
-    root:                str   = "least-squares"
-    coalescent:          str   = "skyline"
-    date_inference:      str   = "marginal"
-    divergence_units:    str   = "mutations"
-    clock_filter_iqd:    int   = 4
-    ancestral_inference: str   = "joint"
+    mask_5prime: int = 0
+    mask_3prime: int = 0
+    mask_sites: str = ""
+    ufboot: int = 1000
+    model: str = "MFP"
+    root: str = "least-squares"
+    coalescent: str = "skyline"
+    date_inference: str = "marginal"
+    divergence_units: str = "mutations"
+    clock_filter_iqd: int = 4
+    ancestral_inference: str = "joint"
 
 
 class OptionsConfig(BaseModel):
@@ -70,19 +71,20 @@ class CoordinatesConfig(BaseModel):
 
 class ColoursHueTablesConfig(BaseModel):
     """Optional override paths for bundled *_hues.tsv files."""
+
     model_config = ConfigDict(extra="allow")
-    region:   Optional[str] = None
-    host:     Optional[str] = None
-    source:   Optional[str] = None
-    data_use: Optional[str] = None
+    region: str | None = None
+    host: str | None = None
+    source: str | None = None
+    data_use: str | None = None
 
 
 class ColoursConfig(BaseModel):
     model_config = ConfigDict(extra="allow")
-    clade:      str = "clade_truncated clade"
-    geo:        str = "region division location"
-    source:     str = "source"
-    data_use:   str = "data_use"
+    clade: str = "clade_truncated clade"
+    geo: str = "region division location"
+    source: str = "source"
+    data_use: str = "data_use"
     hue_tables: ColoursHueTablesConfig = Field(default_factory=ColoursHueTablesConfig)
 
 
@@ -98,62 +100,61 @@ class SubsamplingConfig(BaseModel):
 
 class CurationConfig(BaseModel):
     model_config = ConfigDict(extra="allow")
-    clade_levels:    int           = 1
-    clade_separator: str           = "."
-    host_rules:      Optional[str] = None  # override path for host_rules.yaml
+    clade_levels: int = 1
+    clade_separator: str = "."
+    host_rules: str | None = None  # override path for host_rules.yaml
 
 
 class RegionsConfig(BaseModel):
     """Override paths for bundled region-mapping TSV files."""
+
     model_config = ConfigDict(extra="allow")
-    country_map:            Optional[str] = None
-    division_map:           Optional[str] = None
-    division_abbreviations: Optional[str] = None
-    division_parser:        str           = "brazil"  # "brazil" | "none"
+    country_map: str | None = None
+    division_map: str | None = None
+    division_abbreviations: str | None = None
+    division_parser: str = "brazil"  # "brazil" | "none"
 
 
 class PathoplexusConfig(BaseModel):
     model_config = ConfigDict(extra="allow")
-    organism:             str   = ""
-    base_url:             str   = "https://lapis.pathoplexus.org"
-    metadata_endpoint:    str   = "details"
-    sequences_endpoint:   str   = "unalignedNucleotideSequences"
-    min_completeness:     float = 0.70
+    organism: str = ""
+    base_url: str = "https://lapis.pathoplexus.org"
+    metadata_endpoint: str = "details"
+    sequences_endpoint: str = "unalignedNucleotideSequences"
+    min_completeness: float = 0.70
 
 
 class NcbiConfig(BaseModel):
     model_config = ConfigDict(extra="allow")
-    taxid:       int   = 0
-    genome_size: int   = 0
-    min_length:  float = 0.7
-    max_length:  float = 1.1
-    email:       str   = ""
-    api_key:     str   = ""
+    taxid: int = 0
+    genome_size: int = 0
+    min_length: float = 0.7
+    max_length: float = 1.1
+    email: str = ""
+    api_key: str = ""
 
 
 class ViralqcConfig(BaseModel):
     model_config = ConfigDict(extra="allow")
-    conda_env:               str = "viralQC"
-    clade_column:            str = "clade"
-    datasets_dir:            str = ""
-    blast_database:          str = ""
+    conda_env: str = "viralQC"
+    clade_column: str = "clade"
+    datasets_dir: str = ""
+    blast_database: str = ""
     blast_database_metadata: str = ""
 
 
 class QcConfig(BaseModel):
     model_config = ConfigDict(extra="allow")
-    genome_quality:    List[str] = ["A", "B"]
-    min_coverage:      float     = 0.70
-    required_columns:  List[str] = Field(
-        default_factory=lambda: ["strain", "date", "clade"]
-    )
+    genome_quality: list[str] = ["A", "B"]
+    min_coverage: float = 0.70
+    required_columns: list[str] = Field(default_factory=lambda: ["strain", "date", "clade"])
 
 
 class LocalSequencesConfig(BaseModel):
     model_config = ConfigDict(extra="allow")
-    enabled:   bool = False
-    metadata:  str  = "data/metadata.xlsx"
-    sequences: str  = "data/new_sequences.fasta"
+    enabled: bool = False
+    metadata: str = "data/metadata.xlsx"
+    sequences: str = "data/new_sequences.fasta"
 
 
 class PathsConfig(BaseModel):
@@ -165,6 +166,7 @@ class PathsConfig(BaseModel):
 # Root model
 # ---------------------------------------------------------------------------
 
+
 class FlexpipeConfig(BaseModel):
     """Root configuration model for a flexpipe build.
 
@@ -172,28 +174,29 @@ class FlexpipeConfig(BaseModel):
     the YFV-Brazil example build.  Override keys are additive — omitting a
     section falls back to the bundled default data files.
     """
+
     model_config = ConfigDict(extra="allow")
 
-    files:           FilesConfig           = Field(default_factory=FilesConfig)
-    parameters:      ParametersConfig      = Field(default_factory=ParametersConfig)
-    options:         OptionsConfig         = Field(default_factory=OptionsConfig)
-    coordinates:     CoordinatesConfig     = Field(default_factory=CoordinatesConfig)
-    colours:         ColoursConfig         = Field(default_factory=ColoursConfig)
-    traits:          TraitsConfig          = Field(default_factory=TraitsConfig)
-    subsampling:     SubsamplingConfig     = Field(default_factory=SubsamplingConfig)
-    curation:        CurationConfig        = Field(default_factory=CurationConfig)
-    regions:         RegionsConfig         = Field(default_factory=RegionsConfig)
-    region_source:   Literal["country", "division"] = "country"
-    data_source:     Literal["pathoplexus", "ncbi"]  = "pathoplexus"
-    pathoplexus:     PathoplexusConfig     = Field(default_factory=PathoplexusConfig)
-    ncbi:            NcbiConfig            = Field(default_factory=NcbiConfig)
-    viralqc:         ViralqcConfig         = Field(default_factory=ViralqcConfig)
-    qc:              QcConfig              = Field(default_factory=QcConfig)
-    local_sequences: LocalSequencesConfig  = Field(default_factory=LocalSequencesConfig)
-    paths:           PathsConfig           = Field(default_factory=PathsConfig)
+    files: FilesConfig = Field(default_factory=FilesConfig)
+    parameters: ParametersConfig = Field(default_factory=ParametersConfig)
+    options: OptionsConfig = Field(default_factory=OptionsConfig)
+    coordinates: CoordinatesConfig = Field(default_factory=CoordinatesConfig)
+    colours: ColoursConfig = Field(default_factory=ColoursConfig)
+    traits: TraitsConfig = Field(default_factory=TraitsConfig)
+    subsampling: SubsamplingConfig = Field(default_factory=SubsamplingConfig)
+    curation: CurationConfig = Field(default_factory=CurationConfig)
+    regions: RegionsConfig = Field(default_factory=RegionsConfig)
+    region_source: Literal["country", "division"] = "country"
+    data_source: Literal["pathoplexus", "ncbi"] = "pathoplexus"
+    pathoplexus: PathoplexusConfig = Field(default_factory=PathoplexusConfig)
+    ncbi: NcbiConfig = Field(default_factory=NcbiConfig)
+    viralqc: ViralqcConfig = Field(default_factory=ViralqcConfig)
+    qc: QcConfig = Field(default_factory=QcConfig)
+    local_sequences: LocalSequencesConfig = Field(default_factory=LocalSequencesConfig)
+    paths: PathsConfig = Field(default_factory=PathsConfig)
 
     @model_validator(mode="after")
-    def check_pathoplexus_config(self) -> "FlexpipeConfig":
+    def check_pathoplexus_config(self) -> FlexpipeConfig:
         if self.data_source == "pathoplexus" and not self.pathoplexus.organism:
             raise ValueError(
                 "pathoplexus.organism is required when data_source='pathoplexus'.\n"
@@ -202,7 +205,7 @@ class FlexpipeConfig(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def check_ncbi_config(self) -> "FlexpipeConfig":
+    def check_ncbi_config(self) -> FlexpipeConfig:
         if self.data_source == "ncbi" and self.ncbi.taxid == 0:
             raise ValueError(
                 "ncbi.taxid is required when data_source='ncbi'.\n"
@@ -211,11 +214,11 @@ class FlexpipeConfig(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def check_region_override_paths(self) -> "FlexpipeConfig":
+    def check_region_override_paths(self) -> FlexpipeConfig:
         """Verify any explicitly specified region-map override paths exist."""
         for attr, label in [
-            ("country_map",            "regions.country_map"),
-            ("division_map",           "regions.division_map"),
+            ("country_map", "regions.country_map"),
+            ("division_map", "regions.division_map"),
             ("division_abbreviations", "regions.division_abbreviations"),
         ]:
             path = getattr(self.regions, attr)
@@ -227,12 +230,12 @@ class FlexpipeConfig(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def check_hue_table_override_paths(self) -> "FlexpipeConfig":
+    def check_hue_table_override_paths(self) -> FlexpipeConfig:
         """Verify any explicitly specified hue-table override paths exist."""
         for attr, label in [
-            ("region",   "colours.hue_tables.region"),
-            ("host",     "colours.hue_tables.host"),
-            ("source",   "colours.hue_tables.source"),
+            ("region", "colours.hue_tables.region"),
+            ("host", "colours.hue_tables.host"),
+            ("source", "colours.hue_tables.source"),
             ("data_use", "colours.hue_tables.data_use"),
         ]:
             path = getattr(self.colours.hue_tables, attr)
@@ -248,13 +251,16 @@ class FlexpipeConfig(BaseModel):
 # ViralQC path resolution
 # ---------------------------------------------------------------------------
 
+
 def resolve_viralqc_paths(viralqc_cfg: ViralqcConfig) -> ViralqcConfig:
     """Resolve and validate ViralQC dataset paths.
 
     Resolution order for ``datasets_dir``:
     1. ``viralqc.datasets_dir`` from config (if non-empty, not a ``/home/`` placeholder)
     2. ``$VIRALQC_DATASETS_DIR`` environment variable
-    3. ``SystemExit`` with a clear, actionable message
+    3. Submodule default: ``<repo-root>/viralQC/datasets`` (auto-discovered when the
+       viralQC git submodule is present and ``scripts/install_viralqc.sh`` has been run)
+    4. ``SystemExit`` with a clear, actionable message
 
     ``blast_database`` and ``blast_database_metadata`` default to
     ``<datasets_dir>/blast.fasta`` and ``<datasets_dir>/blast.tsv`` unless
@@ -276,11 +282,20 @@ def resolve_viralqc_paths(viralqc_cfg: ViralqcConfig) -> ViralqcConfig:
     if not datasets_dir or str(datasets_dir).startswith("/home/"):
         datasets_dir = os.environ.get("VIRALQC_DATASETS_DIR", "")
     if not datasets_dir:
+        # Fallback: auto-discover the viralQC submodule bundled with the repo.
+        # Path(__file__) is <repo>/flexpipe/config.py → parents[1] is <repo>.
+        _submodule_datasets = Path(__file__).resolve().parents[1] / "viralQC" / "datasets"
+        if _submodule_datasets.exists():
+            datasets_dir = str(_submodule_datasets)
+            logger.debug("ViralQC datasets resolved from submodule: %s", datasets_dir)
+    if not datasets_dir:
         raise SystemExit(
             "ViralQC datasets directory not configured.\n"
-            "Set 'viralqc.datasets_dir' in your config.yaml, or export the "
-            "VIRALQC_DATASETS_DIR environment variable pointing to your ViralQC "
-            "datasets directory (e.g. /path/to/viralQC/datasets)."
+            "Options (in order of precedence):\n"
+            "  1. Set 'viralqc.datasets_dir' in your config.yaml\n"
+            "  2. Export VIRALQC_DATASETS_DIR=/path/to/viralQC/datasets\n"
+            "  3. Run 'bash scripts/install_viralqc.sh' to set up the bundled submodule\n"
+            "See: https://github.com/InstitutoTodosPelaSaude/viralQC"
         )
     datasets_dir = Path(datasets_dir)
     if not datasets_dir.exists():
@@ -315,15 +330,16 @@ def resolve_viralqc_paths(viralqc_cfg: ViralqcConfig) -> ViralqcConfig:
 # Public API
 # ---------------------------------------------------------------------------
 
-def _load_yaml(path: Union[str, Path]) -> dict:
+
+def _load_yaml(path: str | Path) -> dict:
     """Load a YAML file and return a plain dictionary."""
     with open(path, encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
 
 
 def load_config(
-    config_path: Union[str, Path],
-    workdir: Optional[Union[str, Path]] = None,
+    config_path: str | Path,
+    workdir: str | Path | None = None,
     skip_viralqc: bool = False,
 ) -> FlexpipeConfig:
     """Load and validate a flexpipe config.yaml.

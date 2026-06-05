@@ -32,52 +32,52 @@ logger = logging.getLogger(__name__)
 
 # ── ITpS xlsx field → Pathoplexus PPX column name ────────────────────────────
 XLSX_TO_PPX = {
-    "original_seq_id":  "accessionVersion",
-    "collection_date":  "sampleCollectionDate",
-    "country":          "geoLocCountry",
-    "state":            "geoLocAdmin1",
-    "city":             "geoLocAdmin2",
-    "host_species":     "hostNameCommon",
-    "data_use":         "dataUseTerms",
-    "authors":          "authors",
-    "age":              "hostAge",
-    "sex":              "hostGender",
-    "specimen_id":      "specimenCollectorSampleId",
-    "seq_instrument":   "sequencingInstrument",
-    "seq_tech":         "sequencingProtocol",
+    "original_seq_id": "accessionVersion",
+    "collection_date": "sampleCollectionDate",
+    "country": "geoLocCountry",
+    "state": "geoLocAdmin1",
+    "city": "geoLocAdmin2",
+    "host_species": "hostNameCommon",
+    "data_use": "dataUseTerms",
+    "authors": "authors",
+    "age": "hostAge",
+    "sex": "hostGender",
+    "specimen_id": "specimenCollectorSampleId",
+    "seq_instrument": "sequencingInstrument",
+    "seq_tech": "sequencingProtocol",
     "depth_of_coverage": "depthOfCoverage",
-    "sample_type":      "sampleType",
+    "sample_type": "sampleType",
 }
 
 # ── ITpS new TSV format (PascalCase headers, 'ID' as identifier) → PPX ───────
 ITPS_TSV_TO_PPX = {
-    "ID":                          "accessionVersion",
-    "CollectionDate":              "sampleCollectionDate",
-    "Country":                     "geoLocCountry",
-    "State":                       "geoLocAdmin1",
-    "City":                        "geoLocAdmin2",
-    "HostSpecies":                 "hostNameCommon",
-    "DataUse":                     "dataUseTerms",
-    "Authors":                     "authors",
-    "HostAge":                     "hostAge",
-    "HostSex":                     "hostGender",
-    "OriginalSampleID":            "specimenCollectorSampleId",
-    "SequenceInstrument":          "sequencingInstrument",
-    "SequenceTechnology":          "sequencingProtocol",
-    "DepthOfCoverage":             "depthOfCoverage",
-    "SampleType":                  "sampleType",
-    "AuthorAffiliations":          "affiliations",
-    "OriginalLaboratoryName":      "orig_lab_name",
-    "OriginalLaboratoryAddress":   "orig_lab_address",
-    "SubmissionLaboratoryName":    "subm_lab_name",
+    "ID": "accessionVersion",
+    "CollectionDate": "sampleCollectionDate",
+    "Country": "geoLocCountry",
+    "State": "geoLocAdmin1",
+    "City": "geoLocAdmin2",
+    "HostSpecies": "hostNameCommon",
+    "DataUse": "dataUseTerms",
+    "Authors": "authors",
+    "HostAge": "hostAge",
+    "HostSex": "hostGender",
+    "OriginalSampleID": "specimenCollectorSampleId",
+    "SequenceInstrument": "sequencingInstrument",
+    "SequenceTechnology": "sequencingProtocol",
+    "DepthOfCoverage": "depthOfCoverage",
+    "SampleType": "sampleType",
+    "AuthorAffiliations": "affiliations",
+    "OriginalLaboratoryName": "orig_lab_name",
+    "OriginalLaboratoryAddress": "orig_lab_address",
+    "SubmissionLaboratoryName": "subm_lab_name",
     "SubmissionLaboratoryAddress": "subm_lab_address",
-    "HostHealthState":             "health_state",
-    "HostHealthOutcome":           "health_outcome",
-    "HostSignsAndSymptoms":        "signs_and_symptoms",
-    "HostDisease":                 "host_disease",
-    "HostTravelHistory":           "travel_history",
-    "PathogenSpecies":             "pathogen_common_name",
-    "OriginalHostSpecimenID":      "sample_code",
+    "HostHealthState": "health_state",
+    "HostHealthOutcome": "health_outcome",
+    "HostSignsAndSymptoms": "signs_and_symptoms",
+    "HostDisease": "host_disease",
+    "HostTravelHistory": "travel_history",
+    "PathogenSpecies": "pathogen_common_name",
+    "OriginalHostSpecimenID": "sample_code",
 }
 
 
@@ -132,22 +132,50 @@ def read_itps_tsv_metadata(path: str) -> pd.DataFrame:
         df["dataUseTerms"] = df["dataUseTerms"].str.strip().str.upper()
     # Drop ViralQC output columns (they'll be re-added by curate after the pipeline run)
     vqc_cols = {
-        "Segment", "Clade", "TargetGene", "GenomeQuality", "TargetRegionsQuality",
-        "TargetGeneQuality", "CodingDNASequenceCoverageQuality", "MissingDataQuality",
-        "PrivateMutationsQuality", "MixedSitesQuality",
-        "SingleNucleotidePolymorphismsClustersQuality", "FrameShiftsQuality",
-        "StopCodonsQuality", "Coverage", "CodingDNASequenceCoverage",
-        "QualityOverallStatus", "NucleotideSubstitutions", "NucleotideDeletions",
-        "NucleotideInsertions", "FrameShifts", "AminoacidSubstitutions",
-        "AminoacidDeletions", "AminoacidInsertions", "TotalSubstitutions",
-        "TotalDeletions", "TotalInsertions", "TotalFrameShifts", "TotalMissing",
-        "TotalNonACGTNs", "TotalAminoacidSubstitutions", "TotalAminoacidDeletions",
-        "TotalAminoacidInsertions", "TotalUnknownAminoacids",
+        "Segment",
+        "Clade",
+        "TargetGene",
+        "GenomeQuality",
+        "TargetRegionsQuality",
+        "TargetGeneQuality",
+        "CodingDNASequenceCoverageQuality",
+        "MissingDataQuality",
+        "PrivateMutationsQuality",
+        "MixedSitesQuality",
+        "SingleNucleotidePolymorphismsClustersQuality",
+        "FrameShiftsQuality",
+        "StopCodonsQuality",
+        "Coverage",
+        "CodingDNASequenceCoverage",
+        "QualityOverallStatus",
+        "NucleotideSubstitutions",
+        "NucleotideDeletions",
+        "NucleotideInsertions",
+        "FrameShifts",
+        "AminoacidSubstitutions",
+        "AminoacidDeletions",
+        "AminoacidInsertions",
+        "TotalSubstitutions",
+        "TotalDeletions",
+        "TotalInsertions",
+        "TotalFrameShifts",
+        "TotalMissing",
+        "TotalNonACGTNs",
+        "TotalAminoacidSubstitutions",
+        "TotalAminoacidDeletions",
+        "TotalAminoacidInsertions",
+        "TotalUnknownAminoacids",
         "PrivateNucleotideMutationsTotalReversionSubstitutions",
         "PrivateNucleotideMutationsTotalPrivateSubstitutions",
-        "MissingDataStatus", "SingleNucleotidePolymorphismsClustersStatus",
-        "FrameShiftsStatus", "StopCodonsStatus", "Dataset", "DatasetVersion",
-        "clade", "genomeQuality", "coverage",
+        "MissingDataStatus",
+        "SingleNucleotidePolymorphismsClustersStatus",
+        "FrameShiftsStatus",
+        "StopCodonsStatus",
+        "Dataset",
+        "DatasetVersion",
+        "clade",
+        "genomeQuality",
+        "coverage",
     }
     df.drop(columns=[c for c in vqc_cols if c in df.columns], inplace=True)
     return df
@@ -189,16 +217,17 @@ def detect_id_column(df: pd.DataFrame) -> str:
 def main() -> None:
     """Entry point for ``flexpipe-merge``."""
     parser = argparse.ArgumentParser(description="Merge Pathoplexus and local sequences/metadata")
-    parser.add_argument("--pathoplexus-metadata",  required=True)
+    parser.add_argument("--pathoplexus-metadata", required=True)
     parser.add_argument("--pathoplexus-sequences", required=True)
-    parser.add_argument("--local-metadata",        required=False, default="")
-    parser.add_argument("--local-sequences",       required=False, default="")
-    parser.add_argument("--enabled",               required=False, default="false")
-    parser.add_argument("--metadata-output",       required=True)
-    parser.add_argument("--sequences-output",      required=True)
+    parser.add_argument("--local-metadata", required=False, default="")
+    parser.add_argument("--local-sequences", required=False, default="")
+    parser.add_argument("--enabled", required=False, default="false")
+    parser.add_argument("--metadata-output", required=True)
+    parser.add_argument("--sequences-output", required=True)
     args = parser.parse_args()
 
     from flexpipe.logging_setup import configure_logging
+
     configure_logging()
 
     local_enabled = str(args.enabled).lower() in ("true", "1", "yes")
@@ -227,7 +256,7 @@ def main() -> None:
         else:
             logger.info("Loading local sequences: %s", args.local_sequences)
             local_seqs = read_fasta_records(args.local_sequences)
-            fasta_ids  = set(local_seqs)
+            fasta_ids = set(local_seqs)
             logger.info("  %d sequences in FASTA", len(fasta_ids))
 
             logger.info("Loading local metadata: %s", args.local_metadata)
@@ -242,7 +271,8 @@ def main() -> None:
             if missing:
                 logger.warning(
                     "%d FASTA IDs have no metadata entry: %s",
-                    len(missing), sorted(missing),
+                    len(missing),
+                    sorted(missing),
                 )
 
             if local_id_col != ppx_id_col:

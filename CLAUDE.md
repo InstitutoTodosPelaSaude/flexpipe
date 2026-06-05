@@ -21,6 +21,9 @@ Current example build: **Yellow Fever Virus (YFV) Brazil** (`builds/yfv-brazil/`
 
 ### Environment Setup
 ```bash
+# Clone with the viralQC submodule (or run: git submodule update --init --recursive)
+git clone --recurse-submodules https://github.com/InstitutoTodosPelaSaude/flexpipe.git
+
 # Create and activate the nextstrain conda environment
 conda env create -f config/nextstrain.yml
 conda activate nextstrain
@@ -28,8 +31,8 @@ conda activate nextstrain
 # Install the flexpipe package (editable, with dev + test extras)
 pip install -e '.[test,dev]'
 
-# Install ViralQC in a separate conda environment (required for QC step)
-conda create -n viralQC -c conda-forge -c bioconda viralqc
+# Set up the bundled viralQC submodule (creates env, downloads datasets, runs tests)
+bash scripts/install_viralqc.sh
 ```
 
 ### Running the Full Pipeline
@@ -186,9 +189,10 @@ workflow.configfiles[0]`.
 - Authority: FASTA file; only sequences present in FASTA are included
 
 **Quality control via ViralQC**:
-- Runs `vqc` in the `viralQC` conda environment (external dependency)
+- Runs `vqc` in the `viralQC` conda environment; vendored as a git submodule at `viralQC/`
 - Outputs genome quality grades (A–D) and Nextclade clade assignments
-- ViralQC datasets are resolved via `VIRALQC_DATASETS_DIR` env var or `viralqc.datasets_dir` config key
+- ViralQC datasets resolution order: `viralqc.datasets_dir` config key → `$VIRALQC_DATASETS_DIR` → `viralQC/datasets/` (auto-discovered from submodule)
+- Set up with: `bash scripts/install_viralqc.sh` (creates env, downloads datasets, runs tests)
 
 **Curation** (`flexpipe-curate` / `flexpipe.curate.pipeline`):
 - Renames fields via `augur curate rename` (accessionVersion→strain, geoLocCountry→country, etc.)
@@ -286,7 +290,7 @@ Key fields to update in `config.yaml`:
 
 - **Conda environments**:
   - `nextstrain`: augur ≥13, snakemake, iqtree3, mafft, python ≥3.9, plus all deps in `config/nextstrain.yml`
-  - `viralQC`: viralQC (external package; separate conda env)
+  - `viralQC`: bundled as a git submodule (`viralQC/`); set up via `bash scripts/install_viralqc.sh` (not a conda package)
 - **Pip-installable** (in `pyproject.toml` `[project.dependencies]`): pandas, pyyaml, biopython, geopy, requests, matplotlib ≥3.9, colour, openpyxl, beautifulsoup4, pydantic ≥2
 - **External APIs**:
   - Pathoplexus/LAPIS (HTTP)

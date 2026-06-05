@@ -1,0 +1,3 @@
+[submodule "viralQC"]
+	path = viralQC
+	url = https://github.com/InstitutoTodosPelaSaude/viralQC.git

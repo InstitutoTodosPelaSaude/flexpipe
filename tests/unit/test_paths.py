@@ -4,8 +4,9 @@ These tests verify the service-readiness requirement: all output paths are
 anchored in the workdir, not the source tree.
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 from flexpipe.paths import WorkdirPaths
 
@@ -28,7 +29,7 @@ class TestWorkdirPathsProperties:
         assert paths.root.is_absolute()
 
     def test_results_under_root(self, paths):
-        assert paths.results.parts[:len(paths.root.parts)] == paths.root.parts
+        assert paths.results.parts[: len(paths.root.parts)] == paths.root.parts
 
     def test_ingest_dir_under_results(self, paths):
         assert str(paths.ingest_dir).startswith(str(paths.results))
@@ -91,9 +92,7 @@ class TestWorkdirPathsEnsureDirs:
         source_tree.mkdir()
         paths.ensure_dirs()
         # Verify the source tree is empty
-        created_outside = [
-            p for p in source_tree.rglob("*") if p.is_dir()
-        ]
+        created_outside = [p for p in source_tree.rglob("*") if p.is_dir()]
         assert created_outside == []
 
 

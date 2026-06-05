@@ -40,6 +40,7 @@ DELAY_SEC = 0.4  # ≤ 3 req/s without API key, ≤ 10 with API key
 
 # ── Parsing helpers ───────────────────────────────────────────────────────────
 
+
 def parse_country_field(raw: str):
     """Parse NCBI country field ``'Country: Division, Location'`` → ``(country, div, loc)``."""
     country = division = location = ""
@@ -71,9 +72,7 @@ def parse_gb_record(rec) -> dict:
             host = feature.qualifiers.get("host", [""])[0]
             # INSDC migrated from "country" to "geo_loc_name" qualifier (~2023)
             raw_country = (
-                feature.qualifiers.get("geo_loc_name")
-                or feature.qualifiers.get("country")
-                or [""]
+                feature.qualifiers.get("geo_loc_name") or feature.qualifiers.get("country") or [""]
             )[0]
             collection_date = feature.qualifiers.get("collection_date", [""])[0]
             break
@@ -86,20 +85,21 @@ def parse_gb_record(rec) -> dict:
     country, division, location = parse_country_field(raw_country)
 
     return {
-        "accessionVersion":     rec.id,
+        "accessionVersion": rec.id,
         "sampleCollectionDate": collection_date,
-        "geoLocCountry":        country,
-        "geoLocAdmin1":         division,
-        "geoLocAdmin2":         location,
-        "hostNameCommon":       host,
-        "authors":              authors,
-        "dataUseTerms":         "OPEN",
-        "lineage":              "",
-        "source":               "NCBI",
+        "geoLocCountry": country,
+        "geoLocAdmin1": division,
+        "geoLocAdmin2": location,
+        "hostNameCommon": host,
+        "authors": authors,
+        "dataUseTerms": "OPEN",
+        "lineage": "",
+        "source": "NCBI",
     }
 
 
 # ── NCBI search + fetch ───────────────────────────────────────────────────────
+
 
 def search_ncbi(taxid, min_length: int, max_length: int, min_date=None, extra_term=None):
     """Search NCBI Entrez and return ``(count, webenv, query_key)``."""
@@ -131,9 +131,12 @@ def iter_records(count: int, webenv: str, query_key: str):
             try:
                 handle = Entrez.efetch(
                     db="nucleotide",
-                    rettype="gb", retmode="text",
-                    retstart=start, retmax=BATCH_SIZE,
-                    webenv=webenv, query_key=query_key,
+                    rettype="gb",
+                    retmode="text",
+                    retstart=start,
+                    retmax=BATCH_SIZE,
+                    webenv=webenv,
+                    query_key=query_key,
                 )
                 records = list(SeqIO.parse(handle, "gb"))
                 handle.close()
@@ -148,17 +151,19 @@ def iter_records(count: int, webenv: str, query_key: str):
                     wait = 5 * attempt
                     logger.warning(
                         "Network error (%s), retry %d/5 in %ds...",
-                        exc.__class__.__name__, attempt, wait,
+                        exc.__class__.__name__,
+                        attempt,
+                        wait,
                     )
                     time.sleep(wait)
                 else:
                     raise
-        for rec in records:
-            yield rec
+        yield from records
         time.sleep(DELAY_SEC)
 
 
 # ── main ──────────────────────────────────────────────────────────────────────
+
 
 def load_config(path: str) -> dict:
     """Load and return the pipeline config YAML."""
@@ -171,24 +176,25 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Fetch sequences and metadata from NCBI for the flexpipe pipeline."
     )
-    parser.add_argument("--config",           required=True, help="Path to config/config.yaml")
-    parser.add_argument("--metadata-output",  required=True, help="Output TSV (PPX format)")
+    parser.add_argument("--config", required=True, help="Path to config/config.yaml")
+    parser.add_argument("--metadata-output", required=True, help="Output TSV (PPX format)")
     parser.add_argument("--sequences-output", required=True, help="Output FASTA path")
     args = parser.parse_args()
 
     from flexpipe.logging_setup import configure_logging
+
     configure_logging()
 
-    cfg  = load_config(args.config)
+    cfg = load_config(args.config)
     ncbi = cfg.get("ncbi", {})
-    sub  = cfg.get("subsampling", {})
+    sub = cfg.get("subsampling", {})
 
-    taxid       = ncbi.get("taxid")
+    taxid = ncbi.get("taxid")
     genome_size = ncbi.get("genome_size")
-    email       = ncbi.get("email", "") or "pipeline@example.com"
-    api_key     = ncbi.get("api_key", "") or None
-    min_frac    = float(ncbi.get("min_length", 0.7))
-    max_frac    = float(ncbi.get("max_length", 1.1))
+    email = ncbi.get("email", "") or "pipeline@example.com"
+    api_key = ncbi.get("api_key", "") or None
+    min_frac = float(ncbi.get("min_length", 0.7))
+    max_frac = float(ncbi.get("max_length", 1.1))
 
     if not taxid:
         sys.exit("ERROR: ncbi.taxid is required in config.yaml")
@@ -210,12 +216,14 @@ def main() -> None:
     if api_key:
         Entrez.api_key = api_key
 
-    os.makedirs(os.path.dirname(os.path.abspath(args.metadata_output)),  exist_ok=True)
+    os.makedirs(os.path.dirname(os.path.abspath(args.metadata_output)), exist_ok=True)
     os.makedirs(os.path.dirname(os.path.abspath(args.sequences_output)), exist_ok=True)
 
     logger.info(
         "Length filter: %d–%d bp  |  min_date: %s",
-        min_length, max_length, min_date or "none",
+        min_length,
+        max_length,
+        min_date or "none",
     )
     if extra_term:
         logger.info("Extra search term: %s", extra_term)
@@ -224,16 +232,25 @@ def main() -> None:
 
     # Write empty outputs so Snakemake never fails on a 0-result query
     if count == 0:
-        pd.DataFrame(columns=[
-            "accessionVersion", "sampleCollectionDate", "geoLocCountry",
-            "geoLocAdmin1", "geoLocAdmin2", "hostNameCommon", "authors",
-            "dataUseTerms", "lineage", "source",
-        ]).to_csv(args.metadata_output, sep="\t", index=False)
+        pd.DataFrame(
+            columns=[
+                "accessionVersion",
+                "sampleCollectionDate",
+                "geoLocCountry",
+                "geoLocAdmin1",
+                "geoLocAdmin2",
+                "hostNameCommon",
+                "authors",
+                "dataUseTerms",
+                "lineage",
+                "source",
+            ]
+        ).to_csv(args.metadata_output, sep="\t", index=False)
         open(args.sequences_output, "w").close()
         logger.info("No records found — empty outputs written.")
         return
 
-    rows  = []
+    rows = []
     n_seq = 0
 
     with open(args.sequences_output, "w") as fa:

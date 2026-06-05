@@ -45,9 +45,7 @@ def load_table(
     elif suffix in ("xls", "xlsx"):
         df = pd.read_excel(p, index_col=None, header=0, sheet_name=0, dtype=dtype, **kwargs)
     else:
-        raise ValueError(
-            f"Unsupported file format '{p.suffix}'. Expected: .tsv, .csv, .xls, .xlsx"
-        )
+        raise ValueError(f"Unsupported file format '{p.suffix}'. Expected: .tsv, .csv, .xls, .xlsx")
     df.fillna(fillna, inplace=True)
     logger.debug("Loaded %d rows from %s", len(df), p)
     return df

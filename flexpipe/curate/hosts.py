@@ -81,7 +81,7 @@ def normalize_host(raw: str) -> str:
     s = raw.strip()
     if not s:
         return s
-    base = s.split(';')[0].strip()
+    base = s.split(";")[0].strip()
     bl = base.lower()
 
     for target, conds in _COMPILED_RULES:

@@ -1,7 +1,5 @@
 """Unit tests for flexpipe.curate.regions."""
 
-import pytest
-
 from flexpipe.curate.regions import (
     _lookup_brazil_region,
     _parse_brazil_division,
@@ -72,6 +70,7 @@ class TestParseBrazilDivision:
     def test_all_27_states_recognized(self):
         """Every canonical state name must parse to itself."""
         from flexpipe.curate.regions import BRAZIL_REGION_MAP
+
         for state_name in BRAZIL_REGION_MAP:
             s, _ = _parse_brazil_division(state_name)
             assert s == state_name, f"Failed for: {state_name!r}"
@@ -79,6 +78,7 @@ class TestParseBrazilDivision:
     def test_all_abbrevs_recognized(self):
         """Every 2-letter abbreviation must parse to its full state name."""
         from flexpipe.curate.regions import _BRAZIL_ABBREV
+
         for abbr, expected_state in _BRAZIL_ABBREV.items():
             s, _ = _parse_brazil_division(abbr)
             assert s == expected_state, f"Abbreviation {abbr!r} did not map to {expected_state!r}"

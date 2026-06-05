@@ -20,7 +20,6 @@ import sys
 from pathlib import Path
 from typing import Optional, Union
 
-
 LOG_FORMAT = "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
 DATE_FORMAT = "%Y-%m-%dT%H:%M:%S"
 

@@ -14,7 +14,6 @@ from __future__ import annotations
 import logging
 from importlib.resources import files
 from pathlib import Path
-from typing import Optional, Union
 
 import pandas as pd
 import yaml
@@ -25,7 +24,7 @@ logger = logging.getLogger(__name__)
 def load_data_table(
     package: str,
     filename: str,
-    override: Optional[Union[str, Path]] = None,
+    override: str | Path | None = None,
     comment: str = "#",
 ) -> pd.DataFrame:
     """Load a TSV reference table from an override path or the bundled default.
@@ -61,7 +60,7 @@ def load_data_table(
 def load_data_yaml(
     package: str,
     filename: str,
-    override: Optional[Union[str, Path]] = None,
+    override: str | Path | None = None,
 ) -> object:
     """Load a YAML reference file from an override path or the bundled default.
 

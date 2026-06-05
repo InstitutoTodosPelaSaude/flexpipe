@@ -70,12 +70,14 @@ def fetch_metadata(
         headers["Authorization"] = f"Bearer {auth_token}"
 
     params = base_params(min_date, min_completeness)
-    params.update({
-        "downloadAsFile": "false",
-        "dataFormat": "TSV",
-        "limit": chunk_size,
-        "offset": 0,
-    })
+    params.update(
+        {
+            "downloadAsFile": "false",
+            "dataFormat": "TSV",
+            "limit": chunk_size,
+            "offset": 0,
+        }
+    )
 
     rows = []
     header = None
@@ -163,26 +165,27 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Fetch metadata and sequences from Pathoplexus via LAPIS"
     )
-    parser.add_argument("--config",           required=True)
-    parser.add_argument("--metadata-output",  required=True)
+    parser.add_argument("--config", required=True)
+    parser.add_argument("--metadata-output", required=True)
     parser.add_argument("--sequences-output", required=True)
     args = parser.parse_args()
 
     from flexpipe.logging_setup import configure_logging
+
     configure_logging()
 
     cfg = load_config(args.config)
     ppx = cfg.get("pathoplexus", {})
     sub = cfg.get("subsampling", {})
 
-    base_url         = ppx.get("base_url", "https://lapis.pathoplexus.org")
-    organism         = ppx.get("organism")
+    base_url = ppx.get("base_url", "https://lapis.pathoplexus.org")
+    organism = ppx.get("organism")
     if not organism:
         logger.error("pathoplexus.organism is required in config.yaml")
         sys.exit(1)
-    meta_ep          = ppx.get("metadata_endpoint", "details")
-    seq_ep           = ppx.get("sequences_endpoint", "unalignedNucleotideSequences")
-    auth_token       = ppx.get("auth_token", "") or None
+    meta_ep = ppx.get("metadata_endpoint", "details")
+    seq_ep = ppx.get("sequences_endpoint", "unalignedNucleotideSequences")
+    auth_token = ppx.get("auth_token", "") or None
     min_completeness = ppx.get("min_completeness", None)
 
     # min_date: prefer explicit pathoplexus.min_date, fall back to subsampling.min_year
@@ -193,9 +196,9 @@ def main() -> None:
             min_date = f"{min_year}-01-01"
 
     meta_url = build_url(base_url, organism, meta_ep)
-    seq_url  = build_url(base_url, organism, seq_ep)
+    seq_url = build_url(base_url, organism, seq_ep)
 
-    os.makedirs(os.path.dirname(args.metadata_output),  exist_ok=True)
+    os.makedirs(os.path.dirname(args.metadata_output), exist_ok=True)
     os.makedirs(os.path.dirname(args.sequences_output), exist_ok=True)
 
     logger.info("Filters: min_date=%s, min_completeness=%s", min_date, min_completeness)

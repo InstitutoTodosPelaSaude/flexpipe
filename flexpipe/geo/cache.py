@@ -79,7 +79,11 @@ def _read_cache(path: Union[str, Path]) -> pd.DataFrame:
         df = pd.read_csv(p, sep="\t", dtype=str).fillna("")
     else:
         df = pd.read_csv(
-            p, sep="\t", header=None, names=_CACHE_COLS, dtype=str,
+            p,
+            sep="\t",
+            header=None,
+            names=_CACHE_COLS,
+            dtype=str,
         ).fillna("")
         # Drop blank-line rows (blank lines between trait groups in latlongs.tsv)
         df = df[df["name"].str.strip() != ""]

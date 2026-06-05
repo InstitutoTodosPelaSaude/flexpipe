@@ -6,10 +6,9 @@ deduplicated the merge would produce a cache larger than intended, or wipe out
 manually edited entries.
 """
 
-import pytest
 import pandas as pd
 
-from flexpipe.geo.cache import merge_coordinate_cache, _read_cache
+from flexpipe.geo.cache import _read_cache, merge_coordinate_cache
 
 
 def _write_cache(path, rows):
@@ -29,10 +28,13 @@ class TestReadCache:
 
     def test_reads_tsv_with_header_correctly(self, tmp_path):
         p = tmp_path / "cache.tsv"
-        _write_cache(p, [
-            ("division", "São Paulo", "-23.5", "-46.6"),
-            ("country", "Brazil", "-14.2", "-51.9"),
-        ])
+        _write_cache(
+            p,
+            [
+                ("division", "São Paulo", "-23.5", "-46.6"),
+                ("country", "Brazil", "-14.2", "-51.9"),
+            ],
+        )
         result = _read_cache(p)
         assert len(result) == 2
         assert result["name"].tolist() == ["São Paulo", "Brazil"]
@@ -41,8 +43,7 @@ class TestReadCache:
         """Legacy format (old Snakefile inline block or latlongs.tsv) — no header row."""
         p = tmp_path / "legacy.tsv"
         p.write_text(
-            "division\tSão Paulo\t-23.5\t-46.6\n"
-            "country\tBrazil\t-14.2\t-51.9\n",
+            "division\tSão Paulo\t-23.5\t-46.6\n" "country\tBrazil\t-14.2\t-51.9\n",
             encoding="utf-8",
         )
         result = _read_cache(p)
@@ -73,9 +74,7 @@ class TestReadCache:
 
         # latlongs.tsv format — no header, blank lines between groups
         new.write_text(
-            "division\tParaná\t-24.8\t-51.0\n"
-            "\n"
-            "location\tCuritiba\t-25.4\t-49.2\n",
+            "division\tParaná\t-24.8\t-51.0\n" "\n" "location\tCuritiba\t-25.4\t-49.2\n",
             encoding="utf-8",
         )
         # existing cache with header (new format)

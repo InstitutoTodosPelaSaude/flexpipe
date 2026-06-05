@@ -1,7 +1,5 @@
 """Unit tests for flexpipe.curate.hosts.normalize_host."""
 
-import pytest
-
 from flexpipe.curate.hosts import normalize_host
 
 

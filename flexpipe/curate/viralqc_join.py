@@ -105,7 +105,8 @@ def join_viralqc(
                     if n:
                         logger.warning(
                             "Excluding %d sequences with wrong/unclassified virus (expected: %s)",
-                            n, expected_virus,
+                            n,
+                            expected_virus,
                         )
                         if "genome_quality" not in df.columns:
                             df["genome_quality"] = ""
@@ -120,7 +121,8 @@ def join_viralqc(
                     if n:
                         logger.warning(
                             "Excluding %d sequences with wrong segment (expected: %s)",
-                            n, expected_segment,
+                            n,
+                            expected_segment,
                         )
                         if "genome_quality" not in df.columns:
                             df["genome_quality"] = ""

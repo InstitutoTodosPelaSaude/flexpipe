@@ -50,6 +50,7 @@ def _seed_coordinate_cache(build_dir: Path, paths: WorkdirPaths) -> None:
     target = paths.cache_coordinates
     if not target.exists() and seed.exists():
         import shutil
+
         shutil.copy2(seed, target)
         logger.info("Seeded coordinate cache from %s → %s", seed, target)
 
@@ -58,10 +59,14 @@ def _run_snakemake(snakefile: Path, config_path: Path, paths: WorkdirPaths, core
     """Invoke Snakemake for one stage and return the exit code."""
     cmd = [
         "snakemake",
-        "--snakefile", str(snakefile),
-        "--configfile", str(config_path),
-        "--config", f"workdir={paths.root}",
-        "--cores", str(cores),
+        "--snakefile",
+        str(snakefile),
+        "--configfile",
+        str(config_path),
+        "--config",
+        f"workdir={paths.root}",
+        "--cores",
+        str(cores),
         "--nolock",
     ]
     logger.info("Running: %s", " ".join(cmd))
@@ -93,7 +98,7 @@ def run_pipeline(
 
     # Load and validate config
     try:
-        cfg = load_config(config_path, workdir=workdir)
+        load_config(config_path, workdir=workdir)
     except SystemExit as exc:
         logger.error("Configuration error: %s", exc)
         return 2
@@ -197,6 +202,7 @@ def main() -> None:
     # Resolve run_date: must be explicit for reproducibility; warn if defaulting to today
     if args.run_date is None:
         from datetime import date
+
         run_date = date.today().isoformat()
         logger.warning(
             "--run-date not provided; defaulting to today (%s). "

@@ -1,10 +1,6 @@
 """Unit tests for flexpipe.curate.viralqc_join.join_viralqc."""
 
-import os
-import tempfile
-
 import pandas as pd
-import pytest
 
 from flexpipe.curate.viralqc_join import join_viralqc
 
@@ -49,7 +45,9 @@ class TestJoinViralqcClade:
     def test_viralqc_clade_overrides_empty_existing(self, tmp_path):
         df = _make_metadata("SEQ001")
         df["clade"] = ""
-        path = _write_viralqc(tmp_path, [{"seqName": "SEQ001", "clade": "I.A", "genomeQuality": "A"}])
+        path = _write_viralqc(
+            tmp_path, [{"seqName": "SEQ001", "clade": "I.A", "genomeQuality": "A"}]
+        )
         result = join_viralqc(df, path, {"clade_column": "clade"})
         assert result.loc[0, "clade"] == "I.A"
 
@@ -57,7 +55,9 @@ class TestJoinViralqcClade:
         """ViralQC result replaces any existing clade value when non-empty."""
         df = _make_metadata("SEQ001")
         df["clade"] = "OLD_CLADE"
-        path = _write_viralqc(tmp_path, [{"seqName": "SEQ001", "clade": "I.B", "genomeQuality": "A"}])
+        path = _write_viralqc(
+            tmp_path, [{"seqName": "SEQ001", "clade": "I.B", "genomeQuality": "A"}]
+        )
         result = join_viralqc(df, path, {"clade_column": "clade"})
         assert result.loc[0, "clade"] == "I.B"
 
@@ -74,7 +74,9 @@ class TestJoinViralqcClade:
         df = _make_metadata("SEQ001", "SEQ002")
         df["clade"] = ["CLADE_A", "CLADE_B"]
         # Only SEQ001 in ViralQC
-        path = _write_viralqc(tmp_path, [{"seqName": "SEQ001", "clade": "NEW", "genomeQuality": "A"}])
+        path = _write_viralqc(
+            tmp_path, [{"seqName": "SEQ001", "clade": "NEW", "genomeQuality": "A"}]
+        )
         result = join_viralqc(df, path, {"clade_column": "clade"})
         assert result.loc[result["strain"] == "SEQ002", "clade"].iloc[0] == "CLADE_B"
 
@@ -90,17 +92,24 @@ class TestJoinViralqcQuality:
 
     def test_coverage_from_nc_coverage(self, tmp_path):
         df = _make_metadata("SEQ001")
-        path = _write_viralqc(tmp_path, [{"seqName": "SEQ001", "coverage": "0.97", "genomeQuality": "A"}])
+        path = _write_viralqc(
+            tmp_path, [{"seqName": "SEQ001", "coverage": "0.97", "genomeQuality": "A"}]
+        )
         result = join_viralqc(df, path, {})
         assert abs(float(result.loc[0, "coverage"]) - 0.97) < 1e-6
 
     def test_qc_overall_status_mapped(self, tmp_path):
         df = _make_metadata("SEQ001")
-        path = _write_viralqc(tmp_path, [{
-            "seqName": "SEQ001",
-            "genomeQuality": "A",
-            "qc.overallStatus": "good",
-        }])
+        path = _write_viralqc(
+            tmp_path,
+            [
+                {
+                    "seqName": "SEQ001",
+                    "genomeQuality": "A",
+                    "qc.overallStatus": "good",
+                }
+            ],
+        )
         result = join_viralqc(df, path, {})
         assert result.loc[0, "qc_overall_status"] == "good"
 
@@ -110,10 +119,13 @@ class TestJoinViralqcContamination:
 
     def test_wrong_virus_flagged_D(self, tmp_path):
         df = _make_metadata("SEQ001", "SEQ002")
-        path = _write_viralqc(tmp_path, [
-            {"seqName": "SEQ001", "virus": "YFV", "genomeQuality": "A"},
-            {"seqName": "SEQ002", "virus": "DENV", "genomeQuality": "A"},
-        ])
+        path = _write_viralqc(
+            tmp_path,
+            [
+                {"seqName": "SEQ001", "virus": "YFV", "genomeQuality": "A"},
+                {"seqName": "SEQ002", "virus": "DENV", "genomeQuality": "A"},
+            ],
+        )
         cfg = {"expected_virus": "YFV"}
         result = join_viralqc(df, path, cfg)
         assert result.loc[result["strain"] == "SEQ001", "genome_quality"].iloc[0] == "A"
@@ -121,27 +133,36 @@ class TestJoinViralqcContamination:
 
     def test_unclassified_virus_flagged_D(self, tmp_path):
         df = _make_metadata("SEQ001")
-        path = _write_viralqc(tmp_path, [
-            {"seqName": "SEQ001", "virus": "unclassified virus", "genomeQuality": "A"},
-        ])
+        path = _write_viralqc(
+            tmp_path,
+            [
+                {"seqName": "SEQ001", "virus": "unclassified virus", "genomeQuality": "A"},
+            ],
+        )
         cfg = {"expected_virus": "YFV"}
         result = join_viralqc(df, path, cfg)
         assert result.loc[0, "genome_quality"] == "D"
 
     def test_correct_virus_not_flagged(self, tmp_path):
         df = _make_metadata("SEQ001")
-        path = _write_viralqc(tmp_path, [
-            {"seqName": "SEQ001", "virus": "YFV", "genomeQuality": "A"},
-        ])
+        path = _write_viralqc(
+            tmp_path,
+            [
+                {"seqName": "SEQ001", "virus": "YFV", "genomeQuality": "A"},
+            ],
+        )
         cfg = {"expected_virus": "YFV"}
         result = join_viralqc(df, path, cfg)
         assert result.loc[0, "genome_quality"] == "A"
 
     def test_wrong_segment_flagged_D(self, tmp_path):
         df = _make_metadata("SEQ001")
-        path = _write_viralqc(tmp_path, [
-            {"seqName": "SEQ001", "segment": "N", "genomeQuality": "A"},
-        ])
+        path = _write_viralqc(
+            tmp_path,
+            [
+                {"seqName": "SEQ001", "segment": "N", "genomeQuality": "A"},
+            ],
+        )
         cfg = {"expected_segment": "L"}
         result = join_viralqc(df, path, cfg)
         assert result.loc[0, "genome_quality"] == "D"
@@ -149,9 +170,12 @@ class TestJoinViralqcContamination:
     def test_empty_virus_not_excluded(self, tmp_path):
         """Sequences not analyzed by ViralQC (empty virus) must not be flagged."""
         df = _make_metadata("SEQ001")
-        path = _write_viralqc(tmp_path, [
-            {"seqName": "SEQ001", "virus": "", "genomeQuality": "A"},
-        ])
+        path = _write_viralqc(
+            tmp_path,
+            [
+                {"seqName": "SEQ001", "virus": "", "genomeQuality": "A"},
+            ],
+        )
         cfg = {"expected_virus": "YFV"}
         result = join_viralqc(df, path, cfg)
         assert result.loc[0, "genome_quality"] == "A"

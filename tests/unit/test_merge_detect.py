@@ -1,9 +1,5 @@
 """Unit tests for flexpipe.ingest.merge — format detection and FASTA-authority logic."""
 
-import io
-import os
-import textwrap
-
 import pandas as pd
 import pytest
 
@@ -13,9 +9,7 @@ from flexpipe.ingest.merge import (
     read_fasta_records,
     read_itps_tsv_metadata,
     read_local_metadata,
-    read_xlsx_metadata,
 )
-
 
 # ── FASTA helpers ──────────────────────────────────────────────────────────────
 
@@ -88,9 +82,15 @@ class TestReadItpsTsvMetadata:
 
     def _write_itps_tsv(self, tmp_path, rows=None):
         rows = rows or [
-            {"ID": "ITPS001", "CollectionDate": "2024-01-01", "Country": "Brazil",
-             "State": "Espírito Santo", "City": "Serra", "HostSpecies": "Homo sapiens",
-             "DataUse": "open"},
+            {
+                "ID": "ITPS001",
+                "CollectionDate": "2024-01-01",
+                "Country": "Brazil",
+                "State": "Espírito Santo",
+                "City": "Serra",
+                "HostSpecies": "Homo sapiens",
+                "DataUse": "open",
+            },
         ]
         df = pd.DataFrame(rows)
         path = tmp_path / "itps_new.tsv"
@@ -136,17 +136,21 @@ class TestReadLocalMetadata:
     """Format auto-detection in ``read_local_metadata``."""
 
     def _write_itps_tsv(self, tmp_path):
-        df = pd.DataFrame([
-            {"ID": "ITPS001", "CollectionDate": "2024-01-01", "Country": "Brazil"},
-        ])
+        df = pd.DataFrame(
+            [
+                {"ID": "ITPS001", "CollectionDate": "2024-01-01", "Country": "Brazil"},
+            ]
+        )
         path = tmp_path / "itps.tsv"
         df.to_csv(path, sep="\t", index=False)
         return path
 
     def _write_ppx_tsv(self, tmp_path):
-        df = pd.DataFrame([
-            {"accessionVersion": "PPX001", "date": "2024-01-01", "country": "Brazil"},
-        ])
+        df = pd.DataFrame(
+            [
+                {"accessionVersion": "PPX001", "date": "2024-01-01", "country": "Brazil"},
+            ]
+        )
         path = tmp_path / "ppx.tsv"
         df.to_csv(path, sep="\t", index=False)
         return path
@@ -164,9 +168,11 @@ class TestReadLocalMetadata:
         assert "accessionVersion" in result.columns
 
     def test_data_use_uppercased_in_passthrough(self, tmp_path):
-        df = pd.DataFrame([
-            {"accessionVersion": "PPX001", "dataUseTerms": "open"},
-        ])
+        df = pd.DataFrame(
+            [
+                {"accessionVersion": "PPX001", "dataUseTerms": "open"},
+            ]
+        )
         path = tmp_path / "ppx.tsv"
         df.to_csv(path, sep="\t", index=False)
         result = read_local_metadata(str(path))

@@ -1,7 +1,5 @@
 """Unit tests for flexpipe.curate.clades.truncate_clade."""
 
-import pytest
-
 from flexpipe.curate.clades import truncate_clade
 
 
