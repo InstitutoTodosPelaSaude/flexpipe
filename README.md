@@ -11,33 +11,93 @@ This repository includes a working example build for **Yellow Fever Virus (YFV) 
 ### Requirements
 
 - [conda](https://docs.conda.io/) or [mamba](https://mamba.readthedocs.io/)
-- A `nextstrain` conda environment with `augur ≥ 13`, `snakemake`, `iqtree3`, and the dependencies listed in `config/nextstrain.yml`
+- A `nextstrain` conda environment (see below)
 - [ViralQC](https://github.com/InstitutoTodosPelaSaude/viralQC) installed in a separate conda environment (`viralQC`)
+
+### Installation
+
+```bash
+# 1. Create the nextstrain conda environment
+conda env create -f config/nextstrain.yml
+conda activate nextstrain
+
+# 2. Install the flexpipe package into the same environment
+pip install -e '.[test,dev]'
+
+# 3. (Separately) install ViralQC
+conda create -n viralQC -c conda-forge -c bioconda viralqc
+```
 
 ### Running the example (YFV Brazil)
 
-The pipeline is split into two independent workflows. Run them in sequence from the repository root:
+All pipeline outputs go to a **workdir** — the source tree is never modified.
 
-**Stage 1 — Ingest**
 ```bash
-conda run -n nextstrain snakemake \
-    --snakefile ingest/Snakefile \
-    --cores 4
-```
+# Run the full pipeline (ingest + phylogenetics) for the YFV Brazil build
+flexpipe-run \
+    --config  builds/yfv-brazil/config.yaml \
+    --workdir /path/to/workdir/yfv-brazil
 
-**Stage 2 — Phylogenetic**
-```bash
-conda run -n nextstrain snakemake \
-    --snakefile phylogenetic/Snakefile \
-    --cores 4
-```
-
-**Visualise**
-```bash
-conda run -n nextstrain auspice view --datasetDir auspice/
+# Visualise
+auspice view --datasetDir /path/to/workdir/yfv-brazil/auspice/
 ```
 
 Open `http://localhost:4000` in your browser.
+
+#### Stage-by-stage execution
+
+```bash
+# Stage 1: ingest only
+flexpipe-run --config builds/yfv-brazil/config.yaml --workdir /tmp/run --stage ingest
+
+# Stage 2: phylogenetics only (after ingest completes)
+flexpipe-run --config builds/yfv-brazil/config.yaml --workdir /tmp/run --stage phylo
+```
+
+#### Direct Snakemake invocation (advanced)
+
+```bash
+# Dry-run to preview ingest steps
+snakemake --snakefile ingest/Snakefile --config workdir=/tmp/run --dry-run --cores 4
+
+# Run ingest directly
+snakemake --snakefile ingest/Snakefile --config workdir=/tmp/run --cores 4
+
+# Run phylogenetics directly
+snakemake --snakefile phylogenetic/Snakefile --config workdir=/tmp/run --cores 4
+```
+
+### ViralQC datasets
+
+ViralQC requires pre-built BLAST databases and Nextclade datasets. Point flexpipe to them via
+the `VIRALQC_DATASETS_DIR` environment variable or the `viralqc.datasets_dir` key in your
+build's `config.yaml`:
+
+```bash
+export VIRALQC_DATASETS_DIR=/path/to/viralqc-datasets
+flexpipe-run --config builds/yfv-brazil/config.yaml --workdir /tmp/run
+```
+
+---
+
+## Multi-build layout
+
+Each build has its own directory under `builds/` with a self-contained `config.yaml`.
+Run multiple builds independently by pointing `--workdir` to separate directories:
+
+```bash
+flexpipe-run --config builds/yfv-brazil/config.yaml  --workdir /workdir/yfv-brazil
+flexpipe-run --config builds/rsv-global/config.yaml  --workdir /workdir/rsv-global
+```
+
+Build directories contain:
+- `config.yaml` — all pipeline parameters for this build
+- `subsample.yaml` — subsampling strategy
+- `auspice_config.json` — Auspice display settings
+- `reference.gb` — reference genome (GenBank format)
+- `clades.tsv` — clade definitions for `augur clades`
+- `keep.txt` / `ignore.txt` — strains to always include/exclude
+- `cache_coordinates.tsv` — read-only geocoding seed (runtime cache lives in `--workdir`)
 
 ---
 
@@ -45,7 +105,7 @@ Open `http://localhost:4000` in your browser.
 
 ```
 fetch_pathoplexus  (or fetch_ncbi)
-    └── merge_local_sequences  (optional local sequences + Pathoplexus/NCBI)
+    └── merge_local_sequences  (optional local sequences)
             └── viralqc        (BLAST + Nextclade: QC grades + clade assignment)
                     └── curate_qc  (normalisation, dedup, augur filter)
                             └── prepare  (augur subsample)
@@ -55,14 +115,16 @@ fetch_pathoplexus  (or fetch_ncbi)
                                             └── [phylogenetic/Snakefile]
                                                     align → mask → tree → refine
                                                     → ancestral → translate → traits
-                                                    → clades → export → auspice/results.json
+                                                    → clades → export
+                                                    → <workdir>/auspice/results.json
 ```
 
 ---
 
 ## Stage 1 — Ingest
 
-Sequences and metadata are fetched from **Pathoplexus** (default) or **NCBI**, controlled by `data_source` in `config/config.yaml`. Only one source is active per run.
+Sequences and metadata are fetched from **Pathoplexus** (default) or **NCBI**, controlled by
+`data_source` in your build's `config.yaml`.
 
 ### Example — YFV Brazil
 
@@ -74,13 +136,15 @@ Sequences and metadata are fetched from **Pathoplexus** (default) or **NCBI**, c
 | `ncbi.taxid` (fallback) | `11089` |
 | `ncbi.genome_size` (bp) | `10862` |
 
-Local surveillance sequences (in `data/new_sequences.fasta` + `data/metadata.xlsx`) are merged with remote data via `merge_local_sequences.py`. Set `local_sequences.enabled: true` in `config.yaml` to activate.
+Local surveillance sequences (`data/new_sequences.fasta` + `data/metadata.xlsx`) are merged
+with remote data. Set `local_sequences.enabled: true` in `config.yaml` to activate.
 
 ---
 
 ## Stage 2 — QC and Curation
 
-**ViralQC** (BLAST + Nextclade) assigns genome quality grades (A–D) and clade labels. The `curate.py` script then:
+**ViralQC** (BLAST + Nextclade) assigns genome quality grades (A–D) and clade labels. The
+`flexpipe-curate` entry point then:
 
 - Renames and standardises metadata fields (`strain`, `date`, `country`, `division`, `location`, `data_use`, `clade`)
 - Computes `clade_truncated` by trimming hierarchical clade names to `clade_levels` levels
@@ -94,7 +158,7 @@ Local surveillance sequences (in `data/new_sequences.fasta` + `data/metadata.xls
 |-----------|-------|
 | `qc.genome_quality` | `A`, `B` (grades C and D discarded) |
 | `qc.min_coverage` | `0.70` |
-| Required columns | `strain`, `date`, `country`, `clade` |
+| Required columns | `strain`, `date`, `clade` |
 
 ### Region mapping
 
@@ -102,49 +166,48 @@ The `region_source` field in `config.yaml` controls how the `region` column is d
 
 | `region_source` | Behaviour | Use case |
 |----------------|-----------|----------|
-| `"country"` | Maps country name → continent via `REGION_MAP` | Global builds |
-| `"division"` | Maps Brazilian state → macro-region via `BRAZIL_REGION_MAP` | Brazil-only builds |
+| `"country"` | Maps country name → continent | Global builds |
+| `"division"` | Maps Brazilian state → macro-region | Brazil-only builds |
 
 Brazilian macro-regions: **Norte**, **Nordeste**, **Centro-Oeste**, **Sudeste**, **Sul**.
 
-The YFV example uses `region_source: "division"` so that `region` represents intra-country geographic structure rather than a continent label.
+The YFV example uses `region_source: "division"`.
 
 ---
 
 ## Stage 3 — Subsampling
 
-Controlled by `config/subsample.yaml`, which is read by `augur subsample`. The YFV Brazil strategy:
+Controlled by `subsample.yaml`, which is read by `augur subsample`. The YFV Brazil strategy:
 
 ```yaml
 defaults:
   min_date: 2015
 
 samples:
-  focal:
-    query: "source == 'ITpS'"       # local sequences always kept in full
-
   brazil:
-    group_by: [division, year]      # subsample by state and year
-    sequences_per_group: 10
-    exclude_where:
-      - "source=ITpS"
-      - "division="
-      - "date="
+    query: "country == 'Brazil'"
+    group_by: [division, year]
+    sequences_per_group: 100
 ```
 
-For global builds (RSV, Flu), replace `division` with `country` and add `clade_truncated` to `group_by` and `exclude_where`.
+For global builds, replace `division` with `country` and add `clade_truncated` to `group_by`.
 
 ---
 
 ## Stage 4 — Coordinates and Colours
 
-**Coordinates**: `get_coordinates.py` queries Nominatim (OpenStreetMap) to geocode the columns listed in `coordinates.columns` (default: `division location` for the YFV example). Results are cached in `config/cache_coordinates.tsv`; the output `config/latlongs.tsv` is consumed by `augur export`. The script applies Nominatim featuretype hints per level (`division → state`, `location → city`) and writes incrementally after each new find to avoid data loss on interruption.
+**Coordinates**: `flexpipe-coordinates` queries Nominatim (OpenStreetMap) to geocode the
+columns listed in `coordinates.columns`. Results are cached in `<workdir>/cache/cache_coordinates.tsv`;
+the output `<workdir>/config/latlongs.tsv` is consumed by `augur export`. The geocoding seed
+from the build directory (`builds/<name>/cache_coordinates.tsv`) is copied into the workdir on
+first run — the source tree is never written to.
 
-**Colours**: `generate_name2hue.py` assigns hues from the subsampled metadata. `colour_maker.py` produces `config/colour_scheme.tsv`. Both are configured via `colours` in `config.yaml`:
+**Colours**: `flexpipe-name2hue` assigns hues from the subsampled metadata. `flexpipe-colours`
+produces `<workdir>/config/colour_scheme.tsv`. Both are configured via `colours` in `config.yaml`:
 
 ```yaml
 colours:
-  clade:    "clade"
+  clade:    "clade_truncated clade"
   geo:      "region division location"
   source:   "source"
   data_use: "data_use"
@@ -154,9 +217,8 @@ colours:
 
 ## Stage 5 — Phylogenetic
 
-Run separately after ingest completes (`snakemake --snakefile phylogenetic/Snakefile --cores N`).
-
-Steps: `align` (MAFFT) → `mask` → `tree` (IQ-TREE 3 UFBoot) → `refine` (TreeTime) → `ancestral` → `translate` → `traits` → `clades` → `export` → `auspice/results.json`
+Steps: `align` (MAFFT) → `mask` → `tree` (IQ-TREE 3 UFBoot) → `refine` (TreeTime) →
+`ancestral` → `translate` → `traits` → `clades` → `export` → `<workdir>/auspice/results.json`
 
 ### Key phylogenetic parameters — YFV example
 
@@ -177,17 +239,21 @@ Steps: `align` (MAFFT) → `mask` → `tree` (IQ-TREE 3 UFBoot) → `refine` (Tr
 
 ### Clade annotation
 
-Clade labels on tree branches are defined in `config/clades.tsv` and applied by `augur clades`. For YFV, genotype information is already present in the metadata `clade` field (sourced from Pathoplexus). The `clades.tsv` defines mutation-based branch labels to annotate internal nodes where a genotype lineage originates.
-
-YFV genotypes are single-level (`I`, `II`, `III`…), so `clade_levels: 1` in `config.yaml` keeps `clade_truncated` equal to `clade`.
+Clade labels are defined in `clades.tsv` and applied by `augur clades`. YFV genotypes are
+single-level (`I`, `II`, `III`…), so `clade_levels: 1` keeps `clade_truncated` equal to `clade`.
 
 ---
 
 ## Adapting to Another Pathogen
 
-To create a new build, copy `config/` and `data/`, then edit `config/config.yaml` and `config/subsample.yaml`. Scripts and Snakefiles are shared and require no modification for supported pathogens.
+Create a new build directory and edit `config.yaml`:
 
-Key fields to update in `config.yaml`:
+```bash
+cp -r builds/yfv-brazil builds/my-pathogen
+# edit builds/my-pathogen/config.yaml, subsample.yaml, reference.gb, clades.tsv
+```
+
+Key fields to update:
 
 | Field | Description |
 |-------|-------------|
@@ -198,41 +264,58 @@ Key fields to update in `config.yaml`:
 | `parameters.mask_5prime/3prime` | Terminal masking in bp (0 for full-genome builds) |
 | `curation.clade_levels` | Hierarchy depth for `clade_truncated` |
 | `region_source` | `"country"` for global builds; `"division"` for Brazil-only |
-| `viralqc.*` | ViralQC dataset and paths (must be configured per pathogen) |
+| `viralqc.*` | ViralQC paths (or set `VIRALQC_DATASETS_DIR`) |
 | `traits.columns` | Columns for ancestral trait reconstruction |
 
 ---
 
-## Configuration Files
+## Build Configuration Files
 
 | File | Purpose |
 |------|---------|
-| `config/config.yaml` | All pipeline parameters |
-| `config/subsample.yaml` | Subsampling strategy (read by `augur subsample`) |
-| `config/auspice_config.json` | Auspice display settings (colorings, filters, panels) |
-| `config/reference.gb` | Reference genome in GenBank format (X03700.1 for YFV) |
-| `config/clades.tsv` | Clade definitions for `augur clades` |
-| `config/cache_coordinates.tsv` | Geocoding cache (updated incrementally each run) |
-| `config/keep.txt` | Strains to always include (one accession per line) |
-| `config/ignore.txt` | Strains to always exclude (reference accession goes here) |
-| `data/new_sequences.fasta` | Local sequences (used when `local_sequences.enabled: true`) |
-| `data/metadata.xlsx` | Local metadata (used when `local_sequences.enabled: true`) |
+| `builds/<name>/config.yaml` | All pipeline parameters for this build |
+| `builds/<name>/subsample.yaml` | Subsampling strategy (read by `augur subsample`) |
+| `builds/<name>/auspice_config.json` | Auspice display settings (colorings, filters, panels) |
+| `builds/<name>/reference.gb` | Reference genome in GenBank format |
+| `builds/<name>/clades.tsv` | Clade definitions for `augur clades` |
+| `builds/<name>/cache_coordinates.tsv` | Geocoding seed (read-only; workdir copy is updated each run) |
+| `builds/<name>/keep.txt` | Strains to always include (one accession per line) |
+| `builds/<name>/ignore.txt` | Strains to always exclude (reference accession goes here) |
+| `config/nextstrain.yml` | Conda environment definition (shared across all builds) |
 
 ---
 
-## Scripts
+## Entry Points
 
-| Script | Role |
-|--------|------|
-| `fetch_pathoplexus.py` | Downloads metadata + sequences from Pathoplexus/LAPIS |
-| `fetch_ncbi.py` | Downloads from NCBI Entrez by taxid |
-| `merge_local_sequences.py` | Merges remote data with local surveillance sequences |
-| `curate.py` | ViralQC join, region, clade_truncated, source, dedup |
-| `get_coordinates.py` | Geocodes locations via Nominatim with rate-limiting and caching |
-| `generate_name2hue.py` | Generates colour hue mapping from subsampled metadata |
-| `colour_maker.py` | Assigns hex colours per metadata value |
-| `name2shape.py` | Assigns shapes for Auspice display |
-| `calculate_delta_frequency.py` | Computes clade frequency changes over time |
+| Command | Role |
+|---------|------|
+| `flexpipe-run` | Orchestrator — run ingest + phylo end-to-end for one build |
+| `flexpipe-fetch-pathoplexus` | Download metadata + sequences from Pathoplexus/LAPIS |
+| `flexpipe-fetch-ncbi` | Download from NCBI Entrez by taxid |
+| `flexpipe-merge` | Merge remote data with local surveillance sequences |
+| `flexpipe-curate` | ViralQC join, region, `clade_truncated`, source, dedup |
+| `flexpipe-coordinates` | Geocode locations via Nominatim with rate-limiting and caching |
+| `flexpipe-update-cache` | Merge newly geocoded coordinates into the workdir cache |
+| `flexpipe-name2hue` | Generate colour hue mapping from subsampled metadata |
+| `flexpipe-colours` | Assign hex colours per metadata value |
+
+---
+
+## Docker
+
+```bash
+docker build -t flexpipe .
+
+docker run --rm \
+    -v $(pwd)/builds:/app/builds \
+    -v /path/to/viralqc-datasets:/viralqc-datasets \
+    -v /path/to/workdir:/workdir \
+    -e VIRALQC_DATASETS_DIR=/viralqc-datasets \
+    flexpipe \
+    flexpipe-run \
+        --config  /app/builds/yfv-brazil/config.yaml \
+        --workdir /workdir/yfv-brazil
+```
 
 ---
 

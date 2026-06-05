@@ -1,0 +1,35 @@
+# Minimal config for golden tests — YFV Brazil division build
+data_source: pathoplexus
+region_source: division
+
+pathoplexus:
+  organism: yellow-fever
+  base_url: https://lapis.pathoplexus.org
+  metadata_endpoint: details
+  sequences_endpoint: unalignedNucleotideSequences
+  min_completeness: 0.70
+
+viralqc:
+  clade_column: clade
+  expected_virus: YFV
+
+curation:
+  clade_levels: 1
+  clade_separator: "."
+
+qc:
+  genome_quality:
+    - "A"
+    - "B"
+  min_coverage: 0.70
+  required_columns:
+    - strain
+    - date
+    - division
+    - clade
+
+colours:
+  clade: clade_truncated clade
+  geo: region division location
+  source: source
+  data_use: data_use

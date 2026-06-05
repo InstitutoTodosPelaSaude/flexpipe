@@ -1,0 +1,9 @@
+strain	date	country	division	location	clade	host	data_use	authors	source	completeness	lineage
+SEQ001	2023-01-15	Brazil	Espírito Santo, Domingos Martins		I	Homo sapiens	OPEN	Silva et al	Pathoplexus	0.95
+SEQ002	2022-06-20	Brazil	ES, Serra [IBGE7 3205002]		I	mosquito	OPEN	Santos et al	Pathoplexus	0.85
+SEQ003	2021-03-10	Brazil	Nova Lima, Minas Gerais	Nova Lima	II	Homo sapiens	OPEN	Costa et al	ITpS	0.92
+SEQ004	2020-11-05	Colombia	Antioquia	Medellín	III	human	OPEN	Gomez et al	NCBI	0.88
+SEQ005	2023-07-01	Brazil	São Paulo		I	Homo sapiens	OPEN	Lima et al	Pathoplexus	0.50
+SEQ006	2023-07-02	Brazil	Rio de Janeiro		I	Homo sapiens	OPEN	Faria et al	Pathoplexus	0.30
+SEQ007	2023-03-05	Brazil	Amazonas		I	haemagogus janthinomys	OPEN	Vasconcelos et al	Pathoplexus	0.91
+SEQ008	2022-09-12	Brazil	Pará		I.A	primate	OPEN	Oliveira et al	Pathoplexus	0.87

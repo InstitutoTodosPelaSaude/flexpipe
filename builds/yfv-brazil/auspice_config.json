@@ -1,0 +1,80 @@
+{
+  "title": "Yellow Fever Virus — Brazil",
+
+  "data_provenance": [
+    {
+      "name": "Pathoplexus",
+      "url": "https://pathoplexus.org/"
+    }
+  ],
+
+  "build_url": "https://github.com/InstitutoTodosPelaSaude/flexpipe",
+
+  "maintainers": [
+    {
+      "name": "Instituto Todos pela Saúde",
+      "url": "https://www.itps.org.br/"
+    }
+  ],
+
+  "colorings": [
+    {
+      "key": "clade",
+      "title": "Genotype",
+      "type": "categorical"
+    },
+    {
+      "key": "region",
+      "title": "Macro-região",
+      "type": "categorical"
+    },
+    {
+      "key": "division",
+      "title": "Estado",
+      "type": "categorical"
+    },
+    {
+      "key": "location",
+      "title": "Município",
+      "type": "categorical"
+    },
+    {
+      "key": "source",
+      "title": "Source",
+      "type": "categorical"
+    },
+    {
+      "key": "data_use",
+      "title": "Data Use Term",
+      "type": "categorical"
+    }
+  ],
+
+  "geo_resolutions": [
+    "division",
+    "location"
+  ],
+
+  "display_defaults": {
+    "color_by": "division",
+    "distance_measure": "num_date",
+    "geo_resolution": "location",
+    "map_triplicate": true,
+    "branch_label": "clade"
+  },
+
+  "filters": [
+    "region",
+    "division",
+    "location",
+    "clade",
+    "source",
+    "data_use"
+  ],
+
+  "panels": [
+    "tree",
+    "map",
+    "entropy"
+  ]
+}

@@ -1,0 +1,67 @@
+# Hue assignments for the 'host' colour hierarchy.
+# Normalized host name → hue (0-350, multiples of 10).
+category	hue
+# Human
+Homo sapiens	200
+home sapiens	200
+human	200
+people	200
+person	200
+# Mosquito / insect (YFV vectors)
+mosquito	30
+mosquitos	30
+asian tiger mosquito	30
+aedes aegypti	30
+aedes albopictus	30
+haemagogus	30
+haemagogus janthinomys	30
+haemagogus leucocelaenus	30
+sabethes	30
+culex	30
+# Non-human primates (YFV sentinel hosts)
+primate	100
+primates	100
+new world monkeys	100
+howler monkey	100
+howler monkeys	100
+brown howler monkey	100
+black howler monkey	100
+capuchin monkeys	100
+black-capped capuchin	100
+black-striped capuchin	100
+black-fronted titi	100
+titi monkeys	100
+marmosets and tamarins	100
+black tufted-ear marmoset	100
+geoffroy's marmoset	100
+common marmoset	100
+azara's night monkey	100
+owl monkey	100
+night monkey	100
+# Other mammals
+Mus musculus	280
+mouse	280
+house mouse	280
+house mouse; mouse	280
+Unknown	340
+avian	60
+swine	40
+ferret	150
+camel	110
+acinonyx jubatus	230
+giant anteater	240
+pangolins	70
+bovine	30
+cattle	30
+sheep	50
+goat	50
+horse	20
+dog	160
+cat	170
+canine	160
+canis lupus familiaris	160
+cairina moschata	60
+swan	60
+turkey	60
+domestic turkey	60
+wild turkey	60

@@ -1,0 +1,28 @@
+# Minimal config for golden tests — global country build
+data_source: ncbi
+region_source: country
+
+ncbi:
+  taxid: 11089
+  genome_size: 10862
+  min_length: 0.7
+  max_length: 1.1
+
+viralqc:
+  clade_column: clade
+  expected_virus: YFV
+
+curation:
+  clade_levels: 1
+  clade_separator: "."
+
+qc:
+  genome_quality:
+    - "A"
+    - "B"
+  min_coverage: 0.70
+  required_columns:
+    - strain
+    - date
+    - country
+    - clade

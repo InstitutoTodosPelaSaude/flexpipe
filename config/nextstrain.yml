@@ -7,30 +7,25 @@ channels:
 
 dependencies:
 - augur>=13
-- nextalign=1
+- nextalign
 - nextstrain-cli
-- python>=3.6
+- python>=3.9
 - nodejs>=10
 - git
 - pip
-- fiona
-- shapely
-- rasterio
-- pyproj
+- iqtree
+- mafft
 - beautifulsoup4
-- geopandas
 - geopy
 - tabulate
 - snakemake-minimal
 - unidecode
 
 - pip:
-  - awscli
-  - rethinkdb==2.3.0.post6
   - pycountry-convert
   - pycountry
   - xlrd
   - lxml
   - openpyxl
-  - matplotlib
+  - matplotlib>=3.9
   - colour

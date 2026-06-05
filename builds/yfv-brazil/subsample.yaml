@@ -1,0 +1,23 @@
+# Subsampling for YFV Brazil build
+#
+# All sequences restricted to Brazil and subsampled by state (division) and year.
+# Add a 'focal' sample and set local_sequences.enabled: true in config.yaml
+# to always keep local ITpS surveillance sequences in full.
+#
+# include  forces strains regardless of other filters (builds/yfv-brazil/keep.txt)
+# exclude  removes strains from all samples (builds/yfv-brazil/ignore.txt)
+
+defaults:
+  min_date: 2015
+  exclude: builds/yfv-brazil/ignore.txt
+
+samples:
+  brazil:
+    query: "country == 'Brazil'"
+    include: builds/yfv-brazil/keep.txt
+    exclude_where:
+      - "date="
+    group_by:
+      - division
+      - year
+    sequences_per_group: 100

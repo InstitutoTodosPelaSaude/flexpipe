@@ -1,42 +1,55 @@
-configfile: "config/config.yaml"
+configfile: "builds/yfv-brazil/config.yaml"
 
 from types import SimpleNamespace
+
+# Config file path passed to scripts that need it (e.g. flexpipe-curate).
+# workflow.configfiles is a list of all --configfile arguments; the first
+# element is the build-specific config.
+_config = str(workflow.configfiles[0]) if workflow.configfiles else "builds/yfv-brazil/config.yaml"
+
+# Per-run output directory. Passed by flexpipe-run as --config workdir=<path>.
+# Defaults to "." so a direct snakemake invocation still works from the repo root.
+_wd = config.get("workdir", ".")
 
 _local   = config.get("local_sequences", {})
 _vqc     = config.get("viralqc", {})
 _sub     = config.get("subsampling", {})
-_coords    = config.get("coordinates", {})
-_colours   = config.get("colours", {})
-_ncbi      = config.get("ncbi", {})
+_coords  = config.get("coordinates", {})
+_colours = config.get("colours", {})
 
 # "pathoplexus" (default) or "ncbi" — never both simultaneously
 _source = config.get("data_source", "pathoplexus")
 
-# Paths that downstream rules consume regardless of which source is active
-_RAW_METADATA  = f"results/ingest/{_source}_metadata.tsv"
-_RAW_SEQUENCES = f"results/ingest/{_source}_sequences.fasta"
+# Source-specific raw-fetch outputs
+_RAW_METADATA  = f"{_wd}/results/ingest/{_source}_metadata.tsv"
+_RAW_SEQUENCES = f"{_wd}/results/ingest/{_source}_sequences.fasta"
+
+# Workdir coordinate cache (writable; seeded from build dir on first run by flexpipe-run)
+_workdir_cache = f"{_wd}/cache/cache_coordinates.tsv"
 
 files = SimpleNamespace(**config["files"])
 
 
 rule all:
     input:
-        sequences     = "results/subsampled/sequences.fasta",
-        metadata      = "results/subsampled/metadata.tsv",
-        latlongs      = "config/latlongs.tsv",
-        colour_scheme = "config/colour_scheme.tsv"
+        sequences     = f"{_wd}/results/subsampled/sequences.fasta",
+        metadata      = f"{_wd}/results/subsampled/metadata.tsv",
+        latlongs      = f"{_wd}/config/latlongs.tsv",
+        colour_scheme = f"{_wd}/config/colour_scheme.tsv"
 
 
 # ─── Fetch + merge ────────────────────────────────────────────────────────────
 
 rule fetch_pathoplexus:
     output:
-        metadata  = "results/ingest/pathoplexus_metadata.tsv",
-        sequences = "results/ingest/pathoplexus_sequences.fasta"
+        metadata  = f"{_wd}/results/ingest/pathoplexus_metadata.tsv",
+        sequences = f"{_wd}/results/ingest/pathoplexus_sequences.fasta"
+    params:
+        cfg = _config
     shell:
         """
-        python scripts/fetch_pathoplexus.py \
-            --config           config/config.yaml \
+        flexpipe-fetch-pathoplexus \
+            --config           {params.cfg} \
             --metadata-output  {output.metadata} \
             --sequences-output {output.sequences}
         """
@@ -44,12 +57,14 @@ rule fetch_pathoplexus:
 
 rule fetch_ncbi:
     output:
-        metadata  = "results/ingest/ncbi_metadata.tsv",
-        sequences = "results/ingest/ncbi_sequences.fasta"
+        metadata  = f"{_wd}/results/ingest/ncbi_metadata.tsv",
+        sequences = f"{_wd}/results/ingest/ncbi_sequences.fasta"
+    params:
+        cfg = _config
     shell:
         """
-        python scripts/fetch_ncbi.py \
-            --config           config/config.yaml \
+        flexpipe-fetch-ncbi \
+            --config           {params.cfg} \
             --metadata-output  {output.metadata} \
             --sequences-output {output.sequences}
         """
@@ -64,11 +79,11 @@ rule merge_local_sequences:
         local_sequences = _local.get("sequences", ""),
         enabled         = _local.get("enabled",   False)
     output:
-        metadata  = "results/ingest/merged_metadata.tsv",
-        sequences = "results/ingest/merged_sequences.fasta"
+        metadata  = f"{_wd}/results/ingest/merged_metadata.tsv",
+        sequences = f"{_wd}/results/ingest/merged_sequences.fasta"
     shell:
         """
-        python scripts/merge_local_sequences.py \
+        flexpipe-merge \
             --pathoplexus-metadata  {input.ppx_metadata} \
             --pathoplexus-sequences {input.ppx_sequences} \
             --local-metadata        {params.local_metadata} \
@@ -81,28 +96,29 @@ rule merge_local_sequences:
 
 # ─── QC + curation ───────────────────────────────────────────────────────────
 
-# ViralQC roda em todas as sequências (Pathoplexus + locais).
-# Usa BLAST + Nextclade internamente → genomeQuality (A/B/C/D) + coverage + clade.
-# Pathoplexus clade é preservado quando o ViralQC não atribui um.
+# ViralQC runs on all sequences (Pathoplexus + local).
+# Uses BLAST + Nextclade internally → genomeQuality (A/B/C/D) + coverage + clade.
+# Pathoplexus clade is preserved when ViralQC does not assign one.
 rule viralqc:
     input:
         sequences = rules.merge_local_sequences.output.sequences
     params:
-        datasets_dir = _vqc.get("datasets_dir", "/home/thales/datasets"),
-        blast_db     = _vqc.get("blast_database", "/home/thales/datasets/blast.fasta"),
-        blast_meta   = _vqc.get("blast_database_metadata", "/home/thales/datasets/blast.tsv"),
+        datasets_dir = _vqc.get("datasets_dir", ""),
+        blast_db     = _vqc.get("blast_database", ""),
+        blast_meta   = _vqc.get("blast_database_metadata", ""),
         conda_env    = _vqc.get("conda_env", "viralQC"),
-        cores        = config.get("options", {}).get("threads", 4)
+        cores        = config.get("options", {}).get("threads", 4),
+        output_dir   = f"{_wd}/results/viralqc"
     output:
-        tsv = "results/viralqc/outputs/results.tsv"
+        tsv = f"{_wd}/results/viralqc/outputs/results.tsv"
     shell:
         """
-        mkdir -p results/viralqc
+        mkdir -p {params.output_dir}
         n=$(grep -c '^>' {input.sequences})
         echo "Running ViralQC on $n sequences..."
         conda run -n {params.conda_env} vqc run \
             --input                   {input.sequences} \
-            --output-dir              results/viralqc \
+            --output-dir              {params.output_dir} \
             --output-file             results.tsv \
             --datasets-dir            {params.datasets_dir} \
             --blast-database          {params.blast_db} \
@@ -118,13 +134,14 @@ rule curate_qc:
         sequences = rules.merge_local_sequences.output.sequences,
         viralqc   = rules.viralqc.output.tsv
     output:
-        renamed   = temp("results/ingest/renamed_metadata.tsv"),
-        dated     = temp("results/ingest/dated_metadata.tsv"),
-        curated   = temp("results/ingest/curated_metadata.tsv"),
-        metadata  = "results/final_metadata.tsv",
-        sequences = "results/final_sequences.fasta"
+        renamed   = temp(f"{_wd}/results/ingest/renamed_metadata.tsv"),
+        dated     = temp(f"{_wd}/results/ingest/dated_metadata.tsv"),
+        curated   = temp(f"{_wd}/results/ingest/curated_metadata.tsv"),
+        metadata  = f"{_wd}/results/ingest/final_metadata.tsv",
+        sequences = f"{_wd}/results/ingest/final_sequences.fasta"
     params:
-        min_coverage = config.get("qc", {}).get("min_coverage", 0.70)
+        min_coverage = config.get("qc", {}).get("min_coverage", 0.70),
+        cfg          = _config
     shell:
         """
         augur curate rename \
@@ -145,8 +162,8 @@ rule curate_qc:
             --expected-date-formats '%Y-%m-%d' '%Y-%m' '%Y' '%d-%b-%Y' '%b-%Y' \
             --output-metadata       {output.dated}
 
-        python scripts/curate.py \
-            --config    config/config.yaml \
+        flexpipe-curate \
+            --config    {params.cfg} \
             --metadata  {output.dated} \
             --nextclade {input.viralqc} \
             --output    {output.curated}
@@ -166,23 +183,23 @@ rule curate_qc:
 
 rule prepare:
     message:
-        "Subsampling: focal (ITpS + Brazil) always kept; context by country/year/clade_truncated"
+        "Subsampling: focal (ITpS + Brazil) always kept; context by division/year"
     input:
-        sequences = rules.curate_qc.output.sequences,
-        metadata  = rules.curate_qc.output.metadata,
-        config    = "config/subsample.yaml"
+        sequences     = rules.curate_qc.output.sequences,
+        metadata      = rules.curate_qc.output.metadata,
+        subsample_cfg = files.subsample_config
     params:
         seed = _sub.get("random_seed", 42)
     output:
-        sequences = "results/subsampled/sequences.fasta",
-        metadata  = "results/subsampled/metadata.tsv"
+        sequences = f"{_wd}/results/subsampled/sequences.fasta",
+        metadata  = f"{_wd}/results/subsampled/metadata.tsv"
     shell:
         """
-        mkdir -p results/subsampled
+        mkdir -p $(dirname {output.sequences})
         augur subsample \
             --sequences        {input.sequences} \
             --metadata         {input.metadata} \
-            --config           {input.config} \
+            --config           {input.subsample_cfg} \
             --seed             {params.seed} \
             --output-sequences {output.sequences} \
             --output-metadata  {output.metadata}
@@ -196,49 +213,48 @@ rule generate_name2hue:
     input:
         metadata = rules.prepare.output.metadata
     output:
-        name2hue = "config/name2hue.tsv"
+        name2hue = f"{_wd}/config/name2hue.tsv"
+    params:
+        cfg = _config
     shell:
         """
-        python scripts/generate_name2hue.py \
+        mkdir -p $(dirname {output.name2hue})
+        flexpipe-name2hue \
             --metadata {input.metadata} \
-            --config   config/config.yaml \
+            --config   {params.cfg} \
             --output   {output.name2hue}
         """
 
 
 rule coordinates:
     message:
-        "Searching for coordinates for samples in {input.metadata}"
+        "Geocoding locations from {input.metadata}"
     input:
-        metadata = rules.prepare.output.metadata,
+        metadata = rules.prepare.output.metadata
     params:
-        columns = _coords.get("columns", "country division location"),
-        cache   = files.cache
+        columns       = _coords.get("columns", "country division location"),
+        workdir_cache = _workdir_cache
     output:
-        latlongs = "config/latlongs.tsv"
+        latlongs = f"{_wd}/config/latlongs.tsv"
     shell:
         """
-        python scripts/get_coordinates.py \
+        mkdir -p $(dirname {output.latlongs})
+        flexpipe-coordinates \
             --metadata {input.metadata} \
             --columns  {params.columns} \
-            --cache    {params.cache} \
+            --cache    {params.workdir_cache} \
             --output   {output.latlongs}
 
-        python3 -c "
-import os, pandas as pd
-cols = ['level', 'name', 'lat', 'lon']
-new   = pd.read_csv('{output.latlongs}', sep='\t', header=None, names=cols).dropna(subset=['name'])
-cache = pd.read_csv('{params.cache}', sep='\t', header=None, names=cols).dropna(subset=['name']) if os.path.exists('{params.cache}') else pd.DataFrame(columns=cols)
-merged = pd.concat([cache, new]).drop_duplicates(subset=['level', 'name'], keep='first')
-merged.to_csv('{params.cache}', sep='\t', index=False, header=False)
-print(f'Cache updated: {{len(merged)}} entries in {params.cache}')
-"
+        flexpipe-update-cache \
+            --new-latlongs {output.latlongs} \
+            --cache        {params.workdir_cache} \
+            --output       {params.workdir_cache}
         """
 
 
 rule colours:
     message:
-        "Assigning colour scheme for columns in {input.matrix}"
+        "Assigning colour scheme"
     input:
         matrix = rules.prepare.output.metadata,
         scheme = rules.generate_name2hue.output.name2hue
@@ -249,39 +265,41 @@ rule colours:
         source   = _colours.get("source",   "source"),
         data_use = _colours.get("data_use", "data_use")
     output:
-        colours1      = temp("config/col_hosts.tsv"),
-        colours2      = temp("config/col_geo.tsv"),
-        colours3      = temp("config/col_clade.tsv"),
-        colours4      = temp("config/col_source.tsv"),
-        colours5      = temp("config/col_data_use.tsv"),
-        colour_scheme = "config/colour_scheme.tsv"
+        colours1      = temp(f"{_wd}/config/col_hosts.tsv"),
+        colours2      = temp(f"{_wd}/config/col_geo.tsv"),
+        colours3      = temp(f"{_wd}/config/col_clade.tsv"),
+        colours4      = temp(f"{_wd}/config/col_source.tsv"),
+        colours5      = temp(f"{_wd}/config/col_data_use.tsv"),
+        colour_scheme = f"{_wd}/config/colour_scheme.tsv"
     shell:
         """
-        python scripts/colour_maker.py \
+        mkdir -p $(dirname {output.colour_scheme})
+
+        flexpipe-colours \
             --input   {input.matrix} \
             --colours {input.scheme} \
             --levels  {params.host} \
             --output  {output.colours1}
 
-        python scripts/colour_maker.py \
+        flexpipe-colours \
             --input   {input.matrix} \
             --colours {input.scheme} \
             --levels  {params.geo} \
             --output  {output.colours2}
 
-        python scripts/colour_maker.py \
+        flexpipe-colours \
             --input   {input.matrix} \
             --colours {input.scheme} \
             --levels  {params.clade} \
             --output  {output.colours3}
 
-        python scripts/colour_maker.py \
+        flexpipe-colours \
             --input   {input.matrix} \
             --colours {input.scheme} \
             --levels  {params.source} \
             --output  {output.colours4}
 
-        python scripts/colour_maker.py \
+        flexpipe-colours \
             --input   {input.matrix} \
             --colours {input.scheme} \
             --levels  {params.data_use} \
@@ -298,15 +316,16 @@ rule colours:
 # ─── Utility ──────────────────────────────────────────────────────────────────
 
 rule clean:
-    message: "Remove subsampled outputs only — viralqc e ingest preservados"
+    message: "Remove subsampled outputs — ingest and ViralQC preserved"
+    params:
+        wd = _wd
     shell:
-        "rm -rfv results/subsampled config/colour_scheme.tsv config/latlongs.tsv config/name2hue.tsv"
+        "rm -rfv {params.wd}/results/subsampled {params.wd}/config/colour_scheme.tsv {params.wd}/config/latlongs.tsv {params.wd}/config/name2hue.tsv"
 
 
 rule reset:
-    message: "Full reset — remove tudo em results/ e configs gerados"
+    message: "Full reset — remove all workdir outputs"
+    params:
+        wd = _wd
     shell:
-        """
-        rm -rfv results/ \
-            config/colour_scheme.tsv config/latlongs.tsv config/name2hue.tsv
-        """
+        "rm -rfv {params.wd}/results {params.wd}/config/colour_scheme.tsv {params.wd}/config/latlongs.tsv {params.wd}/config/name2hue.tsv"

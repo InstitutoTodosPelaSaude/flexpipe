@@ -1,6 +1,9 @@
-configfile: "config/config.yaml"
+configfile: "builds/yfv-brazil/config.yaml"
 
 from types import SimpleNamespace
+
+# Per-run output directory (from flexpipe-run --config workdir=<path>)
+_wd = config.get("workdir", ".")
 
 files      = SimpleNamespace(**config["files"])
 parameters = SimpleNamespace(**config["parameters"])
@@ -8,15 +11,15 @@ options    = SimpleNamespace(**config["options"])
 _traits    = config.get("traits", {})
 _sub       = config.get("subsampling", {})
 
-# Preprocessed outputs produced by ingest/Snakefile — treated as static inputs.
-# Run ingest first: snakemake --snakefile ingest/Snakefile --cores N
-SUBSAMPLED_METADATA  = "results/subsampled/metadata.tsv"
-SUBSAMPLED_SEQUENCES = "results/subsampled/sequences.fasta"
+# Ingest outputs — produced by ingest/Snakefile; treated as static inputs here.
+# Run ingest first: flexpipe-run --config builds/yfv-brazil/config.yaml --workdir <dir> --stage ingest
+SUBSAMPLED_METADATA  = f"{_wd}/results/subsampled/metadata.tsv"
+SUBSAMPLED_SEQUENCES = f"{_wd}/results/subsampled/sequences.fasta"
 
 
 rule all:
     input:
-        auspice = "auspice/results.json"
+        auspice = f"{_wd}/auspice/results.json"
 
 
 # ─── Phylogenetics ────────────────────────────────────────────────────────────
@@ -30,9 +33,10 @@ rule align:
     params:
         threads = options.threads
     output:
-        alignment = "results/alignments/aligned.fasta"
+        alignment = f"{_wd}/results/alignments/aligned.fasta"
     shell:
         """
+        mkdir -p $(dirname {output.alignment})
         n=$(grep -c '^>' {input.sequences})
         echo ""
         echo "=== MAFFT: aligning $n sequences — this may take 5-20+ minutes ==="
@@ -57,7 +61,7 @@ rule mask:
         mask_from_end       = parameters.mask_3prime,
         mask_sites          = parameters.mask_sites
     output:
-        alignment = "results/alignments/masked.fasta"
+        alignment = f"{_wd}/results/alignments/masked.fasta"
     shell:
         """
         augur mask \
@@ -78,12 +82,12 @@ rule tree:
         threads   = options.threads,
         model     = parameters.model,
         bootstrap = parameters.ufboot,
-        prefix    = "results/trees/iqtree"
+        prefix    = f"{_wd}/results/trees/iqtree"
     output:
-        tree = "results/trees/tree.nwk"
+        tree = f"{_wd}/results/trees/tree.nwk"
     shell:
         """
-        mkdir -p results/trees
+        mkdir -p $(dirname {output.tree})
         iqtree3 \
             -s     {input.alignment} \
             -m     {params.model} \
@@ -111,8 +115,8 @@ rule refine:
         unit           = parameters.divergence_units,
         clock_filter   = parameters.clock_filter_iqd
     output:
-        tree      = "results/trees/timetree.nwk",
-        node_data = "results/trees/branch_lengths.json"
+        tree      = f"{_wd}/results/trees/timetree.nwk",
+        node_data = f"{_wd}/results/trees/branch_lengths.json"
     shell:
         """
         augur refine \
@@ -140,7 +144,7 @@ rule ancestral:
     params:
         inference = parameters.ancestral_inference
     output:
-        node_data = "results/trees/nt_muts.json"
+        node_data = f"{_wd}/results/trees/nt_muts.json"
     shell:
         """
         augur ancestral \
@@ -159,7 +163,7 @@ rule translate:
         node_data = rules.ancestral.output.node_data,
         reference = files.reference
     output:
-        node_data = "results/trees/aa_muts.json"
+        node_data = f"{_wd}/results/trees/aa_muts.json"
     shell:
         """
         augur translate \
@@ -179,7 +183,7 @@ rule traits:
     params:
         columns = _traits.get("columns", "country division location clade")
     output:
-        node_data = "results/trees/traits.json"
+        node_data = f"{_wd}/results/trees/traits.json"
     shell:
         """
         augur traits \
@@ -200,7 +204,7 @@ rule clades:
         nuc_muts = rules.ancestral.output.node_data,
         clades   = files.clades
     output:
-        clade_data = "results/trees/clades.json"
+        clade_data = f"{_wd}/results/trees/clades.json"
     shell:
         """
         augur clades \
@@ -222,14 +226,15 @@ rule export:
         traits         = rules.traits.output.node_data,
         nt_muts        = rules.ancestral.output.node_data,
         aa_muts        = rules.translate.output.node_data,
-        colors         = "config/colour_scheme.tsv",
-        lat_longs      = "config/latlongs.tsv",
+        colors         = f"{_wd}/config/colour_scheme.tsv",
+        lat_longs      = f"{_wd}/config/latlongs.tsv",
         clades         = rules.clades.output.clade_data,
         auspice_config = files.auspice_config
     output:
-        auspice = rules.all.input.auspice
+        auspice = f"{_wd}/auspice/results.json"
     shell:
         """
+        mkdir -p $(dirname {output.auspice})
         augur export v2 \
             --tree           {input.tree} \
             --metadata       {input.metadata} \
@@ -237,25 +242,25 @@ rule export:
                              {input.nt_muts} {input.aa_muts} {input.clades} \
             --colors         {input.colors} \
             --lat-longs      {input.lat_longs} \
-            --auspice-config  {input.auspice_config} \
+            --auspice-config {input.auspice_config} \
             --metadata-columns 'Originating Lab' 'Submitting Lab' \
-            --output          {output.auspice}
+            --output         {output.auspice}
         """
 
 
 # ─── Utility ──────────────────────────────────────────────────────────────────
 
 rule clean:
-    message: "Removing phylogenetic outputs (keeps ingest/subsampled outputs and config files)"
+    message: "Remove phylogenetic outputs (keeps ingest/subsampled outputs)"
+    params:
+        wd = _wd
     shell:
-        "rm -rfv results/alignments results/trees auspice/"
+        "rm -rfv {params.wd}/results/alignments {params.wd}/results/trees {params.wd}/auspice"
 
 
 rule reset:
-    message: "Full phylogenetic reset — removes all outputs including subsampled data and config files"
+    message: "Full phylogenetic reset — removes all workdir outputs"
+    params:
+        wd = _wd
     shell:
-        """
-        rm -rfv results/ auspice/ \
-            config/colour_scheme.tsv config/latlongs.tsv config/name2hue.tsv \
-            config/cache_coordinates.tsv
-        """
+        "rm -rfv {params.wd}/results {params.wd}/auspice {params.wd}/config"

@@ -1,0 +1,9 @@
+seqName	clade	genomeQuality	coverage	qc.overallStatus	virus
+SEQ001	I	A	0.95	good	YFV
+SEQ002	I	A	0.85	good	YFV
+SEQ003	II	A	0.92	good	YFV
+SEQ004	III	A	0.88	good	YFV
+SEQ005	I	C	0.50	bad	YFV
+SEQ006		D	0.30	bad	YFV
+SEQ007	I	A	0.91	good	YFV
+SEQ008	I.A	B	0.87	mediocre	YFV

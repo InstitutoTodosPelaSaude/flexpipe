@@ -1,0 +1,215 @@
+"""
+Deterministic hue assignment from subsampled metadata.
+
+Assigns fixed hues to known top-level categories (continents, sources, etc.)
+and spreads remaining hues evenly across unknown values using a hash-based
+deterministic algorithm (same name → same hue across runs, regardless of
+which other names exist in the dataset).
+
+Hue wheel: 0–350, step 10.
+  0=red  30=orange  70=yellow-green  90=green  140=teal  190=cyan
+  200=blue  240=dark-blue  270=purple  290=violet  340=rose
+
+Configuration:
+  Clade truncation level is set in ``config.yaml → curation.clade_levels``
+  (default 1 for YFV).  ``curate.py`` performs the truncation upstream;
+  this script reads the ``clade_truncated`` column.
+
+Hue tables are bundled in ``flexpipe/data/colors/*_hues.tsv`` and can be
+overridden per-build via ``colours.hue_tables.*`` in config.
+
+Extracted from ``scripts/generate_name2hue.py``.
+Fixes applied:
+- Module docstring updated (was referencing non-existent ``subsampling.lineage_levels``
+  config key and the script ``curate_qc.py``; corrected to ``curation.clade_levels``
+  and ``curate.py``).
+- ``nearest_valid`` function removed (was defined but never called anywhere).
+- ``LINEAGE_HUES`` renamed to ``CLADE_HUES`` (matches the ``clade_truncated`` column).
+- ``print()`` replaced with ``logging``.
+- Phase 3: hue tables loaded from ``flexpipe/data/colors/*_hues.tsv``.
+"""
+
+from __future__ import annotations
+
+import argparse
+import logging
+import os
+import re
+
+import pandas as pd
+
+from flexpipe.data import load_data_table
+
+logger = logging.getLogger(__name__)
+
+
+def _load_hue_table(filename: str) -> dict:
+    """Load a *_hues.tsv bundled data file into a ``{category: hue_int}`` dict."""
+    df = load_data_table("flexpipe.data.colors", filename)
+    return dict(zip(df["category"], df["hue"].astype(int)))
+
+
+# ── geo (region = top-level of geo hierarchy) ────────────────────────────────
+REGION_HUES = _load_hue_table("region_hues.tsv")
+
+# ── clade (clade_truncated = top-level of clade hierarchy) ────────────────────
+# All clade_truncated values use deterministic hash-based hues automatically.
+# Same name always → same hue across builds, regardless of how many clades exist.
+# No manual curation needed as new clades emerge.
+CLADE_HUES = {}  # intentionally empty — hash fallback handles everything
+
+# ── host ──────────────────────────────────────────────────────────────────────
+HOST_HUES = _load_hue_table("host_hues.tsv")
+
+# ── source ────────────────────────────────────────────────────────────────────
+SOURCE_HUES = _load_hue_table("source_hues.tsv")
+
+# ── data_use ──────────────────────────────────────────────────────────────────
+DATA_USE_HUES = _load_hue_table("data_use_hues.tsv")
+
+# ── valid hue set (multiples of 10, 0-350) ────────────────────────────────────
+VALID_HUES = set(range(0, 360, 10))
+
+
+def _natural_key(s: str):
+    """Sort key that handles mixed text/numbers: ``A.D.2 < A.D.10``."""
+    return [int(c) if c.isdigit() else c.lower() for c in re.split(r"(\d+)", s)]
+
+
+def spread_hues(names: list) -> dict:
+    """Spread N names evenly across the hue wheel (0–350, multiples of 10).
+
+    Step = ``floor(360 / N)`` rounded down to the nearest 10, minimum 10.
+    Names are sorted alphabetically + numerically so the spread is stable.
+
+    Args:
+        names: List of category names to assign hues to.
+
+    Returns:
+        ``{name: hue_int}`` dict.
+    """
+    n = len(names)
+    if n == 0:
+        return {}
+    step = max(10, (360 // n // 10) * 10)
+    ordered = sorted(names, key=_natural_key)
+    return {name: (i * step) % 360 for i, name in enumerate(ordered)}
+
+
+def collect(df: pd.DataFrame, col: str, fixed_hues: dict, label: str, use_hash_for_unknown: bool = False):
+    """Return ``({value: hue}, warnings)`` for all non-empty values in ``df[col]``.
+
+    Known values (in *fixed_hues*) get their fixed hue.  Unknown values either
+    get a hash-spread hue (if *use_hash_for_unknown*) or the next available
+    hue on the wheel.
+
+    Args:
+        df: Metadata DataFrame.
+        col: Column to collect unique values from.
+        fixed_hues: Mapping of known ``{value: hue}``.
+        label: Human-readable label for log messages.
+        use_hash_for_unknown: If ``True``, spread unknown values deterministically.
+
+    Returns:
+        Tuple ``(result_dict, warning_strings)``.
+    """
+    if col not in df.columns:
+        logger.warning("Column '%s' not found — skipping %s", col, label)
+        return {}, []
+
+    values = sorted(set(
+        v for v in df[col].tolist()
+        if str(v).strip() not in ("", "nan", "NA", "NaN")
+    ))
+
+    result   = {}
+    warnings = []
+    used     = set(fixed_hues.values())
+
+    known   = [v for v in values if v in fixed_hues]
+    unknown = [v for v in values if v not in fixed_hues]
+
+    for v in known:
+        result[v] = int(fixed_hues[v])
+
+    if unknown:
+        if use_hash_for_unknown:
+            n = len(unknown)
+            step = max(10, (360 // n // 10) * 10)
+            spread = spread_hues(unknown)
+            result.update(spread)
+            warnings.append(
+                f"{label}: {n} values → spread hues (step={step}, range 0–{(n - 1) * step})"
+            )
+            for name in sorted(spread, key=lambda x: spread[x]):
+                warnings.append(f"  {label}: '{name}' → {spread[name]}")
+        else:
+            for v in unknown:
+                used_result = set(result.values())
+                h = 0
+                for _ in range(36):
+                    if h not in used and h not in used_result:
+                        break
+                    h = (h + 10) % 360
+                result[v] = h
+                warnings.append(
+                    f"{label}: '{v}' has no fixed hue → assigned {h}. "
+                    f"Add to flexpipe/data/colors/*_hues.tsv or set colours.hue_tables in config."
+                )
+
+    return result, warnings
+
+
+def main() -> None:
+    """Entry point for ``flexpipe-name2hue``."""
+    parser = argparse.ArgumentParser(
+        description="Generate name2hue.tsv from curated metadata"
+    )
+    parser.add_argument("--metadata", required=True, help="Curated metadata TSV")
+    parser.add_argument("--config",   required=False, default=None)
+    parser.add_argument("--output",   required=True, help="Output name2hue.tsv")
+    args = parser.parse_args()
+
+    from flexpipe.logging_setup import configure_logging
+    configure_logging()
+
+    logger.info("Loading metadata: %s", args.metadata)
+    df = pd.read_csv(args.metadata, sep="\t", dtype=str).fillna("")
+
+    all_warnings = []
+    sections = []  # (comment, {cat: hue})
+
+    def run(comment, col, fixed, label, use_hash=False):
+        result, warns = collect(df, col, fixed, label, use_hash)
+        sections.append((comment, result))
+        all_warnings.extend(warns)
+
+    run("# geo (top-level = region)",         "region",          REGION_HUES,   "region")
+    run("# clade (top-level = clade_truncated) — unknown = hash-based",
+        "clade_truncated", CLADE_HUES,    "clade_truncated", use_hash=True)
+    run("# host",                              "host",            HOST_HUES,     "host")
+    run("# source",                            "source",          SOURCE_HUES,   "source")
+    run("# data_use",                          "data_use",        DATA_USE_HUES, "data_use")
+
+    os.makedirs(os.path.dirname(os.path.abspath(args.output)), exist_ok=True)
+    total = 0
+    with open(args.output, "w") as fh:
+        fh.write("category\thue\n")
+        for comment, entries in sections:
+            fh.write(f"\n{comment}\n")
+            for cat, hue in sorted(entries.items()):
+                fh.write(f"{cat}\t{hue}\n")
+                total += 1
+
+    logger.info("Wrote %d entries → %s", total, args.output)
+
+    if all_warnings:
+        logger.warning("Auto-assigned hues (add to *_hues.tsv to fix):")
+        for w in all_warnings:
+            logger.warning("  %s", w)
+    else:
+        logger.info("All categories matched fixed hue tables.")
+
+
+if __name__ == "__main__":
+    main()

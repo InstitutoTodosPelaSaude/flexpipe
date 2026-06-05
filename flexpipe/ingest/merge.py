@@ -1,28 +1,36 @@
-#!/usr/bin/env python3
 """
-Merge NCBI sequences with local/focal ITpS sequences.
+Merge remote (Pathoplexus / NCBI) data with local ITpS surveillance sequences.
 
-Remote data source: NCBI (fetch_ncbi.py → accessionVersion / PPX column names)
+Remote data source can be either Pathoplexus or NCBI; both output PPX-style
+column names so the merge logic is identical.
+
 Local focal data can be in two ITpS formats (auto-detected):
-  - xlsx  (ITpS old format — header auto-detected by 'original_seq_id' row)
-  - tsv   (ITpS new format — detected by 'ID' column, PascalCase headers)
+  - ``xlsx``  (ITpS old format — header detected by ``original_seq_id`` row)
+  - ``tsv``   (ITpS new format — detected by ``ID`` column, PascalCase headers)
 
-Both ITpS formats are mapped to PPX column names so that curate.py can
-handle NCBI and ITpS data uniformly.
+Both ITpS formats are mapped to PPX column names so that ``curate`` can
+handle Pathoplexus/NCBI and ITpS data uniformly.
 
 The FASTA file is always the authority: only sequences present in the FASTA
 are included from the local metadata.
+
+Extracted from ``scripts/merge_local_sequences.py``.
+``print()`` calls replaced with ``logging``.
+Minor docstring fix: was "Merge NCBI sequences…" — NCBI is only one possible source.
 """
 
 import argparse
+import logging
 import os
 import sys
 
 import pandas as pd
 from Bio import SeqIO
 
+logger = logging.getLogger(__name__)
 
-# ITpS xlsx field → Pathoplexus PPX column name
+
+# ── ITpS xlsx field → Pathoplexus PPX column name ────────────────────────────
 XLSX_TO_PPX = {
     "original_seq_id":  "accessionVersion",
     "collection_date":  "sampleCollectionDate",
@@ -41,8 +49,7 @@ XLSX_TO_PPX = {
     "sample_type":      "sampleType",
 }
 
-# ITpS new TSV format (PascalCase headers, 'ID' as identifier) → PPX column name
-# Detected by presence of 'ID' column (absent in old xlsx and NCBI PPX formats)
+# ── ITpS new TSV format (PascalCase headers, 'ID' as identifier) → PPX ───────
 ITPS_TSV_TO_PPX = {
     "ID":                          "accessionVersion",
     "CollectionDate":              "sampleCollectionDate",
@@ -59,7 +66,6 @@ ITPS_TSV_TO_PPX = {
     "SequenceTechnology":          "sequencingProtocol",
     "DepthOfCoverage":             "depthOfCoverage",
     "SampleType":                  "sampleType",
-    # Pass-through: rename to match RSV xlsx pass-through names that curate.py expects
     "AuthorAffiliations":          "affiliations",
     "OriginalLaboratoryName":      "orig_lab_name",
     "OriginalLaboratoryAddress":   "orig_lab_address",
@@ -75,11 +81,13 @@ ITPS_TSV_TO_PPX = {
 }
 
 
-def read_fasta_ids(path):
+def read_fasta_ids(path: str) -> set:
+    """Return the set of sequence IDs (first whitespace-delimited token) in a FASTA file."""
     return {rec.id.split()[0] for rec in SeqIO.parse(path, "fasta")}
 
 
-def read_fasta_records(path):
+def read_fasta_records(path: str) -> dict:
+    """Return ``{seq_id: sequence_str}`` from a FASTA file."""
     records = {}
     for rec in SeqIO.parse(path, "fasta"):
         sid = rec.id.split()[0]
@@ -88,8 +96,12 @@ def read_fasta_records(path):
     return records
 
 
-def read_xlsx_metadata(path):
-    """Read ITpS xlsx, auto-detect header row, map columns to Pathoplexus names."""
+def read_xlsx_metadata(path: str) -> pd.DataFrame:
+    """Read ITpS xlsx, auto-detect header row, map columns to PPX names.
+
+    The header is identified by finding the row that contains
+    ``'original_seq_id'``.
+    """
     raw = pd.read_excel(path, header=None, dtype=str).fillna("")
 
     header_row = None
@@ -99,7 +111,7 @@ def read_xlsx_metadata(path):
             break
 
     if header_row is None:
-        print("ERROR: 'original_seq_id' column not found in xlsx.", file=sys.stderr)
+        logger.error("'original_seq_id' column not found in xlsx: %s", path)
         sys.exit(1)
 
     df = pd.read_excel(path, header=header_row, dtype=str).fillna("")
@@ -111,15 +123,14 @@ def read_xlsx_metadata(path):
     return df
 
 
-def read_itps_tsv_metadata(path):
-    """Read ITpS new TSV format (PascalCase columns, 'ID' as identifier)."""
+def read_itps_tsv_metadata(path: str) -> pd.DataFrame:
+    """Read ITpS new TSV format (PascalCase columns, ``'ID'`` as identifier)."""
     df = pd.read_csv(path, sep="\t", dtype=str, keep_default_na=False).fillna("")
     df = df.rename(columns={k: v for k, v in ITPS_TSV_TO_PPX.items() if k in df.columns})
     df["source"] = "ITpS"
     if "dataUseTerms" in df.columns:
         df["dataUseTerms"] = df["dataUseTerms"].str.strip().str.upper()
-    # drop ViralQC output columns already present in the export — they'll be re-added
-    # by curate.py after the pipeline's own ViralQC run
+    # Drop ViralQC output columns (they'll be re-added by curate after the pipeline run)
     vqc_cols = {
         "Segment", "Clade", "TargetGene", "GenomeQuality", "TargetRegionsQuality",
         "TargetGeneQuality", "CodingDNASequenceCoverageQuality", "MissingDataQuality",
@@ -136,20 +147,30 @@ def read_itps_tsv_metadata(path):
         "PrivateNucleotideMutationsTotalPrivateSubstitutions",
         "MissingDataStatus", "SingleNucleotidePolymorphismsClustersStatus",
         "FrameShiftsStatus", "StopCodonsStatus", "Dataset", "DatasetVersion",
-        # already-renamed equivalents
         "clade", "genomeQuality", "coverage",
     }
     df.drop(columns=[c for c in vqc_cols if c in df.columns], inplace=True)
     return df
 
 
-def read_local_metadata(path):
+def read_local_metadata(path: str) -> pd.DataFrame:
+    """Auto-detect and read local ITpS metadata in any supported format.
+
+    Supported formats:
+    - ``.xlsx`` / ``.xls``: ITpS old format (``original_seq_id`` header detection)
+    - ``.tsv`` with ``ID`` column: ITpS new PascalCase TSV
+    - ``.tsv`` with ``accessionVersion`` or PPX headers: pass-through
+    """
     ext = os.path.splitext(path)[1].lower()
     if ext in (".xlsx", ".xls"):
         return read_xlsx_metadata(path)
     df_peek = pd.read_csv(path, sep="\t", dtype=str, nrows=0, keep_default_na=False)
-    if "ID" in df_peek.columns and "original_seq_id" not in df_peek.columns \
-            and "accessionVersion" not in df_peek.columns and "strain" not in df_peek.columns:
+    if (
+        "ID" in df_peek.columns
+        and "original_seq_id" not in df_peek.columns
+        and "accessionVersion" not in df_peek.columns
+        and "strain" not in df_peek.columns
+    ):
         return read_itps_tsv_metadata(path)
     df = pd.read_csv(path, sep="\t", dtype=str, keep_default_na=False).fillna("")
     if "dataUseTerms" in df.columns:
@@ -157,14 +178,16 @@ def read_local_metadata(path):
     return df
 
 
-def detect_id_column(df):
+def detect_id_column(df: pd.DataFrame) -> str:
+    """Return the ID column name (``accessionVersion`` or ``strain``)."""
     for col in ("accessionVersion", "strain"):
         if col in df.columns:
             return col
     raise ValueError(f"No ID column (accessionVersion/strain) found. Got: {list(df.columns)}")
 
 
-def main():
+def main() -> None:
+    """Entry point for ``flexpipe-merge``."""
     parser = argparse.ArgumentParser(description="Merge Pathoplexus and local sequences/metadata")
     parser.add_argument("--pathoplexus-metadata",  required=True)
     parser.add_argument("--pathoplexus-sequences", required=True)
@@ -175,79 +198,76 @@ def main():
     parser.add_argument("--sequences-output",      required=True)
     args = parser.parse_args()
 
+    from flexpipe.logging_setup import configure_logging
+    configure_logging()
+
     local_enabled = str(args.enabled).lower() in ("true", "1", "yes")
 
     os.makedirs(os.path.dirname(args.metadata_output), exist_ok=True)
     os.makedirs(os.path.dirname(args.sequences_output), exist_ok=True)
 
-    # ── load remote (Pathoplexus or NCBI) data ────────────────────────────────
-    print(f"Loading remote metadata: {args.pathoplexus_metadata}")
+    # Load remote (Pathoplexus or NCBI) data
+    logger.info("Loading remote metadata: %s", args.pathoplexus_metadata)
     ppx_meta = pd.read_csv(args.pathoplexus_metadata, sep="\t", dtype=str).fillna("")
     ppx_id_col = detect_id_column(ppx_meta)
 
-    print(f"Loading remote sequences: {args.pathoplexus_sequences}")
+    logger.info("Loading remote sequences: %s", args.pathoplexus_sequences)
     ppx_seqs = read_fasta_records(args.pathoplexus_sequences)
-    print(f"  {len(ppx_meta)} metadata rows, {len(ppx_seqs)} sequences")
+    logger.info("  %d metadata rows, %d sequences", len(ppx_meta), len(ppx_seqs))
 
     merged_meta = ppx_meta.copy()
     merged_seqs = dict(ppx_seqs)
 
-    # ── optionally merge local sequences ─────────────────────────────────────
+    # Optionally merge local sequences
     if local_enabled and args.local_metadata and args.local_sequences:
         if not os.path.isfile(args.local_metadata):
-            print(f"WARNING: local metadata not found: {args.local_metadata}", file=sys.stderr)
+            logger.warning("Local metadata not found: %s", args.local_metadata)
         elif not os.path.isfile(args.local_sequences):
-            print(f"WARNING: local sequences not found: {args.local_sequences}", file=sys.stderr)
+            logger.warning("Local sequences not found: %s", args.local_sequences)
         else:
-            print(f"Loading local sequences: {args.local_sequences}")
+            logger.info("Loading local sequences: %s", args.local_sequences)
             local_seqs = read_fasta_records(args.local_sequences)
             fasta_ids  = set(local_seqs)
-            print(f"  {len(fasta_ids)} sequences in FASTA")
+            logger.info("  %d sequences in FASTA", len(fasta_ids))
 
-            print(f"Loading local metadata: {args.local_metadata}")
+            logger.info("Loading local metadata: %s", args.local_metadata)
             local_meta = read_local_metadata(args.local_metadata)
             local_id_col = detect_id_column(local_meta)
 
-            # filter metadata to sequences present in FASTA (FASTA is authoritative)
             before = len(local_meta)
             local_meta = local_meta[local_meta[local_id_col].isin(fasta_ids)].reset_index(drop=True)
-            print(f"  {before} metadata rows → {len(local_meta)} matched to FASTA")
+            logger.info("  %d metadata rows → %d matched to FASTA", before, len(local_meta))
 
-            # warn about FASTA IDs with no metadata
             missing = fasta_ids - set(local_meta[local_id_col])
             if missing:
-                print(f"  WARNING: {len(missing)} FASTA IDs have no metadata entry:")
-                for m in sorted(missing):
-                    print(f"    {m}")
+                logger.warning(
+                    "%d FASTA IDs have no metadata entry: %s",
+                    len(missing), sorted(missing),
+                )
 
-            # ensure Pathoplexus ID column exists in local metadata
             if local_id_col != ppx_id_col:
                 local_meta[ppx_id_col] = local_meta[local_id_col]
 
-            # deduplicate against Pathoplexus (avoid overwriting public sequences)
             existing_ids = set(ppx_meta[ppx_id_col])
             new_local_meta = local_meta[~local_meta[ppx_id_col].isin(existing_ids)].copy()
-            new_local_seqs = {k: v for k, v in local_seqs.items()
-                              if k not in existing_ids}
-            print(f"  Adding {len(new_local_meta)} new local records")
+            new_local_seqs = {k: v for k, v in local_seqs.items() if k not in existing_ids}
+            logger.info("  Adding %d new local records", len(new_local_meta))
 
-            # outer concat: preserves all columns from both sources
             merged_meta = pd.concat([ppx_meta, new_local_meta], ignore_index=True).fillna("")
             merged_seqs.update(new_local_seqs)
     else:
         if local_enabled:
-            print("local_sequences.enabled=true but paths not provided; skipping local merge")
+            logger.info("local_sequences.enabled=true but paths not provided; skipping local merge")
         else:
-            print("local_sequences.enabled=false; using only Pathoplexus data")
+            logger.info("local_sequences.enabled=false; using only remote data")
 
-    # ── write outputs ─────────────────────────────────────────────────────────
     merged_meta.to_csv(args.metadata_output, sep="\t", index=False)
-    print(f"\nMerged metadata: {len(merged_meta)} rows → {args.metadata_output}")
+    logger.info("Merged metadata: %d rows → %s", len(merged_meta), args.metadata_output)
 
     with open(args.sequences_output, "w") as fh:
         for seq_id, seq in merged_seqs.items():
             fh.write(f">{seq_id}\n{seq}\n")
-    print(f"Merged sequences: {len(merged_seqs)} records → {args.sequences_output}")
+    logger.info("Merged sequences: %d records → %s", len(merged_seqs), args.sequences_output)
 
 
 if __name__ == "__main__":
