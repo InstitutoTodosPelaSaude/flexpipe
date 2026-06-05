@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  lint-and-test:
+    name: Lint & Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package and dev deps
+        run: pip install -e '.[test,dev]'
+
+      - name: Lint (ruff)
+        run: ruff check .
+
+      - name: Format check (black)
+        run: black --check .
+
+      - name: Unit tests
+        run: pytest
+
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.pull_request.labels.*.name, 'run-integration')
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up conda (miniforge)
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest
+          environment-file: config/nextstrain.yml
+          activate-environment: nextstrain
+          auto-activate-base: false
+
+      - name: Install flexpipe into nextstrain env
+        shell: bash -l {0}
+        run: pip install -e '.[test]'
+
+      - name: Integration tests
+        shell: bash -l {0}
+        run: pytest -m integration

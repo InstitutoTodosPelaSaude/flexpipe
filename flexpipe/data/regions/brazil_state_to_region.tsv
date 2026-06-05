@@ -1,0 +1,34 @@
+# Brazilian state → macro-region mapping for division-mode builds.
+state	region
+# Norte
+Amazonas	Norte
+Pará	Norte
+Roraima	Norte
+Amapá	Norte
+Acre	Norte
+Rondônia	Norte
+Tocantins	Norte
+# Nordeste
+Maranhão	Nordeste
+Piauí	Nordeste
+Ceará	Nordeste
+Rio Grande do Norte	Nordeste
+Paraíba	Nordeste
+Pernambuco	Nordeste
+Alagoas	Nordeste
+Sergipe	Nordeste
+Bahia	Nordeste
+# Centro-Oeste
+Mato Grosso	Centro-Oeste
+Mato Grosso do Sul	Centro-Oeste
+Goiás	Centro-Oeste
+Distrito Federal	Centro-Oeste
+# Sudeste
+São Paulo	Sudeste
+Rio de Janeiro	Sudeste
+Minas Gerais	Sudeste
+Espírito Santo	Sudeste
+# Sul
+Paraná	Sul
+Santa Catarina	Sul
+Rio Grande do Sul	Sul

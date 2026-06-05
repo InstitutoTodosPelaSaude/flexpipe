@@ -1,0 +1,98 @@
+# Host normalization rules for flexpipe.
+#
+# Rules are evaluated in ORDER; the FIRST matching rule wins.
+# The 'target' is the normalized host name (empty string = drop the sequence).
+# If no rule matches, the base name (before the first ';', lowercased) is returned.
+#
+# Rule condition types (multiple conditions in one rule are OR-ed):
+#   regex         — re.match(pattern, base_lower, re.IGNORECASE)
+#   startswith    — base_lower.startswith(v) for any v in values
+#   literal       — base_lower == v for any v in values (exact match)
+#   contains      — v in base_lower (single string substring match)
+#   contains_any  — any(kw in base_lower for kw in keywords)
+
+rules:
+
+  - target: human
+    conditions:
+      - type: regex
+        pattern: "^ho[mn][eo][\\s_]?sapien|^hom\\s+sapien"
+      - type: startswith
+        values: ["human", "homosapien"]
+      - type: literal
+        values: ["people", "person"]
+
+  - target: swine
+    conditions:
+      - type: regex
+        pattern: "^(sus scrofa|swine|pig|wild boar|feral pig)\\b"
+
+  - target: avian
+    conditions:
+      - type: regex
+        pattern: "^(anas|avian|gallus|duck|turkey|teal|shoveler|anatidae|bucephala|calidris|arenaria|microcarbo|charadrius|tringa|anser|branta|cygnus|larus|fulica|porzana|grus|cairina)"
+      - type: contains_any
+        keywords:
+          - bird
+          - duck
+          - goose
+          - crane
+          - waterfowl
+          - waterbird
+          - mallard
+          - pintail
+          - teal
+          - shoveler
+          - fowl
+          - avian
+          - heron
+          - wader
+          - shorebird
+          - plover
+          - stork
+          - spoonbill
+          - chick
+          - quail
+          - pigeon
+          - dove
+          - gull
+          - pelican
+          - cormorant
+          - sparrow
+          - finch
+          - swan
+
+  - target: mouse
+    conditions:
+      - type: contains
+        value: "mus musculus"
+      - type: literal
+        values: ["mouse", "house mouse"]
+
+  - target: ferret
+    conditions:
+      - type: contains_any
+        keywords: ["mustela", "neogale"]
+      - type: literal
+        values: ["ferret", "mink"]
+
+  - target: camel
+    conditions:
+      - type: contains
+        value: "camelus"
+      - type: literal
+        values: ["camel"]
+
+  - target: ""
+    conditions:
+      - type: contains
+        value: "mdck"
+      - type: literal
+        values: ["reverse genetics", "cell line", "env", "environmental"]
+
+  - target: dog
+    conditions:
+      - type: contains
+        value: "canis lupus"
+      - type: literal
+        values: ["canine"]

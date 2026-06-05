@@ -1,6 +1,19 @@
 
 .DS_Store
 
+# Python build artifacts
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Test / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
 # Generated config files (recreated on each run)
 config/name2hue.tsv
 config/colour_scheme.tsv

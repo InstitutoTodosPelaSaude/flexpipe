@@ -1,10 +1,11 @@
 files:
-  keep:           "config/keep.txt"
-  ignore:         "config/ignore.txt"
-  cache:          "config/cache_coordinates.tsv"
-  reference:      "config/reference.gb"
-  clades:         "config/clades.tsv"
-  auspice_config: "config/auspice_config.json"
+  keep:             "builds/yfv-brazil/keep.txt"
+  ignore:           "builds/yfv-brazil/ignore.txt"
+  cache:            "builds/yfv-brazil/cache_coordinates.tsv"
+  reference:        "builds/yfv-brazil/reference.gb"
+  clades:           "builds/yfv-brazil/clades.tsv"
+  auspice_config:   "builds/yfv-brazil/auspice_config.json"
+  subsample_config: "builds/yfv-brazil/subsample.yaml"
 
 parameters:
   mask_5prime: 142

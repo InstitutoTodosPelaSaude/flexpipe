@@ -1,0 +1,18 @@
+# Hue assignments for the 'region' colour hierarchy.
+# Hue values are multiples of 10 in range 0-350 (colour wheel used by colour_maker).
+# Continents (for global builds) and Brazilian macro-regions (for division builds).
+category	hue
+# Continents — global builds
+Africa	20
+Asia	70
+Europe	140
+Europe/Asia	190
+North America	240
+Oceania	290
+South America	340
+# Brazilian macro-regions — division builds
+Norte	100
+Nordeste	30
+Centro-Oeste	70
+Sudeste	0
+Sul	200
