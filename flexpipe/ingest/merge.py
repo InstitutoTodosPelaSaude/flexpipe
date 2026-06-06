@@ -33,7 +33,7 @@ from flexpipe.io import read_fasta_ids  # avoids duplicating the same helper
 
 def _load_viralqc_cols() -> set[str]:
     data = load_data_yaml("flexpipe.data.curation", "viralqc_itps_columns.yaml")
-    return set(data.get("viralqc_columns", []))  # type: ignore[arg-type]
+    return set(data.get("viralqc_columns", []))
 
 
 _VQC_COLS: set[str] = _load_viralqc_cols()

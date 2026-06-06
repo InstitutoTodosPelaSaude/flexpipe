@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 def _load_drop_set() -> set[str]:
     data = load_data_yaml("flexpipe.data.curation", "drop_columns.yaml")
-    return set(data.get("drop", []))  # type: ignore[arg-type]
+    return set(data.get("drop", []))
 
 
 def harmonize_column(df: pd.DataFrame, src: str, dst: str) -> pd.DataFrame:

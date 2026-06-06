@@ -12,6 +12,7 @@ pointing to a custom file in its ``config.yaml`` without editing Python.
 from __future__ import annotations
 
 import logging
+from typing import Any
 from importlib.resources import files
 from pathlib import Path
 
@@ -61,7 +62,7 @@ def load_data_yaml(
     package: str,
     filename: str,
     override: str | Path | None = None,
-) -> object:
+) -> Any:
     """Load a YAML reference file from an override path or the bundled default.
 
     Args:
