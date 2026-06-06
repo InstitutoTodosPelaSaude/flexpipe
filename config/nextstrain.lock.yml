@@ -58,6 +58,7 @@ dependencies:
 
   # Utilities bundled in nextstrain.yml
   - beautifulsoup4=4.14.3
+  - filelock=3.29.1
   - geopy=2.4.1
   - tabulate=0.10.0
   - unidecode=1.4.0

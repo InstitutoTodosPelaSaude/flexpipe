@@ -15,7 +15,7 @@ The pipeline is an **installable Python package** (`pip install -e .`) backed by
 
 All outputs go to a **per-build workdir** — the source tree is never modified at runtime.
 
-Current example build: **Yellow Fever Virus (YFV) Brazil** (`builds/yfv-brazil/`)
+Example builds: **Yellow Fever Virus (YFV) Brazil** (`builds/yfv-brazil/`) and **RSV-A global** (`builds/rsv-global/` — scaffold, see NOTES.md).
 
 ## Common Commands
 
@@ -110,7 +110,7 @@ flexpipe/
   cli.py                 # console-script entry-point dispatch
   io.py                  # shared load_table(), FASTA helpers
   ingest/{pathoplexus,ncbi,merge}.py
-  curate/{regions,hosts,clades,columns,viralqc_join,pipeline}.py
+  curate/{regions,hosts,clades,columns,viralqc_join,pipeline,qc_summary}.py
   geo/{coordinates,cache}.py
   colors/{hues,scheme}.py
   data/                  # bundled defaults (shipped via hatchling force-include)
@@ -118,7 +118,7 @@ flexpipe/
     hosts/host_rules.yaml
     colors/{region_hues.tsv, host_hues.tsv, source_hues.tsv, data_use_hues.tsv}
 builds/
-  yfv-brazil/
+  yfv-brazil/            # Pathoplexus, division region, fully runnable
     config.yaml          # all parameters for this build
     subsample.yaml
     auspice_config.json
@@ -126,6 +126,7 @@ builds/
     reference.gb
     keep.txt  ignore.txt
     cache_coordinates.tsv   # read-only seed; workdir copy updated at runtime
+  rsv-global/            # NCBI, country region, scaffold (see NOTES.md)
 config/
   nextstrain.yml         # conda environment definition (shared)
 ingest/Snakefile
@@ -257,6 +258,7 @@ All parameters are in `builds/<name>/config.yaml` under `parameters` and `option
 | `flexpipe-fetch-ncbi` | `flexpipe.ingest.ncbi.main` |
 | `flexpipe-merge` | `flexpipe.ingest.merge.main` |
 | `flexpipe-curate` | `flexpipe.curate.pipeline.main` |
+| `flexpipe-qc-summary` | `flexpipe.curate.qc_summary.main` |
 | `flexpipe-coordinates` | `flexpipe.geo.coordinates.main` |
 | `flexpipe-update-cache` | inline argparse → `flexpipe.geo.cache.merge_coordinate_cache` |
 | `flexpipe-name2hue` | `flexpipe.colors.hues.main` |
@@ -281,6 +283,12 @@ All parameters are in `builds/<name>/config.yaml` under `parameters` and `option
 
 **Workdir isolation**: All generated artifacts (results, latlongs, colour_scheme, logs, manifest, coordinate cache) go to `<workdir>/`. The build directory (`builds/<name>/`) is read-only. The source tree is never modified during a run.
 
+**Workdir locking**: `flexpipe-run` acquires `<workdir>/.flexpipe.lock` (via `filelock.FileLock`, timeout=0) before invoking Snakemake. A second concurrent `flexpipe-run` on the same workdir exits immediately with code 2. `--nolock` is passed to Snakemake because its native lock is scoped to the invocation directory, not the workdir.
+
+**Segmented viruses (out of scope for v0.x)**: The pipeline uses a single reference / single alignment / single tree. For segmented viruses, run one build per segment. Set `viralqc.expected_segment` to flag wrong-segment reads via ViralQC; the rest of the pipeline has no per-segment fan-out or reassortment handling.
+
+**QC summary artifact**: After `augur filter`, the `qc_summary` rule runs `flexpipe-qc-summary` to produce `<workdir>/results/qc_report.json` (grade counts, coverage stats, filter-reason breakdown) and `<workdir>/results/qc_summary.tsv` (flat per-grade table). Always generated as part of `rule all`.
+
 ## Adapting for a New Pathogen
 
 ```bash
@@ -292,9 +300,13 @@ flexpipe-run --config builds/my-pathogen/config.yaml --workdir /tmp/my-run
 Key fields to update in `config.yaml`:
 - `data_source` (pathoplexus or ncbi)
 - `pathoplexus.organism` / `ncbi.taxid`
-- `parameters.mask_5prime/3prime` (terminal masking in bp; 0 for full-genome)
+- `parameters.mask_5prime/3prime` (terminal masking in bp; **reference-specific** — set 0 and calibrate for each new reference)
+- `parameters.mask_sites_file` (optional BED file of problematic sites; leave blank if unused)
 - `curation.clade_levels` (hierarchy depth for `clade_truncated`)
+- `qc.min_sequences` (minimum subsampled sequences before phylogenetics; default 10; 0 disables)
 - `region_source` (country for global, division for Brazil-only builds)
+- `viralqc.expected_virus` (ViralQC rejects sequences not matching this virus)
+- `viralqc.expected_segment` (single segment label for single-segment builds; leave blank for non-segmented viruses)
 - `viralqc.*` (or set `VIRALQC_DATASETS_DIR`)
 - `traits.columns` (which metadata fields to infer ancestral states for)
 
@@ -303,7 +315,7 @@ Key fields to update in `config.yaml`:
 - **Conda environments**:
   - `nextstrain`: augur ≥13, snakemake, iqtree3, mafft, python ≥3.9, plus all deps in `config/nextstrain.yml`
   - `viralQC`: bundled as a git submodule (`viralQC/`); set up via `bash scripts/install_viralqc.sh` (not a conda package)
-- **Pip-installable** (in `pyproject.toml` `[project.dependencies]`): pandas, pyyaml, biopython, geopy, requests, matplotlib ≥3.9, colour, openpyxl, beautifulsoup4, pydantic ≥2
+- **Pip-installable** (in `pyproject.toml` `[project.dependencies]`): pandas, pyyaml, biopython, geopy, requests, matplotlib ≥3.9, colour, openpyxl, beautifulsoup4, pydantic ≥2, filelock
 - **External APIs**:
   - Pathoplexus/LAPIS (HTTP)
   - NCBI Entrez (HTTP; email + optional API key recommended)
