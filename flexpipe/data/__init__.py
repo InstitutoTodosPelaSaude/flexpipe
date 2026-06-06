@@ -12,9 +12,9 @@ pointing to a custom file in its ``config.yaml`` without editing Python.
 from __future__ import annotations
 
 import logging
-from typing import Any
 from importlib.resources import files
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 import yaml
