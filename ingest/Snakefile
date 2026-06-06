@@ -2,23 +2,12 @@ configfile: "builds/yfv-brazil/config.yaml"
 
 from types import SimpleNamespace
 
-# Config file path passed to flexpipe-* scripts (e.g. flexpipe-curate).
-# workflow.configfiles lists every --configfile; flexpipe-run adds a second
-# snakemake_resolved.yaml with resolved ViralQC paths for Snakemake params only.
-# Scripts need the full build config under builds/<name>/config.yaml.
-_config = "builds/yfv-brazil/config.yaml"
-if workflow.configfiles:
-    for _cf in workflow.configfiles:
-        _cf_str = str(_cf).replace("\\", "/")
-        if "/builds/" in _cf_str:
-            _config = _cf_str
-            break
-    else:
-        for _cf in workflow.configfiles:
-            _cf_str = str(_cf)
-            if not _cf_str.endswith("snakemake_resolved.yaml"):
-                _config = _cf_str
-                break
+# Path to the build config.yaml, passed to flexpipe-* CLI subprocesses (e.g. flexpipe-curate).
+# flexpipe-run injects the absolute path via --config build_config=<path>.
+# The fallback supports direct `snakemake` invocations (single --configfile, no overrides).
+_config = config.get("build_config")
+if not _config:
+    _config = str(workflow.configfiles[0]) if workflow.configfiles else "builds/yfv-brazil/config.yaml"
 
 # Per-run output directory. Passed by flexpipe-run as --config workdir=<path>.
 # Defaults to "." so a direct snakemake invocation still works from the repo root.

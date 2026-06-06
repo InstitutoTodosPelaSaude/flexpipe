@@ -92,6 +92,7 @@ def _run_snakemake(
         [
             "--config",
             f"workdir={paths.root}",
+            f"build_config={config_path}",
             "--cores",
             str(cores),
             "--nolock",

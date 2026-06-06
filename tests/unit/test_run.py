@@ -200,6 +200,12 @@ class TestRunSnakemakeCommand:
             str(Path("builds/yfv-brazil/config.yaml"))
         )
 
+        # build_config must be passed as an explicit --config key so flexpipe-* CLIs
+        # receive the full build config path without relying on path heuristics.
+        config_tokens = [t for t in cmd if t.startswith("build_config=")]
+        assert len(config_tokens) == 1, "build_config= not found in --config args"
+        assert config_tokens[0] == f"build_config={Path('builds/yfv-brazil/config.yaml')}"
+
     def test_writes_overrides_during_run(self, patch_run, tmp_path):
         run_pipeline(
             config_path=FIXTURE_CONFIG,
