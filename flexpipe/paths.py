@@ -124,6 +124,11 @@ class WorkdirPaths:
     def snakemake_config_overrides(self) -> Path:
         return self.generated_config_dir / "snakemake_resolved.yaml"
 
+    @property
+    def subsample_config_resolved(self) -> Path:
+        """Workdir-local subsample config with ``defaults.max_date`` injected from run_date."""
+        return self.generated_config_dir / "subsample_resolved.yaml"
+
     # ── mutable cache ────────────────────────────────────────────────────────
     @property
     def cache_dir(self) -> Path:
@@ -145,6 +150,28 @@ class WorkdirPaths:
     @property
     def phylo_log(self) -> Path:
         return self.logs_dir / "phylo.log"
+
+    # ── QC artifacts ─────────────────────────────────────────────────────────
+    @property
+    def filter_log(self) -> Path:
+        """Per-strain filter log written by ``augur filter --output-log``."""
+        return self.ingest_dir / "filter_log.tsv"
+
+    @property
+    def qc_report(self) -> Path:
+        """Structured JSON QC report written by ``flexpipe-qc-summary``."""
+        return self.results / "qc_report.json"
+
+    @property
+    def qc_summary(self) -> Path:
+        """Flat TSV QC summary (per-grade counts) written by ``flexpipe-qc-summary``."""
+        return self.results / "qc_summary.tsv"
+
+    # ── concurrency ───────────────────────────────────────────────────────────
+    @property
+    def lock_file(self) -> Path:
+        """Workdir-level lock file used by ``filelock`` to prevent concurrent runs."""
+        return self.root / ".flexpipe.lock"
 
     # ── provenance ───────────────────────────────────────────────────────────
     @property

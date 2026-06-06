@@ -63,8 +63,17 @@ def _run_version(cmd: list) -> str:
         return "unknown"
 
 
-def _hash_config(config_path: Union[str, Path]) -> str:
-    """Return a short SHA-256 digest covering config.yaml and adjacent build files."""
+def _hash_config(config_path: Union[str, Path], run_date: Optional[str] = None) -> str:
+    """Return a short SHA-256 digest covering config.yaml, adjacent build files, and run_date.
+
+    Including *run_date* in the digest ensures that two runs of the same build config on
+    different reference dates produce different ``config_hash`` values and therefore
+    different ``run_id``\\s — reflecting the distinct analysis windows.
+
+    Args:
+        config_path: Path to the build ``config.yaml``.
+        run_date: Reference date (``YYYY-MM-DD``) to bind the analysis window, or ``None``.
+    """
     try:
         config_path = Path(config_path)
         build_dir = config_path.parent
@@ -76,6 +85,9 @@ def _hash_config(config_path: Union[str, Path]) -> str:
             candidate = build_dir / name
             if candidate.exists():
                 h.update(candidate.read_bytes())
+        # Bind the analysis window so different run_dates yield different hashes
+        if run_date:
+            h.update(run_date.encode())
         return h.hexdigest()[:16]
     except Exception:
         return "unknown"
@@ -98,7 +110,7 @@ class Manifest:
     ) -> None:
         self.run_date = run_date
         self.build_name = build_name
-        self.config_hash = _hash_config(config_path) if config_path else "unknown"
+        self.config_hash = _hash_config(config_path, run_date) if config_path else "unknown"
         self.counts: dict[str, int] = {}
         self.extra: dict[str, object] = {}
         self._start_time: float = time.time()
@@ -126,16 +138,27 @@ class Manifest:
             "mafft": _run_version(["mafft", "--version"]),
         }
 
-    def validate_boundary(self, subsampled_metadata: Union[str, Path]) -> None:
-        """Assert the ingest→phylo column contract.
+    def validate_boundary(
+        self,
+        subsampled_metadata: Union[str, Path],
+        min_sequences: int = 0,
+    ) -> None:
+        """Assert the ingest→phylo column contract and minimum-sequences guardrail.
 
-        Reads the header of *subsampled_metadata* and verifies that every
-        column in ``BOUNDARY_REQUIRED_COLUMNS`` is present.  Raises
-        ``SystemExit`` with a clear message on failure so Snakemake surfaces
-        it cleanly.
+        Reads *subsampled_metadata* and verifies:
+        1. Every column in ``BOUNDARY_REQUIRED_COLUMNS`` is present.
+        2. When *min_sequences* > 0, the file contains at least that many data rows.
+           Timetree inference is unreliable on very small datasets; this check prevents
+           a silent but meaningless phylogeny from being produced.
+
+        Raises ``SystemExit`` with a clear message on failure so Snakemake surfaces it
+        cleanly.  Passing ``min_sequences=0`` (the default) skips the row-count check,
+        preserving backward-compatibility for callers that do not configure the guardrail.
 
         Args:
             subsampled_metadata: Path to ``results/subsampled/metadata.tsv``.
+            min_sequences: Minimum number of sequences required to proceed.
+                ``0`` disables the check.
         """
         path = Path(subsampled_metadata)
         if not path.exists():
@@ -143,7 +166,8 @@ class Manifest:
                 f"Boundary check failed: subsampled metadata not found at {path}\n"
                 "Ensure the ingest stage completed successfully."
             )
-        cols = set(pd.read_csv(path, sep="\t", nrows=0).columns)
+        df = pd.read_csv(path, sep="\t", nrows=max(min_sequences + 1, 1))
+        cols = set(df.columns)
         missing = BOUNDARY_REQUIRED_COLUMNS - cols
         if missing:
             raise SystemExit(
@@ -152,7 +176,24 @@ class Manifest:
                 f"File: {path}\n"
                 f"Present columns: {sorted(cols)}"
             )
-        logger.info("Boundary check passed (%d columns present)", len(cols))
+        if min_sequences > 0:
+            # Count rows: re-read just the index column for efficiency
+            n_rows = sum(1 for _ in open(path)) - 1  # subtract header
+            if n_rows < min_sequences:
+                raise SystemExit(
+                    f"Boundary check failed: subsampled dataset has only {n_rows} sequence(s), "
+                    f"but qc.min_sequences={min_sequences} is required for a meaningful phylogeny.\n"
+                    f"File: {path}\n"
+                    "Options:\n"
+                    "  • Lower qc.min_sequences in your config.yaml\n"
+                    "  • Relax your subsampling strategy (subsample.yaml)\n"
+                    "  • Broaden your QC thresholds (qc.genome_quality, qc.min_coverage)"
+                )
+            logger.info(
+                "Boundary check passed (%d sequences ≥ min_sequences=%d)", n_rows, min_sequences
+            )
+        else:
+            logger.info("Boundary check passed (%d columns present)", len(cols))
 
     def to_dict(self) -> dict:
         """Serialize the manifest to a plain dictionary."""

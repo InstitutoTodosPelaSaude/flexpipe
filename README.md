@@ -2,7 +2,10 @@
 
 A flexible Nextstrain pipeline for genomic epidemiology of viral pathogens. Supports data ingestion from [Pathoplexus](https://pathoplexus.org/) or [NCBI](https://www.ncbi.nlm.nih.gov/labs/virus/vssi/), optional integration of local surveillance sequences, automated QC via [ViralQC](https://github.com/InstitutoTodosPelaSaude/viralQC), and a complete phylogenetic workflow ending in an [Auspice](https://auspice.us/)-compatible JSON.
 
-This repository includes a working example build for **Yellow Fever Virus (YFV) in Brazil**, covering sequences from 2015 to the present using Pathoplexus as the data source.
+This repository includes two example builds:
+
+- **Yellow Fever Virus (YFV) in Brazil** (`builds/yfv-brazil/`) — Pathoplexus source, Brazil-division region, fully runnable.
+- **RSV-A global** (`builds/rsv-global/`) — NCBI source, country region, scaffold (see `builds/rsv-global/NOTES.md` for required biological inputs).
 
 ---
 
@@ -262,15 +265,30 @@ Steps: `align` (MAFFT) → `mask` → `tree` (IQ-TREE 3 UFBoot) → `refine` (Tr
 | `parameters.divergence_units` | `mutations` | Branch length units in timetree |
 | `parameters.clock_filter_iqd` | `4` | IQD filter for clock outliers |
 | `parameters.ancestral_inference` | `joint` | Joint ancestral reconstruction |
-| `parameters.mask_5prime` | `142` | Bases masked at 5′ end (X03700.1-specific) |
-| `parameters.mask_3prime` | `548` | Bases masked at 3′ end (X03700.1-specific) |
+| `parameters.mask_5prime` | `142` | Bases masked at 5′ end (**reference-specific** — X03700.1) |
+| `parameters.mask_3prime` | `548` | Bases masked at 3′ end (**reference-specific** — X03700.1) |
+| `parameters.mask_sites_file` | `""` | Optional BED file of problematic sites (`augur mask --mask`) |
 | `options.threads` | `4` | Threads for MAFFT and IQ-TREE |
 | `traits.columns` | `division location clade` | Columns for ancestral trait inference |
+
+> **Terminal masking is reference-specific.** The values `mask_5prime: 142` and `mask_3prime: 548`
+> are calibrated for the YFV reference X03700.1. When using a different reference, recalculate
+> these values from a pilot alignment. Set both to `0` to disable terminal masking (safe default
+> for new builds). Use `mask_sites_file` to point at a BED file of additional problematic sites.
 
 ### Clade annotation
 
 Clade labels are defined in `clades.tsv` and applied by `augur clades`. YFV genotypes are
 single-level (`I`, `II`, `III`…), so `clade_levels: 1` keeps `clade_truncated` equal to `clade`.
+
+### Segmented viruses (out of scope for v0.x)
+
+flexpipe uses a **single reference / single alignment / single tree** model. This works for
+non-segmented or effectively-single-segment workflows (YFV, RSV-A, SARS-CoV-2). For segmented
+viruses (Influenza, Arenaviruses, …), run **one build per segment** and set
+`viralqc.expected_segment` in each build's `config.yaml` so ViralQC flags wrong-segment
+sequences. Full per-segment fan-out, co-phylogeny, and reassortment handling are deferred to
+a future version.
 
 ---
 
@@ -291,9 +309,13 @@ Key fields to update:
 | `pathoplexus.organism` | Pathoplexus organism slug (e.g. `rsv-a`, `yellow-fever`) |
 | `ncbi.taxid` | NCBI taxonomy ID |
 | `ncbi.genome_size` | Reference genome size in bp |
-| `parameters.mask_5prime/3prime` | Terminal masking in bp (0 for full-genome builds) |
+| `parameters.mask_5prime/3prime` | Terminal masking in bp; **reference-specific** — set 0 for new builds and calibrate |
+| `parameters.mask_sites_file` | Optional BED file of additional problematic sites |
 | `curation.clade_levels` | Hierarchy depth for `clade_truncated` |
+| `qc.min_sequences` | Minimum subsampled sequences before phylogenetics (default 10; 0 disables) |
 | `region_source` | `"country"` for global builds; `"division"` for Brazil-only |
+| `viralqc.expected_virus` | Expected virus name (ViralQC rejects mismatches) |
+| `viralqc.expected_segment` | Expected segment name for single-segment builds; leave blank for non-segmented |
 | `viralqc.*` | ViralQC paths (or set `VIRALQC_DATASETS_DIR`) |
 | `traits.columns` | Columns for ancestral trait reconstruction |
 
@@ -328,6 +350,7 @@ Key fields to update:
 | `flexpipe-update-cache` | Merge newly geocoded coordinates into the workdir cache |
 | `flexpipe-name2hue` | Generate colour hue mapping from subsampled metadata |
 | `flexpipe-colours` | Assign hex colours per metadata value |
+| `flexpipe-qc-summary` | Build per-run QC report (`qc_report.json` + `qc_summary.tsv`) from ingest outputs |
 
 ---
 

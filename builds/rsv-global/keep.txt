@@ -1,0 +1,2 @@
+# Strains to always include in subsampling (one per line).
+# Leave empty or add accessions that must be retained regardless of subsampling limits.

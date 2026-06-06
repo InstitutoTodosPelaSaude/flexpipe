@@ -8,9 +8,10 @@ files:
   subsample_config: "builds/yfv-brazil/subsample.yaml"
 
 parameters:
-  mask_5prime: 142
-  mask_3prime: 548
+  mask_5prime: 142      # X03700.1-specific: update per-reference for other builds
+  mask_3prime: 548      # X03700.1-specific: update per-reference for other builds
   mask_sites: "1"
+  mask_sites_file: ""   # optional BED file of problematic sites (leave blank for none)
   ufboot: 1000
   model: "MFP"
   root: "least-squares"

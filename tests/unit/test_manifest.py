@@ -43,6 +43,22 @@ class TestManifestBasics:
         m2 = Manifest(run_date="2025-01-01", build_name="test", config_path=cfg2)
         assert m1.config_hash != m2.config_hash
 
+    def test_config_hash_differs_for_different_run_date(self, tmp_path):
+        """Same config file but different run_date must produce different config_hash."""
+        cfg = tmp_path / "config.yaml"
+        cfg.write_text("data_source: pathoplexus\n")
+        m1 = Manifest(run_date="2026-01-01", build_name="test", config_path=cfg)
+        m2 = Manifest(run_date="2026-06-01", build_name="test", config_path=cfg)
+        assert m1.config_hash != m2.config_hash
+
+    def test_config_hash_stable_for_same_config_and_run_date(self, tmp_path):
+        """Same config file and same run_date must produce identical config_hash."""
+        cfg = tmp_path / "config.yaml"
+        cfg.write_text("data_source: pathoplexus\n")
+        m1 = Manifest(run_date="2026-01-01", build_name="test", config_path=cfg)
+        m2 = Manifest(run_date="2026-01-01", build_name="test", config_path=cfg)
+        assert m1.config_hash == m2.config_hash
+
 
 class TestManifestRecordCounts:
     """record_counts() accumulation."""
@@ -134,3 +150,42 @@ class TestManifestBoundaryCheck:
         assert "date" in BOUNDARY_REQUIRED_COLUMNS
         assert "clade" in BOUNDARY_REQUIRED_COLUMNS
         assert "clade_truncated" in BOUNDARY_REQUIRED_COLUMNS
+
+    # --- min_sequences guardrail ---
+
+    def _write_metadata_with_rows(self, tmp_path, n_rows: int):
+        """Write a metadata TSV with all required columns and n_rows data rows."""
+        import pandas as pd
+
+        cols = list(BOUNDARY_REQUIRED_COLUMNS)
+        data = {col: [f"val{i}" for i in range(n_rows)] for col in cols}
+        path = tmp_path / "metadata_rows.tsv"
+        pd.DataFrame(data).to_csv(path, sep="\t", index=False)
+        return path
+
+    def test_min_sequences_passes_when_rows_equal(self, manifest, tmp_path):
+        """Exactly min_sequences rows must pass the guardrail."""
+        path = self._write_metadata_with_rows(tmp_path, 10)
+        manifest.validate_boundary(path, min_sequences=10)  # must not raise
+
+    def test_min_sequences_passes_when_rows_exceed(self, manifest, tmp_path):
+        path = self._write_metadata_with_rows(tmp_path, 20)
+        manifest.validate_boundary(path, min_sequences=10)  # must not raise
+
+    def test_min_sequences_raises_when_too_few(self, manifest, tmp_path):
+        path = self._write_metadata_with_rows(tmp_path, 5)
+        with pytest.raises(SystemExit) as exc_info:
+            manifest.validate_boundary(path, min_sequences=10)
+        msg = str(exc_info.value)
+        assert "5" in msg  # actual count reported
+        assert "10" in msg  # required count reported
+
+    def test_min_sequences_zero_disables_guardrail(self, manifest, tmp_path):
+        """min_sequences=0 skips the row-count check — empty file must pass columns check."""
+        path = self._write_metadata_with_rows(tmp_path, 0)
+        manifest.validate_boundary(path, min_sequences=0)  # must not raise
+
+    def test_min_sequences_default_is_zero(self, manifest, tmp_path):
+        """Default call (no min_sequences arg) must be backward-compatible (0 = no check)."""
+        path = self._write_metadata_with_rows(tmp_path, 0)
+        manifest.validate_boundary(path)  # must not raise

@@ -345,3 +345,89 @@ class TestWriteSnakemakeConfigOverrides:
         fixture_keys = yaml.safe_load(FIXTURE_CONFIG.read_text()).keys()
         for key in fixture_keys:
             assert key in loaded, f"Key '{key}' from build config missing in resolved YAML"
+
+
+# ---------------------------------------------------------------------------
+# 5.6 — ViralqcConfig.expected_segment
+# ---------------------------------------------------------------------------
+
+
+class TestViralqcExpectedSegment:
+    """expected_segment field closes the extra="forbid" gap in ViralqcConfig."""
+
+    def test_default_is_empty_string(self):
+        cfg = ViralqcConfig()
+        assert cfg.expected_segment == ""
+
+    def test_valid_segment_accepted(self):
+        cfg = ViralqcConfig(expected_segment="L")
+        assert cfg.expected_segment == "L"
+
+    def test_full_config_with_expected_segment_validates(self):
+        """A FlexpipeConfig with viralqc.expected_segment must not raise extra="forbid"."""
+        cfg = FlexpipeConfig(
+            data_source="pathoplexus",
+            pathoplexus={"organism": "yellow-fever"},
+            viralqc={"expected_segment": "S"},
+        )
+        assert cfg.viralqc.expected_segment == "S"
+
+    def test_unknown_viralqc_key_still_rejected(self):
+        """extra="forbid" still blocks genuinely unknown keys."""
+        import pydantic
+
+        with pytest.raises(pydantic.ValidationError, match="Extra inputs are not permitted"):
+            ViralqcConfig(totally_unknown_key="x")
+
+
+# ---------------------------------------------------------------------------
+# 5.7 — ParametersConfig.mask_sites_file
+# ---------------------------------------------------------------------------
+
+
+class TestParametersMaskSitesFile:
+    """mask_sites_file is an optional BED path; empty string = no BED masking."""
+
+    def test_default_is_empty_string(self):
+        cfg = FlexpipeConfig(
+            data_source="pathoplexus",
+            pathoplexus={"organism": "yellow-fever"},
+        )
+        assert cfg.parameters.mask_sites_file == ""
+
+    def test_can_be_set_to_a_path(self):
+        cfg = FlexpipeConfig(
+            data_source="pathoplexus",
+            pathoplexus={"organism": "yellow-fever"},
+            parameters={"mask_sites_file": "/some/mask.bed"},
+        )
+        assert cfg.parameters.mask_sites_file == "/some/mask.bed"
+
+
+# ---------------------------------------------------------------------------
+# 5.1 — QcConfig.min_sequences
+# ---------------------------------------------------------------------------
+
+
+class TestQcMinSequences:
+    """min_sequences default and custom values."""
+
+    def test_default_is_10(self):
+        cfg = FlexpipeConfig(
+            data_source="pathoplexus",
+            pathoplexus={"organism": "yellow-fever"},
+        )
+        assert cfg.qc.min_sequences == 10
+
+    def test_can_be_set_to_zero_to_disable(self):
+        cfg = FlexpipeConfig(
+            data_source="pathoplexus",
+            pathoplexus={"organism": "yellow-fever"},
+            qc={
+                "min_sequences": 0,
+                "genome_quality": ["A", "B"],
+                "min_coverage": 0.70,
+                "required_columns": ["strain", "date", "clade"],
+            },
+        )
+        assert cfg.qc.min_sequences == 0

@@ -17,6 +17,13 @@ if not _config:
 # Defaults to "." so a direct snakemake invocation still works from the repo root.
 _wd = config.get("workdir", ".")
 
+# Reference date for this run (YYYY-MM-DD). Injected by flexpipe-run via --config run_date=.
+# When present it is written into the workdir-local subsample config as defaults.max_date
+# so that augur subsample is bounded by the declared analysis window rather than the
+# system clock.  Empty string means no bound (backwards-compatible for direct snakemake
+# invocations).
+_run_date = config.get("run_date", "")
+
 _local   = config.get("local_sequences", {})
 _vqc     = config.get("viralqc", {})
 _sub     = config.get("subsampling", {})
@@ -54,7 +61,9 @@ rule all:
         sequences     = f"{_wd}/results/subsampled/sequences.fasta",
         metadata      = f"{_wd}/results/subsampled/metadata.tsv",
         latlongs      = f"{_wd}/config/latlongs.tsv",
-        colour_scheme = f"{_wd}/config/colour_scheme.tsv"
+        colour_scheme = f"{_wd}/config/colour_scheme.tsv",
+        qc_report     = f"{_wd}/results/qc_report.json",
+        qc_summary    = f"{_wd}/results/qc_summary.tsv"
 
 
 # ─── Fetch + merge ────────────────────────────────────────────────────────────
@@ -153,11 +162,14 @@ rule curate_qc:
         sequences = rules.merge_local_sequences.output.sequences,
         viralqc   = rules.viralqc.output.tsv
     output:
-        renamed   = temp(f"{_wd}/results/ingest/renamed_metadata.tsv"),
-        dated     = temp(f"{_wd}/results/ingest/dated_metadata.tsv"),
-        curated   = temp(f"{_wd}/results/ingest/curated_metadata.tsv"),
-        metadata  = f"{_wd}/results/ingest/final_metadata.tsv",
-        sequences = f"{_wd}/results/ingest/final_sequences.fasta"
+        renamed    = temp(f"{_wd}/results/ingest/renamed_metadata.tsv"),
+        dated      = temp(f"{_wd}/results/ingest/dated_metadata.tsv"),
+        # curated is NOT temp: the qc_summary rule reads it to count per-grade stats
+        # before augur filter drops the low-quality rows.
+        curated    = f"{_wd}/results/ingest/curated_metadata.tsv",
+        metadata   = f"{_wd}/results/ingest/final_metadata.tsv",
+        sequences  = f"{_wd}/results/ingest/final_sequences.fasta",
+        filter_log = f"{_wd}/results/ingest/filter_log.tsv"
     params:
         min_coverage    = _qc.get("min_coverage", 0.70),
         quality_filter  = _quality_filter,
@@ -195,12 +207,70 @@ rule curate_qc:
             --query-columns   coverage:float \
             --query           "coverage.isna() or coverage >= {params.min_coverage}" \
             --exclude-where   {params.req_col_filter} {params.quality_filter} \
+            --output-log      {output.filter_log} \
             --output-metadata  {output.metadata} \
             --output-sequences {output.sequences}
         """
 
 
+# ─── QC summary ──────────────────────────────────────────────────────────────
+
+rule qc_summary:
+    """Write per-run QC artifacts: qc_report.json + qc_summary.tsv.
+
+    Reads curated_metadata.tsv (all sequences before augur filter),
+    filter_log.tsv (per-strain exclusion reasons from augur filter --output-log),
+    and final_metadata.tsv (retained sequences after filter) to produce:
+    - <workdir>/results/qc_report.json — structured JSON with grade counts,
+      coverage stats, and exclusion-reason breakdown.
+    - <workdir>/results/qc_summary.tsv — flat TSV per genome-quality grade.
+    """
+    input:
+        curated    = rules.curate_qc.output.curated,
+        filter_log = rules.curate_qc.output.filter_log,
+        final      = rules.curate_qc.output.metadata
+    output:
+        qc_report  = f"{_wd}/results/qc_report.json",
+        qc_summary = f"{_wd}/results/qc_summary.tsv"
+    shell:
+        """
+        flexpipe-qc-summary \
+            --curated    {input.curated} \
+            --filter-log {input.filter_log} \
+            --final      {input.final} \
+            --qc-report  {output.qc_report} \
+            --qc-summary {output.qc_summary}
+        """
+
+
 # ─── Subsampling ──────────────────────────────────────────────────────────────
+
+rule resolve_subsample_config:
+    """Write a workdir-local copy of the subsample config with defaults.max_date injected.
+
+    When flexpipe-run passes --config run_date=<YYYY-MM-DD>, this rule injects that date
+    as the upper bound for augur subsample so the analysis window is reproducibly anchored
+    to the declared reference date rather than the system clock.
+
+    When run_date is empty (direct snakemake invocation), the source subsample config is
+    copied unchanged — preserving current behaviour.
+    """
+    input:
+        subsample_cfg = files.subsample_config
+    params:
+        run_date = _run_date
+    output:
+        resolved = f"{_wd}/config/subsample_resolved.yaml"
+    run:
+        import yaml
+        from flexpipe.config import resolve_subsample_config
+        with open(input.subsample_cfg, encoding="utf-8") as fh:
+            raw = yaml.safe_load(fh) or {}
+        resolved = resolve_subsample_config(raw, params.run_date)
+        import os; os.makedirs(os.path.dirname(output.resolved), exist_ok=True)
+        with open(output.resolved, "w", encoding="utf-8") as fh:
+            yaml.safe_dump(resolved, fh, default_flow_style=False, sort_keys=False)
+
 
 rule prepare:
     message:
@@ -208,7 +278,7 @@ rule prepare:
     input:
         sequences     = rules.curate_qc.output.sequences,
         metadata      = rules.curate_qc.output.metadata,
-        subsample_cfg = files.subsample_config
+        subsample_cfg = rules.resolve_subsample_config.output.resolved
     params:
         seed = _sub.get("random_seed", 42)
     output:

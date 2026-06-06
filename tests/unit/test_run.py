@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from unittest.mock import MagicMock
 
+import filelock
 import pytest
 import yaml
 
@@ -51,7 +52,27 @@ def patch_run(monkeypatch, tmp_path):
         "source",
         "data_use",
     ]
-    (sub_dir / "metadata.tsv").write_text("\t".join(required_cols) + "\n")
+    # Write header + 10 data rows so the default min_sequences=10 guardrail is satisfied.
+    lines = ["\t".join(required_cols)]
+    for i in range(10):
+        lines.append(
+            "\t".join(
+                [
+                    f"seq{i}",
+                    "2026-01-01",
+                    "Brazil",
+                    "SP",
+                    "SP",
+                    "I",
+                    "I",
+                    "South America",
+                    "human",
+                    "Pathoplexus",
+                    "OPEN",
+                ]
+            )
+        )
+    (sub_dir / "metadata.tsv").write_text("\n".join(lines) + "\n")
     mock = MagicMock(return_value=0)
     monkeypatch.setattr("flexpipe.run._run_snakemake", mock)
     return mock
@@ -206,6 +227,74 @@ class TestRunSnakemakeCommand:
         assert len(config_tokens) == 1, "build_config= not found in --config args"
         assert config_tokens[0] == f"build_config={build_config}"
 
+    def test_run_date_forwarded_to_snakemake(self, monkeypatch, tmp_path):
+        """run_date is passed as --config run_date=<date> to both ingest and phylo stages."""
+        captured = {}
+
+        def fake_run(cmd, **kwargs):
+            captured.setdefault("cmds", []).append(cmd)
+            return MagicMock(returncode=0)
+
+        monkeypatch.setattr("flexpipe.run.subprocess.run", fake_run)
+
+        overrides = tmp_path / "snakemake_resolved.yaml"
+        overrides.write_text("viralqc:\n  datasets_dir: /foo\n")
+        build_config = Path("builds/yfv-brazil/config.yaml")
+
+        _run_snakemake(
+            snakefile=Path("ingest/Snakefile"),
+            config_path=build_config,
+            paths=WorkdirPaths.from_root(tmp_path / "workdir"),
+            cores=2,
+            config_overrides=overrides,
+            run_date="2026-01-01",
+        )
+
+        cmd = captured["cmds"][0]
+        run_date_tokens = [t for t in cmd if t.startswith("run_date=")]
+        assert run_date_tokens == ["run_date=2026-01-01"]
+
+    def test_run_date_absent_when_empty(self, monkeypatch, tmp_path):
+        """No run_date= token when run_date is empty (direct snakemake invocation path)."""
+        captured = {}
+
+        def fake_run(cmd, **kwargs):
+            captured["cmd"] = cmd
+            return MagicMock(returncode=0)
+
+        monkeypatch.setattr("flexpipe.run.subprocess.run", fake_run)
+
+        overrides = tmp_path / "snakemake_resolved.yaml"
+        overrides.write_text("viralqc:\n  datasets_dir: /foo\n")
+        build_config = Path("builds/yfv-brazil/config.yaml")
+
+        _run_snakemake(
+            snakefile=Path("ingest/Snakefile"),
+            config_path=build_config,
+            paths=WorkdirPaths.from_root(tmp_path / "workdir"),
+            cores=2,
+            config_overrides=overrides,
+            run_date="",
+        )
+
+        cmd = captured["cmd"]
+        run_date_tokens = [t for t in cmd if t.startswith("run_date=")]
+        assert run_date_tokens == [], "run_date= token must be absent when run_date is empty"
+
+    def test_run_pipeline_forwards_run_date_to_snakemake(self, patch_run, tmp_path):
+        """run_pipeline passes run_date through to _run_snakemake."""
+        run_pipeline(
+            config_path=FIXTURE_CONFIG,
+            workdir=tmp_path,
+            run_date="2026-03-15",
+            stage="ingest",
+        )
+        call_args = patch_run.call_args_list
+        assert len(call_args) == 1
+        # _run_snakemake receives run_date as a keyword arg
+        _, kwargs = call_args[0]
+        assert kwargs.get("run_date") == "2026-03-15"
+
     def test_writes_resolved_config_during_run(self, patch_run, tmp_path):
         run_pipeline(
             config_path=FIXTURE_CONFIG,
@@ -222,3 +311,155 @@ class TestRunSnakemakeCommand:
         fixture_keys = yaml.safe_load(FIXTURE_CONFIG.read_text()).keys()
         for key in fixture_keys:
             assert key in data, f"Key '{key}' from build config missing in resolved config"
+
+
+class TestWorkdirLock:
+    """Workdir filelock prevents concurrent runs on the same directory."""
+
+    def test_second_run_returns_2_when_locked(self, patch_run, tmp_path):
+        """A second run_pipeline call with the same workdir fails fast with exit code 2."""
+        # Manually acquire the lock to simulate a concurrent process holding it.
+        lock_path = tmp_path / ".flexpipe.lock"
+        lock = filelock.FileLock(str(lock_path), timeout=0)
+        lock.acquire()
+        try:
+            rc = run_pipeline(
+                config_path=FIXTURE_CONFIG,
+                workdir=tmp_path,
+                run_date="2026-01-01",
+            )
+            assert rc == 2, f"Expected exit code 2 (workdir locked), got {rc}"
+        finally:
+            lock.release()
+
+    def test_lock_released_after_successful_run(self, patch_run, tmp_path):
+        """After a successful run the lock file is released (a second run can proceed)."""
+        rc = run_pipeline(
+            config_path=FIXTURE_CONFIG,
+            workdir=tmp_path,
+            run_date="2026-01-01",
+        )
+        assert rc == 0
+        # Lock must be releaseable by a fresh FileLock — i.e. not still held.
+        lock = filelock.FileLock(str(tmp_path / ".flexpipe.lock"), timeout=0)
+        lock.acquire()
+        lock.release()  # would raise filelock.Timeout if still held
+
+
+class TestMinSequencesGuardrail:
+    """min_sequences in QcConfig gates the phylo stage."""
+
+    def _make_cfg_with_min_sequences(self, n: int) -> FlexpipeConfig:
+        return FlexpipeConfig(
+            data_source="pathoplexus",
+            pathoplexus={"organism": "yellow-fever"},
+            viralqc=ViralqcConfig(
+                datasets_dir="/tmp/viralQC/datasets",
+                blast_database="/tmp/viralQC/datasets/blast.fasta",
+                blast_database_metadata="/tmp/viralQC/datasets/blast.tsv",
+            ),
+            qc={
+                "min_sequences": n,
+                "genome_quality": ["A", "B"],
+                "min_coverage": 0.70,
+                "required_columns": ["strain", "date", "clade"],
+            },
+        )
+
+    def _write_metadata(self, path: Path, n_rows: int) -> None:
+        cols = [
+            "strain",
+            "date",
+            "country",
+            "division",
+            "location",
+            "clade",
+            "clade_truncated",
+            "region",
+            "host",
+            "source",
+            "data_use",
+        ]
+        lines = ["\t".join(cols)]
+        for i in range(n_rows):
+            lines.append(
+                "\t".join(
+                    [
+                        f"s{i}",
+                        "2026-01-01",
+                        "Brazil",
+                        "SP",
+                        "SP",
+                        "I",
+                        "I",
+                        "South America",
+                        "human",
+                        "Pathoplexus",
+                        "OPEN",
+                    ]
+                )
+            )
+        path.write_text("\n".join(lines) + "\n")
+
+    def test_guardrail_blocks_when_too_few_sequences(self, monkeypatch, tmp_path):
+        """run_pipeline returns 1 when subsampled rows < min_sequences."""
+        monkeypatch.setattr(
+            "flexpipe.run.load_config",
+            lambda *a, **kw: self._make_cfg_with_min_sequences(10),
+        )
+        monkeypatch.setattr("flexpipe.run._run_snakemake", MagicMock(return_value=0))
+
+        sub_dir = tmp_path / "results" / "subsampled"
+        sub_dir.mkdir(parents=True)
+        # Write only 5 rows — below min_sequences=10
+        self._write_metadata(sub_dir / "metadata.tsv", 5)
+
+        rc = run_pipeline(
+            config_path=FIXTURE_CONFIG,
+            workdir=tmp_path,
+            run_date="2026-01-01",
+            stage="phylo",
+        )
+        assert rc == 1
+
+    def test_guardrail_passes_when_enough_sequences(self, monkeypatch, tmp_path):
+        """run_pipeline succeeds when subsampled rows >= min_sequences."""
+        monkeypatch.setattr(
+            "flexpipe.run.load_config",
+            lambda *a, **kw: self._make_cfg_with_min_sequences(5),
+        )
+        monkeypatch.setattr("flexpipe.run._run_snakemake", MagicMock(return_value=0))
+
+        sub_dir = tmp_path / "results" / "subsampled"
+        sub_dir.mkdir(parents=True)
+        # Write 10 rows — above min_sequences=5
+        self._write_metadata(sub_dir / "metadata.tsv", 10)
+
+        rc = run_pipeline(
+            config_path=FIXTURE_CONFIG,
+            workdir=tmp_path,
+            run_date="2026-01-01",
+            stage="phylo",
+        )
+        assert rc == 0
+
+    def test_guardrail_disabled_with_min_sequences_zero(self, monkeypatch, tmp_path):
+        """min_sequences=0 disables the guardrail (backward-compatible)."""
+        monkeypatch.setattr(
+            "flexpipe.run.load_config",
+            lambda *a, **kw: self._make_cfg_with_min_sequences(0),
+        )
+        monkeypatch.setattr("flexpipe.run._run_snakemake", MagicMock(return_value=0))
+
+        sub_dir = tmp_path / "results" / "subsampled"
+        sub_dir.mkdir(parents=True)
+        # Write 0 data rows — guardrail must be skipped
+        self._write_metadata(sub_dir / "metadata.tsv", 0)
+
+        rc = run_pipeline(
+            config_path=FIXTURE_CONFIG,
+            workdir=tmp_path,
+            run_date="2026-01-01",
+            stage="phylo",
+        )
+        assert rc == 0

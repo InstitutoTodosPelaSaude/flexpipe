@@ -1,0 +1,23 @@
+LOCUS       PP109421               15225 bp    RNA     linear   VRL
+DEFINITION  Respiratory syncytial virus A isolate — PLACEHOLDER.
+            This file must be replaced with the real GenBank record before running
+            the phylogenetic pipeline.  Download with:
+              efetch -db nucleotide -id PP109421.1 -format gb > reference.gb
+            See builds/rsv-global/NOTES.md for full guidance.
+ACCESSION   PP109421
+VERSION     PP109421.1
+KEYWORDS    .
+SOURCE      Orthopneumovirus hominis
+  ORGANISM  Orthopneumovirus hominis
+            Viruses; Riboviria; Orthornavirae; Negarnaviricota;
+            Haploviricotina; Monjiviricetes; Mononegavirales;
+            Pneumoviridae; Orthopneumovirus.
+FEATURES             Location/Qualifiers
+     source          1..15225
+                     /organism="Orthopneumovirus hominis"
+                     /mol_type="genomic RNA"
+                     /db_xref="taxon:11250"
+ORIGIN
+        1 nnnnnnnnnn nnnnnnnnnn nnnnnnnnnn nnnnnnnnnn nnnnnnnnnn nnnnnnnnnn
+       61 nnnnnnnnnn nnnnnnnnnn nnnnnnnnnn nnnnnnnnnn nnnnnnnnnn nnnnnnnnnn
+//

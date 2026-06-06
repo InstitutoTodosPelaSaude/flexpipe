@@ -39,6 +39,13 @@ def curate() -> None:
     main()
 
 
+def qc_summary() -> None:
+    """flexpipe-qc-summary — build per-run QC report from ingest curation outputs."""
+    from flexpipe.curate.qc_summary import main
+
+    main()
+
+
 def coordinates() -> None:
     """flexpipe-coordinates — geocode locations via Nominatim."""
     from flexpipe.geo.coordinates import main

@@ -31,7 +31,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-from flexpipe.config import load_config, write_snakemake_config_overrides
+import filelock
+
+from flexpipe.config import FlexpipeConfig, load_config, write_snakemake_config_overrides
 from flexpipe.logging_setup import configure_logging
 from flexpipe.manifest import Manifest
 from flexpipe.paths import WorkdirPaths
@@ -77,8 +79,23 @@ def _run_snakemake(
     paths: WorkdirPaths,
     cores: int,
     config_overrides: Path | None = None,
+    run_date: str = "",
 ) -> int:
-    """Invoke Snakemake for one stage and return the exit code."""
+    """Invoke Snakemake for one stage and return the exit code.
+
+    Args:
+        snakefile: Path to the Snakefile for this stage.
+        config_path: Path to the build config.yaml (passed as ``build_config=`` so
+            ``flexpipe-*`` CLI subprocesses can locate it).
+        paths: WorkdirPaths for the current run.
+        cores: Number of CPU cores to pass to Snakemake.
+        config_overrides: Resolved config YAML written by
+            ``write_snakemake_config_overrides``; used as the sole ``--configfile``.
+        run_date: Reference date (``YYYY-MM-DD``) to pass as ``--config run_date=``.
+            The ingest stage uses it to bound ``augur subsample`` via ``defaults.max_date``.
+            Phylo ignores it but receives it for forward-compatibility.  Empty string
+            means no date override (backwards-compatible for direct snakemake invocations).
+    """
     cmd = [
         "snakemake",
         "--snakefile",
@@ -90,16 +107,13 @@ def _run_snakemake(
         # required.  Falls back to the raw build config for direct snakemake invocations.
         str(config_overrides) if config_overrides is not None else str(config_path),
     ]
-    cmd.extend(
-        [
-            "--config",
-            f"workdir={paths.root}",
-            f"build_config={config_path}",
-            "--cores",
-            str(cores),
-            "--nolock",
-        ]
-    )
+    config_args = [
+        f"workdir={paths.root}",
+        f"build_config={config_path}",
+    ]
+    if run_date:
+        config_args.append(f"run_date={run_date}")
+    cmd.extend(["--config"] + config_args + ["--cores", str(cores), "--nolock"])
     logger.info("Running: %s", " ".join(cmd))
     result = subprocess.run(cmd)
     return result.returncode
@@ -138,6 +152,47 @@ def run_pipeline(
     paths = WorkdirPaths.from_root(workdir)
     paths.ensure_dirs()
 
+    # Acquire workdir-level lock to prevent concurrent runs on the same workdir.
+    # Snakemake's native lock is scoped to the invocation directory (not the workdir),
+    # so we manage the guard explicitly here.  timeout=0 → fail immediately if locked.
+    lock = filelock.FileLock(str(paths.lock_file), timeout=0)
+    try:
+        lock.acquire()
+    except filelock.Timeout:
+        logger.error(
+            "Another flexpipe-run process already holds the workdir lock: %s\n"
+            "Wait for that run to finish, or remove the lock file manually: %s",
+            workdir,
+            paths.lock_file,
+        )
+        return 2
+
+    try:
+        return _run_pipeline_locked(
+            cfg=cfg,
+            config_path=config_path,
+            build_dir=build_dir,
+            build_name=build_name,
+            paths=paths,
+            run_date=run_date,
+            stage=stage,
+            cores=cores,
+        )
+    finally:
+        lock.release()
+
+
+def _run_pipeline_locked(
+    cfg: FlexpipeConfig,
+    config_path: Path,
+    build_dir: Path,
+    build_name: str,
+    paths: WorkdirPaths,
+    run_date: str,
+    stage: str,
+    cores: int,
+) -> int:
+    """Inner pipeline body — called inside the workdir lock."""
     snakemake_overrides = write_snakemake_config_overrides(
         cfg, paths.snakemake_config_overrides, config_path
     )
@@ -153,11 +208,15 @@ def run_pipeline(
 
     manifest = Manifest(run_date=run_date, build_name=build_name, config_path=config_path)
 
+    min_sequences = cfg.qc.min_sequences
+
     rc = 0
 
     if stage in ("ingest", "all"):
         logger.info("=== Stage: ingest ===")
-        rc = _run_snakemake(_INGEST_SNAKEFILE, config_path, paths, cores, snakemake_overrides)
+        rc = _run_snakemake(
+            _INGEST_SNAKEFILE, config_path, paths, cores, snakemake_overrides, run_date=run_date
+        )
         manifest.record("ingest_exit_code", rc)
         if rc != 0:
             logger.error("Ingest stage failed (exit code %d)", rc)
@@ -167,17 +226,19 @@ def run_pipeline(
         _record_row_counts(manifest, paths)
 
     if stage in ("phylo", "all"):
-        # Boundary check before phylogenetics
-        if stage == "all":
-            try:
-                manifest.validate_boundary(paths.subsampled_metadata)
-            except SystemExit as exc:
-                logger.error("Boundary check failed: %s", exc)
-                manifest.record("status", "boundary_failed")
-                manifest.save(paths.manifest)
-                return 1
+        # Boundary check before phylogenetics: column contract + min-sequences guardrail.
+        # Run for both "all" and standalone "phylo" so the guardrail always applies.
+        try:
+            manifest.validate_boundary(paths.subsampled_metadata, min_sequences=min_sequences)
+        except SystemExit as exc:
+            logger.error("Boundary check failed: %s", exc)
+            manifest.record("status", "boundary_failed")
+            manifest.save(paths.manifest)
+            return 1
         logger.info("=== Stage: phylogenetic ===")
-        rc = _run_snakemake(_PHYLO_SNAKEFILE, config_path, paths, cores, snakemake_overrides)
+        rc = _run_snakemake(
+            _PHYLO_SNAKEFILE, config_path, paths, cores, snakemake_overrides, run_date=run_date
+        )
         manifest.record("phylo_exit_code", rc)
         if rc != 0:
             logger.error("Phylogenetic stage failed (exit code %d)", rc)

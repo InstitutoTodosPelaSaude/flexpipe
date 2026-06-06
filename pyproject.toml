@@ -1,10 +1,10 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
 name = "flexpipe"
-version = "0.2.0"
+dynamic = ["version"]
 description = "Flexible Nextstrain pipeline for genomic epidemiology of viral pathogens"
 readme = "README.md"
 license = {file = "LICENSE"}
@@ -36,6 +36,7 @@ dependencies = [
     "openpyxl",
     "beautifulsoup4",
     "pydantic>=2",
+    "filelock",
 ]
 
 [project.optional-dependencies]
@@ -64,7 +65,11 @@ flexpipe-coordinates       = "flexpipe.cli:coordinates"
 flexpipe-update-cache      = "flexpipe.cli:update_cache"
 flexpipe-name2hue          = "flexpipe.cli:name2hue"
 flexpipe-colours           = "flexpipe.cli:colours"
+flexpipe-qc-summary        = "flexpipe.cli:qc_summary"
 flexpipe-run               = "flexpipe.cli:run"
+
+[tool.hatch.version]
+source = "vcs"
 
 [tool.hatch.build.targets.wheel]
 packages = ["flexpipe"]

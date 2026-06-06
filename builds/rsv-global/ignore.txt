@@ -1,0 +1,3 @@
+# Strains to always exclude (one per line).
+# Add the reference accession here once reference.gb is chosen (see NOTES.md).
+# Example: PP109421

@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
 
 ## Project Overview
 
@@ -15,7 +15,7 @@ The pipeline is an **installable Python package** (`pip install -e .`) backed by
 
 All outputs go to a **per-build workdir** — the source tree is never modified at runtime.
 
-Current example build: **Yellow Fever Virus (YFV) Brazil** (`builds/yfv-brazil/`)
+Example builds: **Yellow Fever Virus (YFV) Brazil** (`builds/yfv-brazil/`) and **RSV-A global** (`builds/rsv-global/` — scaffold, see NOTES.md).
 
 ## Common Commands
 
@@ -24,12 +24,9 @@ Current example build: **Yellow Fever Virus (YFV) Brazil** (`builds/yfv-brazil/`
 # Clone with the viralQC submodule (or run: git submodule update --init --recursive)
 git clone --recurse-submodules https://github.com/InstitutoTodosPelaSaude/flexpipe.git
 
-# Reproducible install (pinned versions — recommended for production/scheduled runs)
-conda env create -f config/nextstrain.lock.yml
+# Create and activate the nextstrain conda environment
+conda env create -f config/nextstrain.yml
 conda activate nextstrain
-
-# Flexible/dev install (accepts newer versions — use during active development)
-# conda env create -f config/nextstrain.yml
 
 # Install the flexpipe package (editable, with dev + test extras)
 pip install -e '.[test,dev]'
@@ -41,24 +38,15 @@ bash scripts/install_viralqc.sh
 ### Running the Full Pipeline
 
 ```bash
-# Run ingest + phylogenetics end-to-end for the YFV Brazil build.
-# --run-date bounds the analysis window: sequences collected after this date
-# are excluded from subsampling via augur subsample's defaults.max_date.
-# Always pass --run-date explicitly for scheduled/reproducible reruns.
+# Run ingest + phylogenetics end-to-end for the YFV Brazil build
 flexpipe-run \
-    --config   builds/yfv-brazil/config.yaml \
-    --workdir  /path/to/workdir/yfv-brazil \
-    --run-date 2026-01-01
+    --config  builds/yfv-brazil/config.yaml \
+    --workdir /path/to/workdir/yfv-brazil
 
 # Visualize results
 auspice view --datasetDir /path/to/workdir/yfv-brazil/auspice/
 # Open http://localhost:4000 in browser
 ```
-
-**`--run-date` semantics:** format is `YYYY-MM-DD`; scope is subsample only (phylo receives it
-for forward-compatibility but does not use it). Omitting it defaults to today with a warning; two
-runs with the same `--run-date` and the same config produce the same `config_hash` and `run_id`
-in the manifest. When not passed, `augur subsample` has no upper date bound.
 
 ### Workflow Control
 ```bash
@@ -89,9 +77,6 @@ snakemake --snakefile ingest/Snakefile \
 ```bash
 # Run all unit tests (default: excludes integration and network tests)
 pytest
-
-# Run integration dry-run wiring tests (requires nextstrain env + snakemake)
-pytest -m integration
 
 # Run with coverage
 pytest --cov=flexpipe
@@ -125,7 +110,7 @@ flexpipe/
   cli.py                 # console-script entry-point dispatch
   io.py                  # shared load_table(), FASTA helpers
   ingest/{pathoplexus,ncbi,merge}.py
-  curate/{regions,hosts,clades,columns,viralqc_join,pipeline}.py
+  curate/{regions,hosts,clades,columns,viralqc_join,pipeline,qc_summary}.py
   geo/{coordinates,cache}.py
   colors/{hues,scheme}.py
   data/                  # bundled defaults (shipped via hatchling force-include)
@@ -133,7 +118,7 @@ flexpipe/
     hosts/host_rules.yaml
     colors/{region_hues.tsv, host_hues.tsv, source_hues.tsv, data_use_hues.tsv}
 builds/
-  yfv-brazil/
+  yfv-brazil/            # Pathoplexus, division region, fully runnable
     config.yaml          # all parameters for this build
     subsample.yaml
     auspice_config.json
@@ -141,12 +126,12 @@ builds/
     reference.gb
     keep.txt  ignore.txt
     cache_coordinates.tsv   # read-only seed; workdir copy updated at runtime
+  rsv-global/            # NCBI, country region, scaffold (see NOTES.md)
 config/
   nextstrain.yml         # conda environment definition (shared)
 ingest/Snakefile
 phylogenetic/Snakefile
 tests/{unit/, golden/, integration/, fixtures/}
-  integration/test_ingest_wiring.py   # dry-run wiring tests (pytest -m integration)
 ```
 
 ### Data Flow
@@ -187,28 +172,26 @@ augur align → mask → iqtree3 tree → augur refine (time-calibration)
 
 ### Ingest Pipeline (`ingest/Snakefile`)
 
-The Snakefile reads `builds/yfv-brazil/config.yaml` as its configfile and accepts two keys via
+The Snakefile reads the **resolved config** (`<workdir>/config/snakemake_resolved.yaml`, written by
+`write_snakemake_config_overrides`) as its sole `--configfile`.  `flexpipe-run` also injects via
 `--config`:
 - `workdir=<path>` — per-run output directory
-- `build_config=<abs path>` — absolute path to the build `config.yaml`, injected by `flexpipe-run`
+- `build_config=<abs path>` — path to the original build `config.yaml` (passed to all `flexpipe-*`
+  CLI subprocesses so they can load the full config)
+- `run_date=<YYYY-MM-DD>` — reference date; used by the `resolve_subsample_config` rule to inject
+  `defaults.max_date` into the workdir-local subsample config before `augur subsample` runs
 
 All output paths are prefixed with `{workdir}/results/...` or `{workdir}/config/...`; the source
 tree is never written to.
 
-**Config wiring**: `flexpipe-run` invokes Snakemake with a **single** `--configfile`:
-- `<workdir>/config/snakemake_resolved.yaml` — written by `write_snakemake_config_overrides()`;
-  contains the **full** build `config.yaml` content merged with pydantic-resolved ViralQC paths.
-  Snakemake 9+ only loads the last `--configfile` when multiple are passed, so a single complete
-  file is required (Snakefiles have no `configfile:` directive).
-
-`flexpipe-*` CLI subprocesses (e.g. `flexpipe-curate`) need the original build `config.yaml`
-path, not the workdir-local resolved snapshot. The Snakefile reads
-`_config = config.get("build_config")` (injected via `--config build_config=<abs path>`) for all
-`params.cfg` values. Direct `snakemake` invocations fall back to `workflow.configfiles[0]`.
-
 **Data source switching** (controlled by `data_source` in `config.yaml`; only one active):
 - `fetch_pathoplexus`: downloads from Pathoplexus/LAPIS (chunked pagination with rate-limiting)
 - `fetch_ncbi`: downloads from NCBI Entrez by taxid
+
+Each rule calls the corresponding `flexpipe-*` console script (e.g. `flexpipe-fetch-pathoplexus`,
+`flexpipe-curate`, `flexpipe-coordinates`). The config file path is passed via `params.cfg = _config`
+(which is the `build_config` injected by `flexpipe-run`, or `workflow.configfiles[0]` for direct
+`snakemake` invocations).
 
 **Merge local sequences** (optional):
 - `flexpipe-merge`: combines remote data with local surveillance sequences
@@ -231,7 +214,10 @@ path, not the workdir-local resolved snapshot. The Snakefile reads
 - Deduplicates, preferring local ITpS records
 
 **Subsampling** (`augur subsample`):
-- Reads `builds/<name>/subsample.yaml`
+- The `resolve_subsample_config` rule writes a workdir-local copy of `builds/<name>/subsample.yaml`
+  to `<workdir>/config/subsample_resolved.yaml`, injecting `defaults.max_date = run_date` when
+  `run_date` is provided.  This bounds the analysis window without modifying the source tree.
+- The `prepare` rule reads the resolved subsample config (not the original build file).
 - For YFV Brazil: subsamples by division (state) and year
 - Generates subsampled metadata and sequences in `<workdir>/results/subsampled/`
 
@@ -272,6 +258,7 @@ All parameters are in `builds/<name>/config.yaml` under `parameters` and `option
 | `flexpipe-fetch-ncbi` | `flexpipe.ingest.ncbi.main` |
 | `flexpipe-merge` | `flexpipe.ingest.merge.main` |
 | `flexpipe-curate` | `flexpipe.curate.pipeline.main` |
+| `flexpipe-qc-summary` | `flexpipe.curate.qc_summary.main` |
 | `flexpipe-coordinates` | `flexpipe.geo.coordinates.main` |
 | `flexpipe-update-cache` | inline argparse → `flexpipe.geo.cache.merge_coordinate_cache` |
 | `flexpipe-name2hue` | `flexpipe.colors.hues.main` |
@@ -296,6 +283,12 @@ All parameters are in `builds/<name>/config.yaml` under `parameters` and `option
 
 **Workdir isolation**: All generated artifacts (results, latlongs, colour_scheme, logs, manifest, coordinate cache) go to `<workdir>/`. The build directory (`builds/<name>/`) is read-only. The source tree is never modified during a run.
 
+**Workdir locking**: `flexpipe-run` acquires `<workdir>/.flexpipe.lock` (via `filelock.FileLock`, timeout=0) before invoking Snakemake. A second concurrent `flexpipe-run` on the same workdir exits immediately with code 2. `--nolock` is passed to Snakemake because its native lock is scoped to the invocation directory, not the workdir.
+
+**Segmented viruses (out of scope for v0.x)**: The pipeline uses a single reference / single alignment / single tree. For segmented viruses, run one build per segment. Set `viralqc.expected_segment` to flag wrong-segment reads via ViralQC; the rest of the pipeline has no per-segment fan-out or reassortment handling.
+
+**QC summary artifact**: After `augur filter`, the `qc_summary` rule runs `flexpipe-qc-summary` to produce `<workdir>/results/qc_report.json` (grade counts, coverage stats, filter-reason breakdown) and `<workdir>/results/qc_summary.tsv` (flat per-grade table). Always generated as part of `rule all`.
+
 ## Adapting for a New Pathogen
 
 ```bash
@@ -307,63 +300,24 @@ flexpipe-run --config builds/my-pathogen/config.yaml --workdir /tmp/my-run
 Key fields to update in `config.yaml`:
 - `data_source` (pathoplexus or ncbi)
 - `pathoplexus.organism` / `ncbi.taxid`
-- `parameters.mask_5prime/3prime` (terminal masking in bp; 0 for full-genome) — **these values
-  are per-reference**: YFV uses 142/548 (X03700.1); you must re-derive them for any new reference
-- `parameters.mask_sites_file` (optional BED file path for problematic-site masking; leave blank
-  if unused)
+- `parameters.mask_5prime/3prime` (terminal masking in bp; **reference-specific** — set 0 and calibrate for each new reference)
+- `parameters.mask_sites_file` (optional BED file of problematic sites; leave blank if unused)
 - `curation.clade_levels` (hierarchy depth for `clade_truncated`)
+- `qc.min_sequences` (minimum subsampled sequences before phylogenetics; default 10; 0 disables)
 - `region_source` (country for global, division for Brazil-only builds)
-- `qc.min_sequences` (minimum subsampled sequences required before phylogenetics; default 10)
+- `viralqc.expected_virus` (ViralQC rejects sequences not matching this virus)
+- `viralqc.expected_segment` (single segment label for single-segment builds; leave blank for non-segmented viruses)
 - `viralqc.*` (or set `VIRALQC_DATASETS_DIR`)
 - `traits.columns` (which metadata fields to infer ancestral states for)
 
 ## Dependencies
 
 - **Conda environments**:
-  - `nextstrain` (flexible install): `conda env create -f config/nextstrain.yml` — floor versions; accepts newer packages
-  - `nextstrain` (reproducible install): `conda env create -f config/nextstrain.lock.yml` — version-pinned, cross-platform spec; preferred for production/scheduled runs
+  - `nextstrain`: augur ≥13, snakemake, iqtree3, mafft, python ≥3.9, plus all deps in `config/nextstrain.yml`
   - `viralQC`: bundled as a git submodule (`viralQC/`); set up via `bash scripts/install_viralqc.sh` (not a conda package)
-- **Pip-installable** (in `pyproject.toml` `[project.dependencies]`): pandas, pyyaml, biopython, geopy, requests, matplotlib ≥3.9, colour, openpyxl, beautifulsoup4, pydantic ≥2
-  - Pinned versions for production: `requirements.lock.txt` (regenerate via `pip freeze` when bumping `pyproject.toml` deps)
+- **Pip-installable** (in `pyproject.toml` `[project.dependencies]`): pandas, pyyaml, biopython, geopy, requests, matplotlib ≥3.9, colour, openpyxl, beautifulsoup4, pydantic ≥2, filelock
 - **External APIs**:
   - Pathoplexus/LAPIS (HTTP)
   - NCBI Entrez (HTTP; email + optional API key recommended)
   - Nominatim/OpenStreetMap (HTTP; 1 req/sec rate limit enforced)
-
-## Versioning
-
-Package version is managed via **hatch-vcs** (`dynamic = ["version"]` in `pyproject.toml`). The version is derived from git tags:
-- `git tag v0.2.0 && git push --tags` — tag the release; hatch-vcs resolves `0.2.0` at install time
-- Without a tag, the installed version is a dev string (e.g. `0.1.dev65+g50db586`)
-- In environments without `.git` (e.g. Docker), set `SETUPTOOLS_SCM_PRETEND_VERSION=0.2.0` before `pip install`
-
-## Segmented viruses (out of scope for v0.x)
-
-The ViralQC join supports per-segment contamination filtering via `viralqc.expected_segment`
-(e.g. `"L"` for Lassa virus L segment) — sequences with a non-matching segment are flagged
-`genome_quality="D"` and excluded. However, the rest of the pipeline (single reference, single
-MAFFT alignment, single IQ-TREE tree) has **no per-segment fan-out or reassortment handling**.
-Multi-segment builds must be run as **separate single-segment builds** (one per segment, each
-with its own reference, clades, and workdir).
-
-## Workdir locking
-
-`flexpipe-run` acquires a workdir-level lock (`<workdir>/.flexpipe.lock`) using `filelock` before
-running Snakemake. A second `flexpipe-run` targeting the same workdir exits with code 2 immediately
-rather than corrupting the ongoing run. Snakemake's native `--nolock` flag is still passed
-because its own lock is scoped to the process invocation directory, not the workdir.
-
-## Lock file maintenance
-
-```bash
-# Regenerate nextstrain.lock.yml after bumping nextstrain.yml
-conda env create -f config/nextstrain.yml -n nextstrain-fresh
-conda list -n nextstrain-fresh --no-pip | awk 'NR>3 {print $1, $2}'
-# Update pinned versions in config/nextstrain.lock.yml from the output above
-conda env remove -n nextstrain-fresh
-
-# Regenerate requirements.lock.txt after bumping pyproject.toml deps
-pip freeze | grep -E "^(pandas|PyYAML|biopython|geopy|requests|matplotlib|colour|openpyxl|beautifulsoup4|pydantic)==" | sort > requirements.lock.txt
-# Append dev/test deps manually
-```
 

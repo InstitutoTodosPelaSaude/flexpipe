@@ -1,0 +1,49 @@
+# .dockerignore — excludes files that must not be copied into the runtime image.
+#
+# ViralQC datasets are NOT bundled in the image (multi-GB); mount them at runtime:
+#   docker run --rm \
+#     -v /path/to/viralqc/datasets:/datasets \
+#     -e VIRALQC_DATASETS_DIR=/datasets \
+#     -v /path/to/builds:/builds \
+#     -v /path/to/workdir:/workdir \
+#     flexpipe flexpipe-run --config /builds/yfv-brazil/config.yaml --workdir /workdir/yfv-brazil
+
+# ── Git history (not needed at runtime; prevents hatch-vcs from running) ─────
+.git/
+.gitmodules
+
+# ── ViralQC submodule (datasets are mounted at runtime, not baked in) ─────────
+viralQC/
+
+# ── Build directories (mounted at runtime) ───────────────────────────────────
+builds/
+
+# ── Tests and development artifacts ──────────────────────────────────────────
+tests/
+.pytest_cache/
+.coverage
+.ruff_cache/
+.mypy_cache/
+htmlcov/
+
+# ── Python bytecode ───────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# ── Local run/workdir outputs ─────────────────────────────────────────────────
+workdir*/
+results/
+*.log
+
+# ── Editor and OS files ───────────────────────────────────────────────────────
+.DS_Store
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# ── Review/planning docs (not needed in image) ────────────────────────────────
+review_*.md
+AGENTS.md

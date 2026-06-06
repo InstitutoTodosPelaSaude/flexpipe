@@ -1,0 +1,8 @@
+clade	gene	site	alt
+# RSV-A clade definitions — PLACEHOLDER; must be populated before a production run.
+# See NOTES.md for clade scheme sources and the expected WHO/Nextstrain nomenclature.
+# Format: one row per defining mutation; augur clades assigns the deepest matching clade.
+# Example:
+# A.D	F	198	L
+# A.D.1	F	276	V
+# A.D.1.1	G	273	S
