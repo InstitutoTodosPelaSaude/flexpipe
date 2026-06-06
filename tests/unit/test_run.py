@@ -10,7 +10,7 @@ import yaml
 
 from flexpipe.config import FlexpipeConfig, ViralqcConfig
 from flexpipe.paths import WorkdirPaths
-from flexpipe.run import _run_snakemake, run_pipeline
+from flexpipe.run import _run_snakemake, run_pipeline, validate_run_date
 
 FIXTURE_CONFIG = Path(__file__).parent.parent / "fixtures" / "config_division_build.yaml"
 
@@ -160,6 +160,19 @@ class TestRunPipelineExitCodes:
         )
         assert rc == 2
 
+    def test_bad_run_date_returns_2(self, patch_run, tmp_path):
+        rc = run_pipeline(
+            config_path=FIXTURE_CONFIG,
+            workdir=tmp_path,
+            run_date="2026-99-99",
+            stage="ingest",
+        )
+        assert rc == 2
+
+    def test_validate_run_date_rejects_non_iso(self):
+        with pytest.raises(SystemExit, match="YYYY-MM-DD"):
+            validate_run_date("20260606")
+
 
 class TestRunPipelineManifest:
     def test_manifest_written(self, patch_run, tmp_path):
@@ -190,6 +203,19 @@ class TestRunPipelineManifest:
         )
         data = json.loads((tmp_path / "manifest.json").read_text())
         assert data.get("run_date") == "2026-06-05"
+
+    def test_manifest_contains_expanded_provenance(self, patch_run, tmp_path):
+        run_pipeline(
+            config_path=FIXTURE_CONFIG,
+            workdir=tmp_path,
+            run_date="2026-06-05",
+            stage="ingest",
+        )
+        data = json.loads((tmp_path / "manifest.json").read_text())
+        assert "resolved_config_digest" in data
+        assert "resolved_inputs" in data
+        assert "git" in data
+        assert "viralqc" in data
 
 
 class TestRunSnakemakeCommand:

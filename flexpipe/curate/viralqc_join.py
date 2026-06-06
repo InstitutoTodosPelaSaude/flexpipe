@@ -50,84 +50,104 @@ def join_viralqc(
         Updated DataFrame with ViralQC columns merged in.
     """
     clade_col = viralqc_cfg.get("clade_column", "clade")
+    df = df.copy()
+    if "qc_exclusion_reason" not in df.columns:
+        df["qc_exclusion_reason"] = ""
 
     if nextclade_path and os.path.isfile(nextclade_path):
         nc = pd.read_csv(nextclade_path, sep="\t", dtype=str, keep_default_na=False).fillna("")
-        if "seqName" in nc.columns:
-            nc_cols = {"seqName": "strain"}
-            if clade_col in nc.columns:
-                nc_cols[clade_col] = "_nc_clade"
-            if "genomeQuality" in nc.columns:
-                nc_cols["genomeQuality"] = "_nc_genome_quality"
-            if "coverage" in nc.columns:
-                nc_cols["coverage"] = "_nc_coverage"
-            if "qc.overallStatus" in nc.columns:
-                nc_cols["qc.overallStatus"] = "_nc_qc"
-            if "virus" in nc.columns:
-                nc_cols["virus"] = "_nc_virus"
-            if "segment" in nc.columns:
-                nc_cols["segment"] = "_nc_segment"
+        if "seqName" not in nc.columns:
+            raise SystemExit(
+                f"Malformed ViralQC output: required column 'seqName' not found in {nextclade_path}"
+            )
 
-            nc_sub = nc[list(nc_cols)].rename(columns=nc_cols)
-            df = df.merge(nc_sub, on="strain", how="left")
+        nc_cols = {"seqName": "strain"}
+        if clade_col in nc.columns:
+            nc_cols[clade_col] = "_nc_clade"
+        if "genomeQuality" in nc.columns:
+            nc_cols["genomeQuality"] = "_nc_genome_quality"
+        if "coverage" in nc.columns:
+            nc_cols["coverage"] = "_nc_coverage"
+        if "qc.overallStatus" in nc.columns:
+            nc_cols["qc.overallStatus"] = "_nc_qc"
+        if "virus" in nc.columns:
+            nc_cols["virus"] = "_nc_virus"
+        if "segment" in nc.columns:
+            nc_cols["segment"] = "_nc_segment"
 
-            if "_nc_clade" in df.columns:
-                existing = df.get("clade", pd.Series("", index=df.index)).fillna("")
-                has_nc_clade = df["_nc_clade"].notna() & (df["_nc_clade"].str.strip() != "")
-                df["clade"] = df["_nc_clade"].where(has_nc_clade, existing)
-                df.drop(columns=["_nc_clade"], inplace=True)
+        nc_sub = nc[list(nc_cols)].rename(columns=nc_cols)
+        nc_sub["_has_viralqc"] = "1"
+        df = df.merge(nc_sub, on="strain", how="left")
 
-            if "_nc_genome_quality" in df.columns:
-                df["genome_quality"] = df["_nc_genome_quality"].fillna("")
-                df.drop(columns=["_nc_genome_quality"], inplace=True)
+        missing_vqc = df["_has_viralqc"].fillna("") != "1"
+        df.loc[missing_vqc, "qc_exclusion_reason"] = "missing_viralqc"
+        df.drop(columns=["_has_viralqc"], inplace=True)
 
-            if "_nc_qc" in df.columns:
-                df["qc_overall_status"] = df["_nc_qc"].fillna("")
-                df.drop(columns=["_nc_qc"], inplace=True)
+        if "_nc_clade" in df.columns:
+            existing = df.get("clade", pd.Series("", index=df.index)).fillna("")
+            has_nc_clade = df["_nc_clade"].notna() & (df["_nc_clade"].str.strip() != "")
+            df["clade"] = df["_nc_clade"].where(has_nc_clade, existing)
+            df.drop(columns=["_nc_clade"], inplace=True)
 
-            if "_nc_coverage" in df.columns:
-                df["coverage"] = pd.to_numeric(df["_nc_coverage"], errors="coerce")
-                df.drop(columns=["_nc_coverage"], inplace=True)
+        if "_nc_genome_quality" in df.columns:
+            df["genome_quality"] = df["_nc_genome_quality"].fillna("")
+            poor_quality = df["genome_quality"].isin(["C", "D"]) & (
+                df["qc_exclusion_reason"].str.strip() == ""
+            )
+            df.loc[poor_quality, "qc_exclusion_reason"] = "viralqc_quality"
+            df.drop(columns=["_nc_genome_quality"], inplace=True)
 
-            # Cross-contamination filter: sequences with wrong/unclassified virus
-            expected_virus = viralqc_cfg.get("expected_virus", None)
-            expected_segment = viralqc_cfg.get("expected_segment", None)
+        if "_nc_qc" in df.columns:
+            df["qc_overall_status"] = df["_nc_qc"].fillna("")
+            df.drop(columns=["_nc_qc"], inplace=True)
 
-            if "_nc_virus" in df.columns:
-                if expected_virus:
-                    present = df["_nc_virus"].str.strip() != ""
-                    bad_virus = present & (df["_nc_virus"].str.strip() != expected_virus)
-                    unclassified = present & df["_nc_virus"].str.lower().str.contains(
-                        "unclassified", na=False
+        if "_nc_coverage" in df.columns:
+            df["coverage"] = pd.to_numeric(df["_nc_coverage"], errors="coerce")
+            df.drop(columns=["_nc_coverage"], inplace=True)
+
+        # Cross-contamination filter: sequences with wrong/unclassified virus
+        expected_virus = viralqc_cfg.get("expected_virus", None)
+        expected_segment = viralqc_cfg.get("expected_segment", None)
+
+        if "_nc_virus" in df.columns:
+            if expected_virus:
+                present = df["_nc_virus"].str.strip() != ""
+                bad_virus = present & (df["_nc_virus"].str.strip() != expected_virus)
+                unclassified = present & df["_nc_virus"].str.lower().str.contains(
+                    "unclassified", na=False
+                )
+                exclude = bad_virus | unclassified
+                n = int(exclude.sum())
+                if n:
+                    logger.warning(
+                        "Excluding %d sequences with wrong/unclassified virus (expected: %s)",
+                        n,
+                        expected_virus,
                     )
-                    exclude = bad_virus | unclassified
-                    n = int(exclude.sum())
-                    if n:
-                        logger.warning(
-                            "Excluding %d sequences with wrong/unclassified virus (expected: %s)",
-                            n,
-                            expected_virus,
-                        )
-                        if "genome_quality" not in df.columns:
-                            df["genome_quality"] = ""
-                        df.loc[exclude, "genome_quality"] = "D"
-                df.drop(columns=["_nc_virus"], inplace=True)
+                    if "genome_quality" not in df.columns:
+                        df["genome_quality"] = ""
+                    df.loc[exclude, "genome_quality"] = "D"
+                    df.loc[exclude, "qc_exclusion_reason"] = "wrong_virus"
+            df.drop(columns=["_nc_virus"], inplace=True)
 
-            if "_nc_segment" in df.columns:
-                if expected_segment:
-                    present = df["_nc_segment"].str.strip() != ""
-                    bad_seg = present & (df["_nc_segment"].str.strip() != expected_segment)
-                    n = int(bad_seg.sum())
-                    if n:
-                        logger.warning(
-                            "Excluding %d sequences with wrong segment (expected: %s)",
-                            n,
-                            expected_segment,
-                        )
-                        if "genome_quality" not in df.columns:
-                            df["genome_quality"] = ""
-                        df.loc[bad_seg, "genome_quality"] = "D"
-                df.drop(columns=["_nc_segment"], inplace=True)
+        if "_nc_segment" in df.columns:
+            if expected_segment:
+                present = df["_nc_segment"].str.strip() != ""
+                bad_seg = present & (df["_nc_segment"].str.strip() != expected_segment)
+                n = int(bad_seg.sum())
+                if n:
+                    logger.warning(
+                        "Excluding %d sequences with wrong segment (expected: %s)",
+                        n,
+                        expected_segment,
+                    )
+                    if "genome_quality" not in df.columns:
+                        df["genome_quality"] = ""
+                    df.loc[bad_seg, "genome_quality"] = "D"
+                    df.loc[bad_seg, "qc_exclusion_reason"] = "wrong_segment"
+            df.drop(columns=["_nc_segment"], inplace=True)
+    else:
+        df["qc_exclusion_reason"] = "missing_viralqc"
 
     # Ensure these columns always exist (even if ViralQC was not run)
     if "genome_quality" not in df.columns:
@@ -136,5 +156,7 @@ def join_viralqc(
         df["qc_overall_status"] = ""
     if "coverage" not in df.columns:
         df["coverage"] = float("nan")
+    if "qc_exclusion_reason" not in df.columns:
+        df["qc_exclusion_reason"] = ""
 
     return df

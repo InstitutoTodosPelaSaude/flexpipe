@@ -53,6 +53,13 @@ def coordinates() -> None:
     main()
 
 
+def disambiguate_geo() -> None:
+    """flexpipe-disambiguate-geo — make ambiguous geographic display names unique."""
+    from flexpipe.geo.coordinates import main_disambiguate
+
+    main_disambiguate()
+
+
 def update_cache() -> None:
     """flexpipe-update-cache — merge new coordinates into the workdir cache.
 

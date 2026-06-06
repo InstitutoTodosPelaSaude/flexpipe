@@ -13,7 +13,11 @@ from flexpipe.geo.cache import _read_cache, merge_coordinate_cache
 
 def _write_cache(path, rows):
     """Write a minimal cache TSV to *path*."""
-    df = pd.DataFrame(rows, columns=["level", "name", "latitude", "longitude"])
+    if rows and len(rows[0]) == 5:
+        columns = ["level", "name", "query", "latitude", "longitude"]
+    else:
+        columns = ["level", "name", "latitude", "longitude"]
+    df = pd.DataFrame(rows, columns=columns)
     df.to_csv(path, sep="\t", index=False)
     return path
 
@@ -24,7 +28,7 @@ class TestReadCache:
     def test_missing_file_returns_empty_df(self, tmp_path):
         result = _read_cache(tmp_path / "nonexistent.tsv")
         assert len(result) == 0
-        assert list(result.columns) == ["level", "name", "latitude", "longitude"]
+        assert list(result.columns) == ["level", "name", "query", "latitude", "longitude"]
 
     def test_reads_tsv_with_header_correctly(self, tmp_path):
         p = tmp_path / "cache.tsv"
@@ -38,6 +42,7 @@ class TestReadCache:
         result = _read_cache(p)
         assert len(result) == 2
         assert result["name"].tolist() == ["São Paulo", "Brazil"]
+        assert result["query"].tolist() == ["São Paulo", "Brazil"]
 
     def test_reads_headerless_tsv(self, tmp_path):
         """Legacy format (old Snakefile inline block or latlongs.tsv) — no header row."""
@@ -51,6 +56,7 @@ class TestReadCache:
         names = set(result["name"])
         assert "São Paulo" in names
         assert "Brazil" in names
+        assert set(result["query"]) == names
 
     def test_headerless_with_blank_lines(self, tmp_path):
         """latlongs.tsv format: blank lines separate trait groups."""
@@ -65,6 +71,31 @@ class TestReadCache:
         result = _read_cache(p)
         assert len(result) == 3
         assert "" not in result["name"].tolist()
+
+    def test_reads_v2_query_key_cache(self, tmp_path):
+        p = tmp_path / "cache.tsv"
+        _write_cache(
+            p,
+            [
+                (
+                    "location",
+                    "Springfield, Illinois",
+                    "United States, Illinois, Springfield",
+                    "39.78",
+                    "-89.64",
+                ),
+                (
+                    "location",
+                    "Springfield, Massachusetts",
+                    "United States, Massachusetts, Springfield",
+                    "42.10",
+                    "-72.59",
+                ),
+            ],
+        )
+        result = _read_cache(p)
+        assert len(result) == 2
+        assert len(set(result["query"])) == 2
 
     def test_merge_from_legacy_latlongs(self, tmp_path):
         """merge_coordinate_cache correctly reads headerless latlongs.tsv as input."""
@@ -87,6 +118,7 @@ class TestReadCache:
         assert "Paraná" in names
         assert "Curitiba" in names
         assert "Brazil" in names
+        assert "query" in result.columns
 
 
 class TestMergeCoordinateCache:
@@ -120,7 +152,7 @@ class TestMergeCoordinateCache:
         assert "Amazonas" in names
 
     def test_cache_wins_on_duplicate_key(self, tmp_path):
-        """If the same (level, name) appears in both cache and new file, cache wins."""
+        """If the same (level, query) appears in both cache and new file, cache wins."""
         new = tmp_path / "latlongs.tsv"
         cache = tmp_path / "cache.tsv"
         output = tmp_path / "output.tsv"
@@ -137,6 +169,42 @@ class TestMergeCoordinateCache:
         assert len(sp_rows) == 1
         # The cache (original) value should win
         assert sp_rows["latitude"].iloc[0] == "-23.5"
+
+    def test_context_query_prevents_city_collision(self, tmp_path):
+        new = tmp_path / "latlongs.tsv"
+        cache = tmp_path / "cache.tsv"
+        output = tmp_path / "output.tsv"
+
+        _write_cache(
+            cache,
+            [
+                (
+                    "location",
+                    "Springfield, Illinois",
+                    "United States, Illinois, Springfield",
+                    "39.78",
+                    "-89.64",
+                )
+            ],
+        )
+        _write_cache(
+            new,
+            [
+                (
+                    "location",
+                    "Springfield, Massachusetts",
+                    "United States, Massachusetts, Springfield",
+                    "42.10",
+                    "-72.59",
+                )
+            ],
+        )
+
+        merge_coordinate_cache(new, cache, output)
+
+        result = pd.read_csv(output, sep="\t", dtype=str)
+        assert len(result) == 2
+        assert len(set(result["query"])) == 2
 
     def test_no_duplicate_rows_produced(self, tmp_path):
         """Merging the same file twice must not produce duplicate rows."""

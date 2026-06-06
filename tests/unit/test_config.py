@@ -10,6 +10,7 @@ from flexpipe.config import (
     FlexpipeConfig,
     ViralqcConfig,
     load_config,
+    resolve_subsample_config,
     resolve_viralqc_paths,
     write_snakemake_config_overrides,
 )
@@ -38,7 +39,7 @@ class TestDefaults:
     def test_ncbi_source_defaults(self):
         cfg = FlexpipeConfig(
             data_source="ncbi",
-            ncbi={"taxid": 11089, "genome_size": 10862},
+            ncbi={"taxid": 11089, "genome_size": 10862, "email": "ops@example.org"},
         )
         assert cfg.data_source == "ncbi"
         assert cfg.ncbi.taxid == 11089
@@ -89,7 +90,15 @@ class TestCrossFieldValidators:
 
     def test_ncbi_missing_taxid_raises(self):
         with pytest.raises(pydantic.ValidationError, match="ncbi.taxid"):
-            FlexpipeConfig(data_source="ncbi", ncbi={"taxid": 0})
+            FlexpipeConfig(data_source="ncbi", ncbi={"taxid": 0, "email": "ops@example.org"})
+
+    def test_ncbi_missing_email_raises(self, monkeypatch):
+        monkeypatch.delenv("NCBI_EMAIL", raising=False)
+        with pytest.raises(pydantic.ValidationError, match="ncbi.email"):
+            FlexpipeConfig(
+                data_source="ncbi",
+                ncbi={"taxid": 11089, "genome_size": 10862},
+            )
 
     def test_invalid_data_source_raises(self):
         with pytest.raises(pydantic.ValidationError):
@@ -193,6 +202,124 @@ class TestLoadConfig:
         )
         cfg = load_config(config_yaml, workdir="/tmp/from_arg", skip_viralqc=True)
         assert cfg.paths.workdir == "/tmp/from_arg"
+
+    def test_build_relative_paths_resolve_from_config_dir(self, tmp_path, monkeypatch):
+        build = tmp_path / "build"
+        build.mkdir()
+        for filename in [
+            "keep.txt",
+            "ignore.txt",
+            "reference.gb",
+            "clades.tsv",
+            "auspice_config.json",
+            "subsample.yaml",
+            "mask.bed",
+            "force.tsv",
+            "country.tsv",
+            "host_rules.yaml",
+            "region_hues.tsv",
+        ]:
+            (build / filename).write_text("x\n")
+        config_yaml = build / "config.yaml"
+        config_yaml.write_text(
+            "data_source: pathoplexus\n"
+            "pathoplexus:\n  organism: yellow-fever\n"
+            "files:\n"
+            "  keep: keep.txt\n"
+            "  ignore: ignore.txt\n"
+            "  cache: cache_coordinates.tsv\n"
+            "  reference: reference.gb\n"
+            "  clades: clades.tsv\n"
+            "  auspice_config: auspice_config.json\n"
+            "  subsample_config: subsample.yaml\n"
+            "parameters:\n"
+            "  mask_sites_file: mask.bed\n"
+            "coordinates:\n"
+            "  columns: country\n"
+            "  force_file: force.tsv\n"
+            "regions:\n"
+            "  country_map: country.tsv\n"
+            "curation:\n"
+            "  host_rules: host_rules.yaml\n"
+            "colours:\n"
+            "  hue_tables:\n"
+            "    region: region_hues.tsv\n"
+        )
+        outside = tmp_path / "outside"
+        outside.mkdir()
+        monkeypatch.chdir(outside)
+
+        cfg = load_config(config_yaml, skip_viralqc=True)
+
+        assert cfg.files.reference == str(build / "reference.gb")
+        assert cfg.files.subsample_config == str(build / "subsample.yaml")
+        assert cfg.files.cache == str(build / "cache_coordinates.tsv")
+        assert cfg.parameters.mask_sites_file == str(build / "mask.bed")
+        assert cfg.coordinates.force_file == str(build / "force.tsv")
+        assert cfg.regions.country_map == str(build / "country.tsv")
+        assert cfg.curation.host_rules == str(build / "host_rules.yaml")
+        assert cfg.colours.hue_tables.region == str(build / "region_hues.tsv")
+
+    def test_local_sequence_paths_required_only_when_enabled(self, tmp_path):
+        config_yaml = tmp_path / "config.yaml"
+        config_yaml.write_text(
+            "data_source: pathoplexus\n"
+            "pathoplexus:\n  organism: yellow-fever\n"
+            "local_sequences:\n"
+            "  enabled: false\n"
+            "  metadata: missing.tsv\n"
+            "  sequences: missing.fasta\n"
+        )
+        cfg = load_config(config_yaml, skip_viralqc=True)
+        assert cfg.local_sequences.enabled is False
+
+        config_yaml.write_text(
+            "data_source: pathoplexus\n"
+            "pathoplexus:\n  organism: yellow-fever\n"
+            "local_sequences:\n"
+            "  enabled: true\n"
+            "  metadata: missing.tsv\n"
+            "  sequences: missing.fasta\n"
+        )
+        with pytest.raises(SystemExit, match="local_sequences.metadata"):
+            load_config(config_yaml, skip_viralqc=True)
+
+    def test_invalid_enum_and_column_list_fail_fast(self):
+        with pytest.raises(pydantic.ValidationError, match="parameters.root"):
+            FlexpipeConfig(
+                data_source="pathoplexus",
+                pathoplexus={"organism": "yellow-fever"},
+                parameters={"root": "bad-root"},
+            )
+
+        with pytest.raises(pydantic.ValidationError, match="traits.columns"):
+            FlexpipeConfig(
+                data_source="pathoplexus",
+                pathoplexus={"organism": "yellow-fever"},
+                traits={"columns": "division; rm -rf"},
+            )
+
+    def test_resolve_subsample_paths_makes_includes_absolute(self, tmp_path):
+        build = tmp_path / "build"
+        build.mkdir()
+        for filename in ["default_exclude.txt", "include.txt", "exclude.txt"]:
+            (build / filename).write_text("seq1\n")
+        subsample_yaml = build / "subsample.yaml"
+        raw = {
+            "defaults": {"exclude": "default_exclude.txt"},
+            "samples": {
+                "focal": {"include": "include.txt", "exclude": ["exclude.txt"]},
+                "context": {"exclude_where": "region=Europe"},
+            },
+        }
+
+        resolved = resolve_subsample_config(raw, "2026-01-01", subsample_yaml)
+
+        assert resolved["defaults"]["exclude"] == str(build / "default_exclude.txt")
+        assert resolved["samples"]["focal"]["include"] == str(build / "include.txt")
+        assert resolved["samples"]["focal"]["exclude"] == [str(build / "exclude.txt")]
+        assert resolved["samples"]["context"]["exclude_where"] == "region=Europe"
+        assert resolved["defaults"]["max_date"] == "2026-01-01"
 
 
 # ---------------------------------------------------------------------------
@@ -304,6 +431,8 @@ class TestResolveViralqcPaths:
 
 
 FIXTURE_CONFIG = Path(__file__).parent.parent / "fixtures" / "config_division_build.yaml"
+REPO_ROOT = Path(__file__).parent.parent.parent
+YFV_BUILD_CONFIG = REPO_ROOT / "builds" / "yfv-brazil" / "config.yaml"
 
 
 class TestWriteSnakemakeConfigOverrides:
@@ -345,6 +474,17 @@ class TestWriteSnakemakeConfigOverrides:
         fixture_keys = yaml.safe_load(FIXTURE_CONFIG.read_text()).keys()
         for key in fixture_keys:
             assert key in loaded, f"Key '{key}' from build config missing in resolved YAML"
+
+    def test_writes_absolute_build_paths(self, tmp_path):
+        cfg = load_config(YFV_BUILD_CONFIG, workdir=tmp_path / "workdir", skip_viralqc=True)
+        out = write_snakemake_config_overrides(
+            cfg, tmp_path / "snakemake_resolved.yaml", YFV_BUILD_CONFIG
+        )
+        loaded = yaml.safe_load(out.read_text())
+        assert Path(loaded["files"]["reference"]).is_absolute()
+        assert Path(loaded["files"]["clades"]).is_absolute()
+        assert Path(loaded["files"]["auspice_config"]).is_absolute()
+        assert Path(loaded["files"]["subsample_config"]).is_absolute()
 
 
 # ---------------------------------------------------------------------------

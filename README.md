@@ -46,7 +46,8 @@ All pipeline outputs go to a **workdir** — the source tree is never modified.
 # Run the full pipeline (ingest + phylogenetics) for the YFV Brazil build
 flexpipe-run \
     --config  builds/yfv-brazil/config.yaml \
-    --workdir /path/to/workdir/yfv-brazil
+    --workdir /path/to/workdir/yfv-brazil \
+    --run-date 2026-06-06
 
 # Visualise
 auspice view --datasetDir /path/to/workdir/yfv-brazil/auspice/
@@ -58,10 +59,10 @@ Open `http://localhost:4000` in your browser.
 
 ```bash
 # Stage 1: ingest only
-flexpipe-run --config builds/yfv-brazil/config.yaml --workdir /tmp/run --stage ingest
+flexpipe-run --config builds/yfv-brazil/config.yaml --workdir /tmp/run --run-date 2026-06-06 --stage ingest
 
 # Stage 2: phylogenetics only (after ingest completes)
-flexpipe-run --config builds/yfv-brazil/config.yaml --workdir /tmp/run --stage phylo
+flexpipe-run --config builds/yfv-brazil/config.yaml --workdir /tmp/run --run-date 2026-06-06 --stage phylo
 ```
 
 #### Direct Snakemake invocation (advanced)
@@ -105,6 +106,15 @@ flexpipe-run --config builds/yfv-brazil/config.yaml --workdir /tmp/run
 #   datasets_dir: /path/to/viralqc-datasets
 ```
 
+The ViralQC runner is configurable. Defaults preserve the historical behavior:
+
+```yaml
+viralqc:
+  runner: conda        # conda, mamba, micromamba, or direct
+  conda_env: viralQC
+  executable: vqc
+```
+
 To re-download just the datasets without reinstalling the environment:
 
 ```bash
@@ -119,8 +129,8 @@ Each build has its own directory under `builds/` with a self-contained `config.y
 Run multiple builds independently by pointing `--workdir` to separate directories:
 
 ```bash
-flexpipe-run --config builds/yfv-brazil/config.yaml  --workdir /workdir/yfv-brazil
-flexpipe-run --config builds/rsv-global/config.yaml  --workdir /workdir/rsv-global
+flexpipe-run --config builds/yfv-brazil/config.yaml  --workdir /workdir/yfv-brazil  --run-date 2026-06-06
+flexpipe-run --config builds/rsv-global/config.yaml  --workdir /workdir/rsv-global  --run-date 2026-06-06
 ```
 
 Build directories contain:
@@ -131,6 +141,9 @@ Build directories contain:
 - `clades.tsv` — clade definitions for `augur clades`
 - `keep.txt` / `ignore.txt` — strains to always include/exclude
 - `cache_coordinates.tsv` — read-only geocoding seed (runtime cache lives in `--workdir`)
+
+For unattended scheduled execution and future service integration, see
+[`docs/service_contract.md`](docs/service_contract.md).
 
 ---
 

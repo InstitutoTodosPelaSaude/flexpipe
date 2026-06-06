@@ -138,6 +138,10 @@ class WorkdirPaths:
     def cache_coordinates(self) -> Path:
         return self.cache_dir / "cache_coordinates.tsv"
 
+    @property
+    def cache_name2hue(self) -> Path:
+        return self.cache_dir / "name2hue.tsv"
+
     # ── logs ─────────────────────────────────────────────────────────────────
     @property
     def logs_dir(self) -> Path:

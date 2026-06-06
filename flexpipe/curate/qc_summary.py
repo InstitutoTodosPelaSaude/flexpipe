@@ -119,10 +119,15 @@ def build_qc_report(
     else:
         logger.warning("'coverage' column not found in curated metadata")
 
-    # ── Cross-contamination count (genome_quality="D" from viralqc_join) ────
-    # viralqc_join marks wrong-virus and wrong-segment sequences with grade "D".
-    # These are a subset of all D-grade sequences, but we report D-grade as a proxy.
-    cross_contamination_count = int(genome_quality_counts.get("D", 0))
+    # ── Cross-contamination count ───────────────────────────────────────────
+    # Count only explicit wrong-virus/wrong-segment reasons. Other D-grade
+    # sequences are ViralQC quality failures, not necessarily contamination.
+    if "qc_exclusion_reason" in curated.columns:
+        cross_contamination_count = int(
+            curated["qc_exclusion_reason"].isin(["wrong_virus", "wrong_segment"]).sum()
+        )
+    else:
+        cross_contamination_count = 0
 
     # ── Exclusion reason breakdown from augur filter log ────────────────────
     exclusion_by_filter: dict[str, int] = {}

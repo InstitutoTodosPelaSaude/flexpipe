@@ -32,9 +32,11 @@ Fixes applied:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import logging
 import os
 import re
+from pathlib import Path
 
 import pandas as pd
 
@@ -77,6 +79,58 @@ DATA_USE_HUES = load_hue_table("data_use_hues.tsv")
 VALID_HUES = set(range(0, 360, 10))
 
 
+def stable_hash_hue(name: str, used_hues: set[int] | None = None) -> int:
+    """Assign *name* to a deterministic hue bucket with collision probing."""
+    used_hues = used_hues or set()
+    digest = hashlib.sha256(str(name).encode("utf-8")).hexdigest()
+    hue = (int(digest, 16) % 36) * 10
+    for _ in range(36):
+        if hue not in used_hues:
+            return hue
+        hue = (hue + 10) % 360
+    return (int(digest, 16) % 36) * 10
+
+
+def load_hue_cache(path: str | Path | None) -> dict[str, int]:
+    """Load a persistent ``category TAB hue`` cache, ignoring malformed rows."""
+    if not path:
+        return {}
+    p = Path(path)
+    if not p.exists():
+        return {}
+    try:
+        df = pd.read_csv(p, sep="\t", dtype=str, comment="#").fillna("")
+    except pd.errors.EmptyDataError:
+        return {}
+    if not {"category", "hue"}.issubset(df.columns):
+        return {}
+    result: dict[str, int] = {}
+    for _, row in df.iterrows():
+        category = str(row.get("category", "")).strip()
+        hue_text = str(row.get("hue", "")).strip()
+        if not category:
+            continue
+        try:
+            hue = int(hue_text)
+        except ValueError:
+            continue
+        if hue in VALID_HUES:
+            result[category] = hue
+    return result
+
+
+def write_hue_cache(path: str | Path | None, cache: dict[str, int]) -> None:
+    """Write the persistent hue cache."""
+    if not path:
+        return
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    with open(p, "w") as fh:
+        fh.write("category\thue\n")
+        for category, hue in sorted(cache.items(), key=lambda item: _natural_key(item[0])):
+            fh.write(f"{category}\t{int(hue)}\n")
+
+
 def _natural_key(s: str):
     """Sort key that handles mixed text/numbers: ``A.D.2 < A.D.10``."""
     return [int(c) if c.isdigit() else c.lower() for c in re.split(r"(\d+)", s)]
@@ -103,7 +157,12 @@ def spread_hues(names: list) -> dict:
 
 
 def collect(
-    df: pd.DataFrame, col: str, fixed_hues: dict, label: str, use_hash_for_unknown: bool = False
+    df: pd.DataFrame,
+    col: str,
+    fixed_hues: dict,
+    label: str,
+    use_hash_for_unknown: bool = False,
+    cached_hues: dict[str, int] | None = None,
 ):
     """Return ``({value: hue}, warnings)`` for all non-empty values in ``df[col]``.
 
@@ -132,6 +191,7 @@ def collect(
     result = {}
     warnings = []
     used = set(fixed_hues.values())
+    cached_hues = cached_hues or {}
 
     known = [v for v in values if v in fixed_hues]
     unknown = [v for v in values if v not in fixed_hues]
@@ -140,29 +200,27 @@ def collect(
         result[v] = int(fixed_hues[v])
 
     if unknown:
-        if use_hash_for_unknown:
-            n = len(unknown)
-            step = max(10, (360 // n // 10) * 10)
-            spread = spread_hues(unknown)
-            result.update(spread)
-            warnings.append(
-                f"{label}: {n} values → spread hues (step={step}, range 0–{(n - 1) * step})"
-            )
-            for name in sorted(spread, key=lambda x: spread[x]):
-                warnings.append(f"  {label}: '{name}' → {spread[name]}")
-        else:
-            for v in unknown:
-                used_result = set(result.values())
+        for v in unknown:
+            used_result = set(result.values())
+            cached = cached_hues.get(v)
+            if cached in VALID_HUES:
+                result[v] = int(cached)
+                continue
+
+            reserved = used | used_result
+            if use_hash_for_unknown:
+                h = stable_hash_hue(v, reserved)
+            else:
                 h = 0
                 for _ in range(36):
-                    if h not in used and h not in used_result:
+                    if h not in reserved:
                         break
                     h = (h + 10) % 360
-                result[v] = h
-                warnings.append(
-                    f"{label}: '{v}' has no fixed hue → assigned {h}. "
-                    f"Add to flexpipe/data/colors/*_hues.tsv or set colours.hue_tables in config."
-                )
+            result[v] = h
+            warnings.append(
+                f"{label}: '{v}' has no fixed hue → assigned {h}. "
+                f"Add to flexpipe/data/colors/*_hues.tsv or set colours.hue_tables in config."
+            )
 
     return result, warnings
 
@@ -173,6 +231,12 @@ def main() -> None:
     parser.add_argument("--metadata", required=True, help="Curated metadata TSV")
     parser.add_argument("--config", required=False, default=None)
     parser.add_argument("--output", required=True, help="Output name2hue.tsv")
+    parser.add_argument(
+        "--cache",
+        required=False,
+        default=None,
+        help="Persistent category→hue cache to read/update",
+    )
     args = parser.parse_args()
 
     from flexpipe.logging_setup import configure_logging
@@ -207,9 +271,17 @@ def main() -> None:
 
     all_warnings = []
     sections = []  # (comment, {cat: hue})
+    persistent_cache = load_hue_cache(args.cache)
 
     def run(comment, col, fixed, label, use_hash=False):
-        result, warns = collect(df, col, fixed, label, use_hash)
+        result, warns = collect(
+            df,
+            col,
+            fixed,
+            label,
+            use_hash_for_unknown=use_hash,
+            cached_hues=persistent_cache,
+        )
         sections.append((comment, result))
         all_warnings.extend(warns)
 
@@ -234,8 +306,10 @@ def main() -> None:
             for cat, hue in sorted(entries.items()):
                 fh.write(f"{cat}\t{hue}\n")
                 total += 1
+                persistent_cache[cat] = int(hue)
 
     logger.info("Wrote %d entries → %s", total, args.output)
+    write_hue_cache(args.cache, persistent_cache)
 
     if all_warnings:
         logger.warning("Auto-assigned hues (add to *_hues.tsv to fix):")

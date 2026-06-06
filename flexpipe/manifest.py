@@ -27,6 +27,7 @@ Usage::
 import hashlib
 import json
 import logging
+import os
 import subprocess
 import time
 from pathlib import Path
@@ -37,6 +38,7 @@ import pandas as pd
 from flexpipe import __version__
 
 logger = logging.getLogger(__name__)
+_VERSION_CACHE: dict[tuple[str, ...], str] = {}
 
 # Minimum columns that must be present in subsampled metadata before phylogenetics starts.
 # This is the ingest→phylo boundary contract.
@@ -56,11 +58,81 @@ BOUNDARY_REQUIRED_COLUMNS = {
 
 def _run_version(cmd: list) -> str:
     """Run a command and return its version string, or 'unknown' on failure."""
+    key = tuple(cmd)
+    if key in _VERSION_CACHE:
+        return _VERSION_CACHE[key]
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
-        return result.stdout.strip() or result.stderr.strip() or "unknown"
+        version = result.stdout.strip() or result.stderr.strip() or "unknown"
     except Exception:
-        return "unknown"
+        version = "unknown"
+    _VERSION_CACHE[key] = version
+    return version
+
+
+def _repo_root() -> Path:
+    return Path(__file__).resolve().parents[1]
+
+
+def _git_state() -> dict[str, object]:
+    repo = _repo_root()
+    commit = _run_version(["git", "-C", str(repo), "rev-parse", "HEAD"]).splitlines()[0]
+    status = _run_version(["git", "-C", str(repo), "status", "--short"])
+    return {
+        "commit": commit,
+        "dirty": bool(status and status != "unknown"),
+    }
+
+
+def _file_digest(path: Union[str, Path], *, max_hash_bytes: int = 50_000_000) -> dict[str, object]:
+    p = Path(path)
+    info: dict[str, object] = {"path": str(p)}
+    if not p.exists():
+        info["exists"] = False
+        return info
+    stat = p.stat()
+    info.update({"exists": True, "size": stat.st_size, "mtime": int(stat.st_mtime)})
+    if p.is_file() and stat.st_size <= max_hash_bytes:
+        h = hashlib.sha256()
+        with open(p, "rb") as fh:
+            for chunk in iter(lambda: fh.read(1024 * 1024), b""):
+                h.update(chunk)
+        info["sha256"] = h.hexdigest()
+    elif p.is_file():
+        info["sha256"] = "skipped_large_file"
+    return info
+
+
+def _directory_fingerprint(path: Union[str, Path]) -> dict[str, object]:
+    p = Path(path)
+    info: dict[str, object] = {"path": str(p), "exists": p.exists()}
+    if not p.exists() or not p.is_dir():
+        return info
+    count = 0
+    total_size = 0
+    latest_mtime = 0
+    metadata_hash = hashlib.sha256()
+    for root, _, files in os.walk(p):
+        for filename in sorted(files):
+            file_path = Path(root) / filename
+            try:
+                stat = file_path.stat()
+            except OSError:
+                continue
+            rel = str(file_path.relative_to(p))
+            count += 1
+            total_size += stat.st_size
+            latest_mtime = max(latest_mtime, int(stat.st_mtime))
+            metadata_hash.update(f"{rel}\t{stat.st_size}\t{int(stat.st_mtime)}\n".encode())
+    info.update(
+        {
+            "file_count": count,
+            "total_size": total_size,
+            "latest_mtime": latest_mtime,
+            "metadata_sha256": metadata_hash.hexdigest(),
+        }
+    )
+    return info
 
 
 def _hash_config(config_path: Union[str, Path], run_date: Optional[str] = None) -> str:
@@ -133,10 +205,48 @@ class Manifest:
         """Attempt to collect versions of external tools."""
         return {
             "flexpipe": __version__,
+            "snakemake": _run_version(["snakemake", "--version"]),
             "augur": _run_version(["augur", "--version"]),
             "iqtree": _run_version(["iqtree3", "--version"]),
             "mafft": _run_version(["mafft", "--version"]),
+            "viralqc": _run_version(["vqc", "--version"]),
         }
+
+    def record_provenance(
+        self,
+        cfg,
+        resolved_config: Union[str, Path],
+        resolved_subsample: Union[str, Path] | None = None,
+    ) -> None:
+        """Record resolved config/input fingerprints for auditability."""
+        inputs = {}
+        for section_name, section in [
+            ("files", cfg.files),
+            ("local_sequences", cfg.local_sequences),
+        ]:
+            for key, value in section.model_dump().items():
+                if value and isinstance(value, str):
+                    path = Path(value)
+                    if path.exists() and path.is_file():
+                        inputs[f"{section_name}.{key}"] = _file_digest(path)
+
+        resolved = {"config": _file_digest(resolved_config)}
+        if resolved_subsample and Path(resolved_subsample).exists():
+            resolved["subsample_config"] = _file_digest(resolved_subsample)
+
+        self.record("resolved_config_digest", resolved["config"].get("sha256", "unknown"))
+        self.record("resolved_inputs", inputs)
+        self.record("resolved_artifacts", resolved)
+        self.record("git", _git_state())
+        self.record(
+            "viralqc",
+            {
+                "runner": getattr(cfg.viralqc, "runner", "conda"),
+                "executable": getattr(cfg.viralqc, "executable", "vqc"),
+                "conda_env": getattr(cfg.viralqc, "conda_env", "viralQC"),
+                "datasets": _directory_fingerprint(getattr(cfg.viralqc, "datasets_dir", "")),
+            },
+        )
 
     def validate_boundary(
         self,

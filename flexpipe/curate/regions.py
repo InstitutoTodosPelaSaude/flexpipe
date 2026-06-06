@@ -72,6 +72,11 @@ def build_brazil_maps(
     return region_map, norm_map, abbrev_map
 
 
+def build_brazil_canonical_map(region_map: dict) -> dict:
+    """Build an accent-insensitive canonical-state lookup from a region map."""
+    return {_normalize(k): k for k in region_map}
+
+
 def _build_region_map() -> dict:
     return build_region_map()
 
@@ -149,7 +154,11 @@ def lookup_brazil_region(
     return nm.get(_normalize(d), "")
 
 
-def _parse_brazil_division(division_str: str, abbrev: dict | None = None):
+def _parse_brazil_division(
+    division_str: str,
+    abbrev: dict | None = None,
+    canonical: dict | None = None,
+):
     """Parse a compound Pathoplexus division string into (canonical_state, city).
 
     Handles formats produced by Pathoplexus YFV::
@@ -166,6 +175,7 @@ def _parse_brazil_division(division_str: str, abbrev: dict | None = None):
         ``(original_string, "")``.
     """
     _abbrev = abbrev if abbrev is not None else _BRAZIL_ABBREV
+    _canonical = canonical if canonical is not None else _BRAZIL_CANONICAL
     d = str(division_str).strip()
     if not d:
         return "", ""
@@ -191,9 +201,9 @@ def _parse_brazil_division(division_str: str, abbrev: dict | None = None):
             state_idx = i
             break
         # Normalised state name (handles missing accents)
-        canonical = _BRAZIL_CANONICAL.get(_normalize(token), "")
-        if canonical:
-            state_name = canonical
+        canonical_state = _canonical.get(_normalize(token), "")
+        if canonical_state:
+            state_name = canonical_state
             state_idx = i
             break
 

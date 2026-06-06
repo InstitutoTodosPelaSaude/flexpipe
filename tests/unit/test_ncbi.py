@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from flexpipe.ingest.ncbi import parse_country_field, parse_gb_record
+from flexpipe.ingest.ncbi import parse_country_field, parse_gb_record, search_ncbi
 
 
 class TestParseCountryField:
@@ -90,3 +90,26 @@ class TestParseGbRecord:
     def test_missing_host_gives_empty(self):
         rec = self._make_record(host="")
         assert parse_gb_record(rec)["hostNameCommon"] == ""
+
+
+class TestSearchNcbi:
+    def test_run_date_bounds_publication_date_query(self, monkeypatch):
+        captured = {}
+
+        class Handle:
+            def close(self):
+                pass
+
+        def fake_esearch(**kwargs):
+            captured["term"] = kwargs["term"]
+            return Handle()
+
+        monkeypatch.setattr("flexpipe.ingest.ncbi.Entrez.esearch", fake_esearch)
+        monkeypatch.setattr(
+            "flexpipe.ingest.ncbi.Entrez.read",
+            lambda handle: {"Count": "0", "WebEnv": "we", "QueryKey": "qk"},
+        )
+
+        search_ncbi(11089, 7000, 12000, min_date="2020-01-01", max_date="2026-06-06")
+
+        assert "2020/01/01:2026/06/06[PDAT]" in captured["term"]

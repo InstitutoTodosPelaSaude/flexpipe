@@ -29,6 +29,7 @@ import argparse
 import logging
 import subprocess
 import sys
+from datetime import date
 from pathlib import Path
 
 import filelock
@@ -44,6 +45,17 @@ logger = logging.getLogger(__name__)
 _REPO_ROOT = Path(__file__).parent.parent
 _INGEST_SNAKEFILE = _REPO_ROOT / "ingest" / "Snakefile"
 _PHYLO_SNAKEFILE = _REPO_ROOT / "phylogenetic" / "Snakefile"
+
+
+def validate_run_date(value: str) -> str:
+    """Validate and normalize a ``YYYY-MM-DD`` run date."""
+    try:
+        parsed = date.fromisoformat(value)
+    except ValueError as exc:
+        raise SystemExit(f"--run-date must be a valid YYYY-MM-DD date, got: {value}") from exc
+    if parsed.isoformat() != value:
+        raise SystemExit(f"--run-date must be in YYYY-MM-DD format, got: {value}")
+    return value
 
 
 def _record_row_counts(manifest: Manifest, paths: WorkdirPaths) -> None:
@@ -62,9 +74,12 @@ def _record_row_counts(manifest: Manifest, paths: WorkdirPaths) -> None:
                 pass
 
 
-def _seed_coordinate_cache(build_dir: Path, paths: WorkdirPaths) -> None:
-    """Copy the read-only seed cache from the build directory to the workdir on first run."""
-    seed = build_dir / "cache_coordinates.tsv"
+def _seed_coordinate_cache(seed_cache: str | Path, paths: WorkdirPaths) -> None:
+    """Copy the configured read-only seed cache to the workdir on first run."""
+    if not seed_cache or str(seed_cache).strip() == "":
+        logger.debug("No coordinate seed cache configured; starting with an empty workdir cache")
+        return
+    seed = Path(seed_cache)
     target = paths.cache_coordinates
     if not target.exists() and seed.exists():
         import shutil
@@ -138,6 +153,12 @@ def run_pipeline(
     Returns:
         Exit code (0 = success).
     """
+    try:
+        run_date = validate_run_date(run_date)
+    except SystemExit as exc:
+        logger.error("Configuration error: %s", exc)
+        return 2
+
     build_dir = config_path.parent
     build_name = build_dir.name
 
@@ -198,7 +219,7 @@ def _run_pipeline_locked(
     )
 
     # Seed coordinate cache (read-only source → writable workdir)
-    _seed_coordinate_cache(build_dir, paths)
+    _seed_coordinate_cache(cfg.files.cache, paths)
 
     # Set up per-build log files
     configure_logging(
@@ -207,6 +228,7 @@ def _run_pipeline_locked(
     )
 
     manifest = Manifest(run_date=run_date, build_name=build_name, config_path=config_path)
+    manifest.record_provenance(cfg, snakemake_overrides)
 
     min_sequences = cfg.qc.min_sequences
 
@@ -221,6 +243,7 @@ def _run_pipeline_locked(
         if rc != 0:
             logger.error("Ingest stage failed (exit code %d)", rc)
             manifest.record("status", "ingest_failed")
+            manifest.record_provenance(cfg, snakemake_overrides, paths.subsample_config_resolved)
             manifest.save(paths.manifest)
             return rc
         _record_row_counts(manifest, paths)
@@ -233,6 +256,7 @@ def _run_pipeline_locked(
         except SystemExit as exc:
             logger.error("Boundary check failed: %s", exc)
             manifest.record("status", "boundary_failed")
+            manifest.record_provenance(cfg, snakemake_overrides, paths.subsample_config_resolved)
             manifest.save(paths.manifest)
             return 1
         logger.info("=== Stage: phylogenetic ===")
@@ -251,6 +275,7 @@ def _run_pipeline_locked(
 
     manifest.record("stage", stage)
     manifest.record("cores", cores)
+    manifest.record_provenance(cfg, snakemake_overrides, paths.subsample_config_resolved)
     manifest.save(paths.manifest)
     logger.info("Pipeline finished (exit code %d)", rc)
     return rc
@@ -307,8 +332,6 @@ def main() -> None:
 
     # Resolve run_date: must be explicit for reproducibility; warn if defaulting to today
     if args.run_date is None:
-        from datetime import date
-
         run_date = date.today().isoformat()
         logger.warning(
             "--run-date not provided; defaulting to today (%s). "
@@ -316,7 +339,7 @@ def main() -> None:
             run_date,
         )
     else:
-        run_date = args.run_date
+        run_date = validate_run_date(args.run_date)
 
     rc = run_pipeline(
         config_path=args.config.resolve(),

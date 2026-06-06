@@ -1,13 +1,50 @@
 from types import SimpleNamespace
+from pathlib import Path
+
+_config = config.get("build_config")
+if not _config and workflow.configfiles:
+    _config = str(workflow.configfiles[0])
+
+_repo_root = Path(workflow.basedir).resolve().parent
+_build_dir = Path(_config).resolve().parent if _config else _repo_root
+
+
+def _resolve_path(value):
+    if value is None or str(value).strip() == "":
+        return value
+    p = Path(str(value)).expanduser()
+    if p.is_absolute():
+        return str(p)
+    build_candidate = (_build_dir / p).resolve()
+    repo_candidate = (_repo_root / p).resolve()
+    if build_candidate.exists():
+        return str(build_candidate)
+    if repo_candidate.exists():
+        return str(repo_candidate)
+    return str(build_candidate)
+
+
+def _resolve_section_paths(section, keys):
+    section = dict(section or {})
+    for key in keys:
+        if key in section:
+            section[key] = _resolve_path(section[key])
+    return section
 
 # Per-run output directory (from flexpipe-run --config workdir=<path>)
 _wd = config.get("workdir", ".")
 
-files      = SimpleNamespace(**config["files"])
-parameters = SimpleNamespace(**config["parameters"])
+files      = SimpleNamespace(
+    **_resolve_section_paths(
+        config["files"],
+        ["keep", "ignore", "cache", "reference", "clades", "auspice_config", "subsample_config"],
+    )
+)
+parameters = SimpleNamespace(**_resolve_section_paths(config["parameters"], ["mask_sites_file"]))
 options    = SimpleNamespace(**config["options"])
 _traits    = config.get("traits", {})
 _sub       = config.get("subsampling", {})
+_trait_columns = _traits.get("columns", "country division location clade").split()
 
 # Ingest outputs — produced by ingest/Snakefile; treated as static inputs here.
 # Run ingest first: flexpipe-run --config builds/yfv-brazil/config.yaml --workdir <dir> --stage ingest
@@ -28,28 +65,29 @@ rule align:
     input:
         sequences = SUBSAMPLED_SEQUENCES,
         reference = files.reference
-    params:
-        threads = options.threads
+    threads:
+        options.threads
     output:
         alignment = f"{_wd}/results/alignments/aligned.fasta"
     shell:
         """
-        mkdir -p $(dirname {output.alignment})
-        n=$(grep -c '^>' {input.sequences})
+        mkdir -p $(dirname {output.alignment:q})
+        n=$(grep -c '^>' {input.sequences:q})
         echo ""
         echo "=== MAFFT: aligning $n sequences — this may take 5-20+ minutes ==="
         echo ""
 
         augur align \
-            --sequences          {input.sequences} \
-            --reference-sequence {input.reference} \
-            --nthreads           {params.threads} \
-            --output             {output.alignment} \
+            --sequences          {input.sequences:q} \
+            --reference-sequence {input.reference:q} \
+            --nthreads           {threads} \
+            --output             {output.alignment:q} \
             --remove-reference
         """
 
 
-_mask_sites_file = config["parameters"].get("mask_sites_file", "")
+_mask_sites_file = parameters.mask_sites_file
+_mask_sites = str(config["parameters"].get("mask_sites", "")).strip()
 
 rule mask:
     message:
@@ -62,20 +100,19 @@ rule mask:
     params:
         mask_from_beginning = parameters.mask_5prime,
         mask_from_end       = parameters.mask_3prime,
-        mask_sites          = parameters.mask_sites,
-        # Build the --mask flag string once; avoids shell-conditional awkwardness.
-        mask_bed_flag = f"--mask {_mask_sites_file}" if _mask_sites_file else ""
+        mask_sites_args     = ["--mask-sites", _mask_sites] if _mask_sites else [],
+        mask_bed_args       = ["--mask", parameters.mask_sites_file] if parameters.mask_sites_file else []
     output:
         alignment = f"{_wd}/results/alignments/masked.fasta"
     shell:
         """
         augur mask \
-            --sequences           {input.alignment} \
+            --sequences           {input.alignment:q} \
             --mask-from-beginning {params.mask_from_beginning} \
             --mask-from-end       {params.mask_from_end} \
-            --mask-sites          {params.mask_sites} \
-            {params.mask_bed_flag} \
-            --output              {output.alignment}
+            {params.mask_bed_args:q} \
+            {params.mask_sites_args:q} \
+            --output              {output.alignment:q}
         """
 
 
@@ -84,8 +121,9 @@ rule tree:
         "Building tree with UFBoot (model={params.model}, bootstrap={params.bootstrap})"
     input:
         alignment = rules.mask.output.alignment
+    threads:
+        options.threads
     params:
-        threads   = options.threads,
         model     = parameters.model,
         bootstrap = parameters.ufboot,
         prefix    = f"{_wd}/results/trees/iqtree"
@@ -93,17 +131,17 @@ rule tree:
         tree = f"{_wd}/results/trees/tree.nwk"
     shell:
         """
-        mkdir -p $(dirname {output.tree})
+        mkdir -p $(dirname {output.tree:q})
         iqtree3 \
-            -s     {input.alignment} \
-            -m     {params.model} \
+            -s     {input.alignment:q} \
+            -m     {params.model:q} \
             -B     {params.bootstrap} \
-            -T     AUTO \
-            --threads-max {params.threads} \
+            -T     {threads} \
+            --threads-max {threads} \
             --redo \
-            --prefix {params.prefix}
+            --prefix {params.prefix:q}
 
-        mv {params.prefix}.treefile {output.tree}
+        mv {params.prefix:q}.treefile {output.tree:q}
         """
 
 
@@ -114,6 +152,8 @@ rule refine:
         tree      = rules.tree.output.tree,
         alignment = rules.mask.output.alignment,
         metadata  = SUBSAMPLED_METADATA
+    threads:
+        options.threads
     params:
         root           = parameters.root,
         coalescent     = parameters.coalescent,
@@ -126,18 +166,18 @@ rule refine:
     shell:
         """
         augur refine \
-            --tree             {input.tree} \
-            --alignment        {input.alignment} \
-            --metadata         {input.metadata} \
-            --output-tree      {output.tree} \
-            --output-node-data {output.node_data} \
-            --root             {params.root} \
+            --tree             {input.tree:q} \
+            --alignment        {input.alignment:q} \
+            --metadata         {input.metadata:q} \
+            --output-tree      {output.tree:q} \
+            --output-node-data {output.node_data:q} \
+            --root             {params.root:q} \
             --timetree \
-            --coalescent       {params.coalescent} \
+            --coalescent       {params.coalescent:q} \
             --date-confidence \
             --clock-filter-iqd {params.clock_filter} \
-            --divergence-units {params.unit} \
-            --date-inference   {params.date_inference}
+            --divergence-units {params.unit:q} \
+            --date-inference   {params.date_inference:q}
         """
 
 
@@ -147,6 +187,8 @@ rule ancestral:
     input:
         tree      = rules.refine.output.tree,
         alignment = rules.mask.output.alignment
+    threads:
+        1
     params:
         inference = parameters.ancestral_inference
     output:
@@ -154,10 +196,10 @@ rule ancestral:
     shell:
         """
         augur ancestral \
-            --tree             {input.tree} \
-            --alignment        {input.alignment} \
-            --inference        {params.inference} \
-            --output-node-data {output.node_data}
+            --tree             {input.tree:q} \
+            --alignment        {input.alignment:q} \
+            --inference        {params.inference:q} \
+            --output-node-data {output.node_data:q}
         """
 
 
@@ -168,15 +210,17 @@ rule translate:
         tree      = rules.refine.output.tree,
         node_data = rules.ancestral.output.node_data,
         reference = files.reference
+    threads:
+        1
     output:
         node_data = f"{_wd}/results/trees/aa_muts.json"
     shell:
         """
         augur translate \
-            --tree                {input.tree} \
-            --ancestral-sequences {input.node_data} \
-            --reference-sequence  {input.reference} \
-            --output              {output.node_data}
+            --tree                {input.tree:q} \
+            --ancestral-sequences {input.node_data:q} \
+            --reference-sequence  {input.reference:q} \
+            --output              {output.node_data:q}
         """
 
 
@@ -186,17 +230,19 @@ rule traits:
     input:
         tree     = rules.refine.output.tree,
         metadata = SUBSAMPLED_METADATA
+    threads:
+        1
     params:
-        columns = _traits.get("columns", "country division location clade")
+        columns = _trait_columns
     output:
         node_data = f"{_wd}/results/trees/traits.json"
     shell:
         """
         augur traits \
-            --tree       {input.tree} \
-            --metadata   {input.metadata} \
-            --output     {output.node_data} \
-            --columns    {params.columns} \
+            --tree       {input.tree:q} \
+            --metadata   {input.metadata:q} \
+            --output     {output.node_data:q} \
+            --columns    {params.columns:q} \
             --confidence
         """
 
@@ -214,11 +260,11 @@ rule clades:
     shell:
         """
         augur clades \
-            --tree             {input.tree} \
-            --mutations        {input.nuc_muts} {input.aa_muts} \
-            --clades           {input.clades} \
+            --tree             {input.tree:q} \
+            --mutations        {input.nuc_muts:q} {input.aa_muts:q} \
+            --clades           {input.clades:q} \
             --membership-name  None \
-            --output           {output.clade_data}
+            --output           {output.clade_data:q}
         """
 
 
@@ -240,17 +286,17 @@ rule export:
         auspice = f"{_wd}/auspice/results.json"
     shell:
         """
-        mkdir -p $(dirname {output.auspice})
+        mkdir -p $(dirname {output.auspice:q})
         augur export v2 \
-            --tree           {input.tree} \
-            --metadata       {input.metadata} \
-            --node-data      {input.branch_lengths} {input.traits} \
-                             {input.nt_muts} {input.aa_muts} {input.clades} \
-            --colors         {input.colors} \
-            --lat-longs      {input.lat_longs} \
-            --auspice-config {input.auspice_config} \
+            --tree           {input.tree:q} \
+            --metadata       {input.metadata:q} \
+            --node-data      {input.branch_lengths:q} {input.traits:q} \
+                             {input.nt_muts:q} {input.aa_muts:q} {input.clades:q} \
+            --colors         {input.colors:q} \
+            --lat-longs      {input.lat_longs:q} \
+            --auspice-config {input.auspice_config:q} \
             --metadata-columns 'Originating Lab' 'Submitting Lab' \
-            --output         {output.auspice}
+            --output         {output.auspice:q}
         """
 
 
@@ -259,14 +305,22 @@ rule export:
 rule clean:
     message: "Remove phylogenetic outputs (keeps ingest/subsampled outputs)"
     params:
-        wd = _wd
+        targets = [
+            f"{_wd}/results/alignments",
+            f"{_wd}/results/trees",
+            f"{_wd}/auspice",
+        ]
     shell:
-        "rm -rfv {params.wd}/results/alignments {params.wd}/results/trees {params.wd}/auspice"
+        "rm -rfv {params.targets:q}"
 
 
 rule reset:
     message: "Full phylogenetic reset — removes all workdir outputs"
     params:
-        wd = _wd
+        targets = [
+            f"{_wd}/results",
+            f"{_wd}/auspice",
+            f"{_wd}/config",
+        ]
     shell:
-        "rm -rfv {params.wd}/results {params.wd}/auspice {params.wd}/config"
+        "rm -rfv {params.targets:q}"

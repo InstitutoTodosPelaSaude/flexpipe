@@ -35,11 +35,13 @@ def build_url(base_url: str, organism: str, endpoint: str) -> str:
     return f"{base_url.rstrip('/')}/{organism}/sample/{endpoint}"
 
 
-def base_params(min_date, min_completeness) -> dict:
+def base_params(min_date, min_completeness, max_date=None) -> dict:
     """Build the common LAPIS query parameters."""
     p = {"versionStatus": "LATEST_VERSION"}
     if min_date:
         p["sampleCollectionDateRangeLowerFrom"] = min_date
+    if max_date:
+        p["sampleCollectionDateRangeUpperTo"] = max_date
     if min_completeness is not None:
         p["completenessFrom"] = min_completeness
     return p
@@ -84,6 +86,7 @@ def fetch_metadata(
     url: str,
     auth_token=None,
     min_date=None,
+    max_date=None,
     min_completeness=None,
     chunk_size: int = 10000,
 ):
@@ -93,6 +96,7 @@ def fetch_metadata(
         url: LAPIS ``/sample/details`` URL.
         auth_token: Optional Bearer token for restricted data.
         min_date: Minimum collection date filter (ISO ``YYYY-MM-DD``).
+        max_date: Maximum collection date filter (ISO ``YYYY-MM-DD``).
         min_completeness: Minimum genome completeness fraction.
         chunk_size: Records per paginated request.
 
@@ -104,7 +108,7 @@ def fetch_metadata(
     if auth_token:
         headers["Authorization"] = f"Bearer {auth_token}"
 
-    params = base_params(min_date, min_completeness)
+    params = base_params(min_date, min_completeness, max_date=max_date)
     params.update(
         {
             "downloadAsFile": "false",
@@ -150,6 +154,7 @@ def fetch_sequences(
     url: str,
     auth_token=None,
     min_date=None,
+    max_date=None,
     min_completeness=None,
     chunk_size: int = 10000,
 ) -> list:
@@ -159,6 +164,7 @@ def fetch_sequences(
         url: LAPIS ``/sample/unalignedNucleotideSequences`` URL.
         auth_token: Optional Bearer token.
         min_date: Minimum collection date filter.
+        max_date: Maximum collection date filter.
         min_completeness: Minimum genome completeness fraction.
         chunk_size: Records per paginated request.
 
@@ -169,7 +175,7 @@ def fetch_sequences(
     if auth_token:
         headers["Authorization"] = f"Bearer {auth_token}"
 
-    params = base_params(min_date, min_completeness)
+    params = base_params(min_date, min_completeness, max_date=max_date)
     params.update({"limit": chunk_size, "offset": 0})
 
     all_fasta = []
@@ -203,6 +209,7 @@ def main() -> None:
     parser.add_argument("--config", required=True)
     parser.add_argument("--metadata-output", required=True)
     parser.add_argument("--sequences-output", required=True)
+    parser.add_argument("--run-date", required=False, default="", help="Upper collection date")
     args = parser.parse_args()
 
     from flexpipe.logging_setup import configure_logging
@@ -237,10 +244,19 @@ def main() -> None:
     os.makedirs(os.path.dirname(args.sequences_output), exist_ok=True)
 
     logger.info("Filters: min_date=%s, min_completeness=%s", min_date, min_completeness)
+    max_date = args.run_date or None
+    if max_date:
+        logger.info("Upper collection-date bound: %s", max_date)
 
     # Metadata
     logger.info("Downloading metadata from: %s", meta_url)
-    header, rows = fetch_metadata(meta_url, auth_token, min_date, min_completeness)
+    header, rows = fetch_metadata(
+        meta_url,
+        auth_token,
+        min_date,
+        max_date=max_date,
+        min_completeness=min_completeness,
+    )
 
     if header is None:
         logger.error("No metadata returned from Pathoplexus.")
@@ -255,7 +271,13 @@ def main() -> None:
 
     # Sequences
     logger.info("Downloading sequences from: %s", seq_url)
-    fasta_entries = fetch_sequences(seq_url, auth_token, min_date, min_completeness)
+    fasta_entries = fetch_sequences(
+        seq_url,
+        auth_token,
+        min_date,
+        max_date=max_date,
+        min_completeness=min_completeness,
+    )
 
     with open(args.sequences_output, "w") as fh:
         for entry in fasta_entries:

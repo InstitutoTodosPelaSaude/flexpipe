@@ -18,15 +18,173 @@ Usage::
 
 from __future__ import annotations
 
+import copy
 import logging
 import os
+import re
 from pathlib import Path
 from typing import Literal
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 logger = logging.getLogger(__name__)
+
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+_COLUMN_LIST_RE = re.compile(r"^[A-Za-z0-9_ .-]+$")
+
+
+def _validate_column_list(value: str, label: str) -> str:
+    """Validate a space-separated column list used in shell-rendered commands."""
+    if not value or not str(value).strip():
+        raise ValueError(f"{label} must be a non-empty column list")
+    if not _COLUMN_LIST_RE.match(str(value)):
+        raise ValueError(
+            f"{label} contains unsupported characters. "
+            "Only letters, numbers, spaces, underscores, dots, and hyphens are allowed."
+        )
+    return value
+
+
+def _is_empty_path(value) -> bool:
+    return value is None or str(value).strip() == ""
+
+
+def _resolve_path_value(
+    value,
+    *,
+    build_dir: Path,
+    repo_root: Path = _REPO_ROOT,
+    must_exist: bool = False,
+    label: str = "path",
+):
+    """Resolve a config path relative to the build dir, with repo-root compatibility fallback."""
+    if _is_empty_path(value):
+        return value
+    p = Path(str(value)).expanduser()
+    if p.is_absolute():
+        resolved = p.resolve(strict=False)
+    else:
+        build_candidate = (build_dir / p).resolve(strict=False)
+        repo_candidate = (repo_root / p).resolve(strict=False)
+        if build_candidate.exists():
+            resolved = build_candidate
+        elif repo_candidate.exists():
+            # Backwards compatibility for current configs that spell paths as
+            # builds/<name>/file rather than file relative to config.yaml.
+            resolved = repo_candidate
+        else:
+            resolved = build_candidate
+    if must_exist and not resolved.exists():
+        raise ValueError(f"{label} path not found: {resolved}")
+    return str(resolved)
+
+
+def _resolve_section_paths(
+    raw: dict,
+    section: str,
+    keys: list[str],
+    *,
+    build_dir: Path,
+    must_exist: bool = False,
+) -> None:
+    data = raw.get(section)
+    if not isinstance(data, dict):
+        return
+    for key in keys:
+        if key in data and not _is_empty_path(data[key]):
+            data[key] = _resolve_path_value(
+                data[key],
+                build_dir=build_dir,
+                must_exist=must_exist,
+                label=f"{section}.{key}",
+            )
+
+
+def resolve_config_paths(raw: dict, config_path: str | Path) -> dict:
+    """Return a deep copy of raw config with path-like values made absolute.
+
+    Relative paths are resolved relative to the build config directory.  For
+    compatibility with existing build configs that use repo-root-relative paths
+    such as ``builds/yfv-brazil/reference.gb``, an existing repo-root candidate
+    is preferred when the build-dir candidate does not exist.
+    """
+    out = copy.deepcopy(raw)
+    build_dir = Path(config_path).resolve().parent
+
+    _resolve_section_paths(
+        out,
+        "files",
+        ["keep", "ignore", "reference", "clades", "auspice_config", "subsample_config"],
+        build_dir=build_dir,
+        must_exist=True,
+    )
+    _resolve_section_paths(out, "files", ["cache"], build_dir=build_dir)
+    _resolve_section_paths(out, "local_sequences", ["metadata", "sequences"], build_dir=build_dir)
+    _resolve_section_paths(
+        out, "parameters", ["mask_sites_file"], build_dir=build_dir, must_exist=True
+    )
+    _resolve_section_paths(out, "coordinates", ["force_file"], build_dir=build_dir, must_exist=True)
+    _resolve_section_paths(
+        out,
+        "regions",
+        ["country_map", "division_map", "division_abbreviations"],
+        build_dir=build_dir,
+        must_exist=True,
+    )
+    _resolve_section_paths(out, "curation", ["host_rules"], build_dir=build_dir, must_exist=True)
+
+    hue_tables = out.get("colours", {}).get("hue_tables")
+    if isinstance(hue_tables, dict):
+        for key in ["region", "host", "source", "data_use"]:
+            if key in hue_tables and not _is_empty_path(hue_tables[key]):
+                hue_tables[key] = _resolve_path_value(
+                    hue_tables[key],
+                    build_dir=build_dir,
+                    must_exist=True,
+                    label=f"colours.hue_tables.{key}",
+                )
+
+    local = out.get("local_sequences", {})
+    if isinstance(local, dict) and local.get("enabled"):
+        for key in ["metadata", "sequences"]:
+            path = local.get(key, "")
+            if _is_empty_path(path) or not Path(path).exists():
+                raise ValueError(
+                    f"local_sequences.enabled=true but local_sequences.{key} was not found: {path}"
+                )
+
+    return out
+
+
+def _resolve_subsample_path_value(value, *, base_dir: Path, repo_root: Path = _REPO_ROOT):
+    if isinstance(value, list):
+        return [
+            _resolve_subsample_path_value(item, base_dir=base_dir, repo_root=repo_root)
+            for item in value
+        ]
+    if _is_empty_path(value):
+        return value
+    return _resolve_path_value(value, build_dir=base_dir, repo_root=repo_root)
+
+
+def resolve_subsample_paths(raw: dict, subsample_config_path: str | Path) -> dict:
+    """Resolve include/exclude paths inside an augur subsample config."""
+    out = copy.deepcopy(raw)
+    base_dir = Path(subsample_config_path).resolve().parent
+    defaults = out.get("defaults")
+    if isinstance(defaults, dict) and "exclude" in defaults:
+        defaults["exclude"] = _resolve_subsample_path_value(defaults["exclude"], base_dir=base_dir)
+
+    samples = out.get("samples")
+    if isinstance(samples, dict):
+        for sample in samples.values():
+            if not isinstance(sample, dict):
+                continue
+            for key in ["include", "exclude"]:
+                if key in sample:
+                    sample[key] = _resolve_subsample_path_value(sample[key], base_dir=base_dir)
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -47,31 +205,36 @@ class FilesConfig(BaseModel):
 
 class ParametersConfig(BaseModel):
     model_config = ConfigDict(extra="allow")  # allow augur-specific extensions
-    mask_5prime: int = 0
-    mask_3prime: int = 0
+    mask_5prime: int = Field(default=0, ge=0)
+    mask_3prime: int = Field(default=0, ge=0)
     mask_sites: str = ""
     mask_sites_file: str = (
         ""  # optional BED file of problematic sites; positional values are per-reference
     )
-    ufboot: int = 1000
-    model: str = "MFP"
-    root: str = "least-squares"
-    coalescent: str = "skyline"
-    date_inference: str = "marginal"
-    divergence_units: str = "mutations"
-    clock_filter_iqd: int = 4
-    ancestral_inference: str = "joint"
+    ufboot: int = Field(default=1000, ge=0)
+    model: str = Field(default="MFP", min_length=1)
+    root: Literal["least-squares", "min_dev", "oldest", "best"] = "least-squares"
+    coalescent: Literal["skyline", "opt", "const", "fixed"] = "skyline"
+    date_inference: Literal["marginal", "joint"] = "marginal"
+    divergence_units: Literal["mutations", "mutations-per-site"] = "mutations"
+    clock_filter_iqd: int = Field(default=4, ge=0)
+    ancestral_inference: Literal["joint", "marginal"] = "joint"
 
 
 class OptionsConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    threads: int = 4
+    threads: int = Field(default=4, ge=1)
 
 
 class CoordinatesConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
     columns: str = "country"
     force_file: str | None = None
+
+    @field_validator("columns")
+    @classmethod
+    def validate_columns(cls, value: str) -> str:
+        return _validate_column_list(value, "coordinates.columns")
 
 
 class ColoursHueTablesConfig(BaseModel):
@@ -92,10 +255,20 @@ class ColoursConfig(BaseModel):
     data_use: str = "data_use"
     hue_tables: ColoursHueTablesConfig = Field(default_factory=ColoursHueTablesConfig)
 
+    @field_validator("clade", "geo", "source", "data_use")
+    @classmethod
+    def validate_colour_levels(cls, value: str) -> str:
+        return _validate_column_list(value, "colours")
+
 
 class TraitsConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
     columns: str = "division location clade"
+
+    @field_validator("columns")
+    @classmethod
+    def validate_columns(cls, value: str) -> str:
+        return _validate_column_list(value, "traits.columns")
 
 
 class SubsamplingConfig(BaseModel):
@@ -150,14 +323,18 @@ class ViralqcConfig(BaseModel):
     blast_database_metadata: str = ""
     expected_virus: str | None = None
     expected_segment: str = ""  # single expected segment (e.g. "L", "S"); flags wrong-segment reads
+    runner: Literal["conda", "mamba", "micromamba", "direct"] = "conda"
+    executable: str = "vqc"
 
 
 class QcConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
     genome_quality: list[str] = ["A", "B"]
-    min_coverage: float = 0.70
+    min_coverage: float = Field(default=0.70, ge=0.0, le=1.0)
     required_columns: list[str] = Field(default_factory=lambda: ["strain", "date", "clade"])
-    min_sequences: int = 10  # minimum subsampled sequences required before phylogenetics
+    min_sequences: int = Field(
+        default=10, ge=0
+    )  # minimum subsampled sequences required before phylogenetics
 
 
 class LocalSequencesConfig(BaseModel):
@@ -220,6 +397,11 @@ class FlexpipeConfig(BaseModel):
             raise ValueError(
                 "ncbi.taxid is required when data_source='ncbi'.\n"
                 "Example: taxid: 11089  # Yellow fever virus"
+            )
+        if self.data_source == "ncbi" and not (self.ncbi.email or os.environ.get("NCBI_EMAIL")):
+            raise ValueError(
+                "ncbi.email or NCBI_EMAIL is required when data_source='ncbi'.\n"
+                "NCBI Entrez requires a real contact email for automated clients."
             )
         return self
 
@@ -336,7 +518,11 @@ def resolve_viralqc_paths(viralqc_cfg: ViralqcConfig) -> ViralqcConfig:
     return ViralqcConfig(**data)
 
 
-def resolve_subsample_config(raw: dict, run_date: str | None) -> dict:
+def resolve_subsample_config(
+    raw: dict,
+    run_date: str | None,
+    subsample_config_path: str | Path | None = None,
+) -> dict:
     """Return a copy of the subsample config dict with ``defaults.max_date`` injected.
 
     When *run_date* is provided, it is written into the ``defaults`` section of the
@@ -355,14 +541,26 @@ def resolve_subsample_config(raw: dict, run_date: str | None) -> dict:
     Returns:
         A shallow copy of *raw* with the ``defaults`` section updated.
     """
-    import copy
-
+    out = (
+        resolve_subsample_paths(raw, subsample_config_path)
+        if subsample_config_path is not None
+        else copy.deepcopy(raw)
+    )
     if not run_date:
-        return raw
-    out = copy.deepcopy(raw)
+        return out
     out.setdefault("defaults", {})["max_date"] = run_date
     logger.debug("resolve_subsample_config: set defaults.max_date=%s", run_date)
     return out
+
+
+def _deep_update(base: dict, override: dict) -> dict:
+    """Recursively merge *override* into *base* and return *base*."""
+    for key, value in override.items():
+        if isinstance(value, dict) and isinstance(base.get(key), dict):
+            _deep_update(base[key], value)
+        else:
+            base[key] = value
+    return base
 
 
 def write_snakemake_config_overrides(
@@ -384,8 +582,14 @@ def write_snakemake_config_overrides(
     Returns:
         The path written.
     """
-    raw = _load_yaml(config_path)
+    # Start from pydantic defaults so omitted sections are still present, then
+    # overlay the real build YAML so build-specific file paths/parameters win.
+    # Runtime-resolved sections are written last.
+    raw = cfg.model_dump()
+    build_raw = resolve_config_paths(_load_yaml(config_path), config_path)
+    _deep_update(raw, build_raw)
     raw["viralqc"] = cfg.viralqc.model_dump()
+    raw["paths"] = cfg.paths.model_dump()
     out = Path(path)
     out.parent.mkdir(parents=True, exist_ok=True)
     with open(out, "w", encoding="utf-8") as f:
@@ -426,12 +630,18 @@ def load_config(
     Returns:
         Validated ``FlexpipeConfig`` instance.
     """
+    config_path = Path(config_path).resolve()
     raw = _load_yaml(config_path)
     logger.info("Loaded config from %s", config_path)
 
     # Inject workdir override before validation
     if workdir is not None:
         raw.setdefault("paths", {})["workdir"] = str(workdir)
+
+    try:
+        raw = resolve_config_paths(raw, config_path)
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
 
     cfg = FlexpipeConfig(**raw)
 

@@ -24,6 +24,7 @@ from flexpipe.curate.columns import apply_harmonization, drop_columns
 from flexpipe.curate.hosts import build_rules, normalize_host
 from flexpipe.curate.regions import (
     _parse_brazil_division,
+    build_brazil_canonical_map,
     build_brazil_maps,
     build_region_map,
     lookup_brazil_region,
@@ -78,6 +79,7 @@ def run_curate(
         division_map_override=cfg.regions.division_map,
         abbrev_override=cfg.regions.division_abbreviations,
     )
+    brazil_canonical = build_brazil_canonical_map(brazil_region_map)
     host_rules = build_rules(override=cfg.curation.host_rules)
 
     os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
@@ -102,7 +104,13 @@ def run_curate(
 
     # ── normalise compound division strings (conditional on division_parser) ──
     if region_source == "division" and "division" in df.columns and division_parser == "brazil":
-        parsed = df["division"].apply(lambda d: _parse_brazil_division(d, abbrev=brazil_abbrev))
+        parsed = df["division"].apply(
+            lambda d: _parse_brazil_division(
+                d,
+                abbrev=brazil_abbrev,
+                canonical=brazil_canonical,
+            )
+        )
         df["division"] = parsed.apply(lambda x: x[0])
         # Enrich location from the city part of compound division strings
         if "location" in df.columns:

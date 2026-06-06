@@ -3,6 +3,7 @@
 from flexpipe.curate.regions import (
     _lookup_brazil_region,
     _parse_brazil_division,
+    build_brazil_canonical_map,
     lookup_region_country,
 )
 
@@ -82,6 +83,17 @@ class TestParseBrazilDivision:
         for abbr, expected_state in _BRAZIL_ABBREV.items():
             s, _ = _parse_brazil_division(abbr)
             assert s == expected_state, f"Abbreviation {abbr!r} did not map to {expected_state!r}"
+
+    def test_custom_canonical_map_used_for_override_states(self):
+        region_map = {"Estado Teste": "Norte"}
+        canonical = build_brazil_canonical_map(region_map)
+        state, city = _parse_brazil_division(
+            "Cidade Teste, Estado Teste",
+            abbrev={},
+            canonical=canonical,
+        )
+        assert state == "Estado Teste"
+        assert city == "Cidade Teste"
 
 
 class TestLookupBrazilRegion:

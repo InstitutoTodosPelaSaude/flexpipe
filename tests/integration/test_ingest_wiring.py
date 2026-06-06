@@ -60,12 +60,30 @@ def resolved_config(tmp_path):
     return write_snakemake_config_overrides(cfg, p, BUILD_CONFIG)
 
 
-def _dry_run(tmp_path, resolved_config, build_config=None):
+@pytest.fixture()
+def direct_viralqc_resolved_config(tmp_path):
+    cfg = FlexpipeConfig(
+        data_source="pathoplexus",
+        pathoplexus={"organism": "yellow-fever"},
+        viralqc=ViralqcConfig(
+            datasets_dir=FAKE_DATASETS_DIR,
+            blast_database=FAKE_BLAST_DB,
+            blast_database_metadata=FAKE_BLAST_META,
+            runner="direct",
+            executable="/opt/viral qc/vqc",
+        ),
+    )
+    p = tmp_path / "snakemake_resolved_direct.yaml"
+    return write_snakemake_config_overrides(cfg, p, BUILD_CONFIG)
+
+
+def _dry_run(tmp_path, resolved_config, build_config=None, cwd=None):
     """Run ``snakemake -n -p`` on the ingest Snakefile and return captured output.
 
     Args:
         build_config: Path to the build config.yaml passed as ``build_config``
             Snakemake config key.  Defaults to the YFV-Brazil config.
+        cwd: Process working directory for Snakemake.  Defaults to the repo root.
 
     Returns:
         (combined_output, return_code)
@@ -78,6 +96,8 @@ def _dry_run(tmp_path, resolved_config, build_config=None):
 
     if build_config is None:
         build_config = BUILD_CONFIG
+    if cwd is None:
+        cwd = REPO_ROOT
 
     workdir = tmp_path / "workdir"
     cmd = [
@@ -100,7 +120,7 @@ def _dry_run(tmp_path, resolved_config, build_config=None):
         cmd,
         capture_output=True,
         text=True,
-        cwd=REPO_ROOT,
+        cwd=cwd,
     )
     combined = result.stdout + "\n" + result.stderr
     return combined, result.returncode
@@ -184,6 +204,20 @@ class TestIngestWiring:
                 f"Line: {line!r}"
             )
 
+    def test_viralqc_threads_are_capped_by_snakemake_cores(self, tmp_path, resolved_config):
+        """The viralqc command must use Snakemake's capped rule threads."""
+        output, rc = _dry_run(tmp_path, resolved_config)
+        assert rc == 0, f"dry-run failed:\n{output}"
+        vqc_lines = [ln for ln in output.splitlines() if "--cores" in ln]
+        assert vqc_lines, "viralqc --cores argument not found in dry-run output"
+        assert any("--cores                   1" in line for line in vqc_lines), output
+        assert "no sequences available for ViralQC" in output
+
+    def test_viralqc_direct_runner_is_rendered(self, tmp_path, direct_viralqc_resolved_config):
+        output, rc = _dry_run(tmp_path, direct_viralqc_resolved_config)
+        assert rc == 0, f"dry-run failed:\n{output}"
+        assert "'/opt/viral qc/vqc' run" in output
+
     def test_dry_run_with_run_date_schedules_resolve_subsample_config(
         self, tmp_path, resolved_config
     ):
@@ -193,6 +227,7 @@ class TestIngestWiring:
         assert "resolve_subsample_config" in output, (
             "resolve_subsample_config rule was not scheduled.\n" f"Output:\n{output}"
         )
+        assert "--run-date 2026-01-01" in output
 
     def test_dry_run_with_run_date_subsample_uses_resolved_config(self, tmp_path, resolved_config):
         """The prepare rule (augur subsample) must consume subsample_resolved.yaml."""
@@ -207,6 +242,14 @@ class TestIngestWiring:
                 f"augur subsample was not given the workdir-resolved subsample config.\n"
                 f"Line: {line!r}"
             )
+
+    def test_dry_run_succeeds_from_outside_repo(self, tmp_path, resolved_config):
+        """Resolved build paths must make ingest independent of the caller's cwd."""
+        outside = tmp_path / "outside"
+        outside.mkdir()
+        output, rc = _dry_run(tmp_path, resolved_config, cwd=outside)
+        assert rc == 0, f"snakemake dry-run from outside repo failed:\n{output}"
+        assert str(BUILD_CONFIG) in output
 
 
 # ---------------------------------------------------------------------------
@@ -223,7 +266,7 @@ def rsv_resolved_config(tmp_path):
     """
     cfg = FlexpipeConfig(
         data_source="ncbi",
-        ncbi={"taxid": 208893, "genome_size": 15200},
+        ncbi={"taxid": 208893, "genome_size": 15200, "email": "ops@example.org"},
         viralqc=ViralqcConfig(
             datasets_dir=FAKE_DATASETS_DIR,
             blast_database=FAKE_BLAST_DB,
@@ -279,3 +322,16 @@ class TestRsvIngestWiring:
                 f"flexpipe-curate received the resolved config instead of the build config.\n"
                 f"Line: {line!r}"
             )
+
+    def test_dry_run_succeeds_from_outside_repo(self, tmp_path, rsv_resolved_config):
+        """The RSV scaffold also plans correctly when invoked from another cwd."""
+        outside = tmp_path / "outside"
+        outside.mkdir()
+        output, rc = _dry_run(
+            tmp_path,
+            rsv_resolved_config,
+            build_config=RSV_BUILD_CONFIG,
+            cwd=outside,
+        )
+        assert rc == 0, f"RSV dry-run from outside repo failed:\n{output}"
+        assert str(RSV_BUILD_CONFIG) in output

@@ -34,6 +34,10 @@ class TestBaseParams:
         p = base_params(None, 0.80)
         assert p["completenessFrom"] == 0.80
 
+    def test_max_date_included(self):
+        p = base_params(None, None, max_date="2026-06-06")
+        assert p["sampleCollectionDateRangeUpperTo"] == "2026-06-06"
+
 
 class TestFetchMetadata:
     _URL = "https://lapis.test/YFV/sample/details"
