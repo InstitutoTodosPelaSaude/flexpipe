@@ -43,29 +43,35 @@ from flexpipe.data import load_data_table
 logger = logging.getLogger(__name__)
 
 
-def _load_hue_table(filename: str) -> dict:
-    """Load a *_hues.tsv bundled data file into a ``{category: hue_int}`` dict."""
-    df = load_data_table("flexpipe.data.colors", filename)
+def load_hue_table(filename: str, override: str | None = None) -> dict:
+    """Load a ``*_hues.tsv`` data file into a ``{category: hue_int}`` dict.
+
+    Args:
+        filename: Bundled file name (e.g. ``"region_hues.tsv"``).
+        override: Optional path to a replacement file.  When provided and the
+            file exists it is used instead of the bundled default.
+    """
+    df = load_data_table("flexpipe.data.colors", filename, override=override)
     return dict(zip(df["category"], df["hue"].astype(int)))
 
 
 # ── geo (region = top-level of geo hierarchy) ────────────────────────────────
-REGION_HUES = _load_hue_table("region_hues.tsv")
+REGION_HUES = load_hue_table("region_hues.tsv")
 
 # ── clade (clade_truncated = top-level of clade hierarchy) ────────────────────
 # All clade_truncated values use deterministic hash-based hues automatically.
 # Same name always → same hue across builds, regardless of how many clades exist.
 # No manual curation needed as new clades emerge.
-CLADE_HUES = {}  # intentionally empty — hash fallback handles everything
+CLADE_HUES: dict = {}  # intentionally empty — hash fallback handles everything
 
 # ── host ──────────────────────────────────────────────────────────────────────
-HOST_HUES = _load_hue_table("host_hues.tsv")
+HOST_HUES = load_hue_table("host_hues.tsv")
 
 # ── source ────────────────────────────────────────────────────────────────────
-SOURCE_HUES = _load_hue_table("source_hues.tsv")
+SOURCE_HUES = load_hue_table("source_hues.tsv")
 
 # ── data_use ──────────────────────────────────────────────────────────────────
-DATA_USE_HUES = _load_hue_table("data_use_hues.tsv")
+DATA_USE_HUES = load_hue_table("data_use_hues.tsv")
 
 # ── valid hue set (multiples of 10, 0-350) ────────────────────────────────────
 VALID_HUES = set(range(0, 360, 10))
@@ -176,6 +182,29 @@ def main() -> None:
     logger.info("Loading metadata: %s", args.metadata)
     df = pd.read_csv(args.metadata, sep="\t", dtype=str).fillna("")
 
+    # Start from bundled defaults; override if config specifies custom hue tables.
+    region_hues = REGION_HUES
+    host_hues = HOST_HUES
+    source_hues = SOURCE_HUES
+    data_use_hues = DATA_USE_HUES
+
+    if args.config:
+        try:
+            from flexpipe.config import load_config
+
+            cfg = load_config(args.config, skip_viralqc=True)
+            ht = cfg.colours.hue_tables
+            if ht.region:
+                region_hues = load_hue_table("region_hues.tsv", override=ht.region)
+            if ht.host:
+                host_hues = load_hue_table("host_hues.tsv", override=ht.host)
+            if ht.source:
+                source_hues = load_hue_table("source_hues.tsv", override=ht.source)
+            if ht.data_use:
+                data_use_hues = load_hue_table("data_use_hues.tsv", override=ht.data_use)
+        except Exception as exc:
+            logger.warning("Could not load hue-table overrides from config: %s", exc)
+
     all_warnings = []
     sections = []  # (comment, {cat: hue})
 
@@ -184,7 +213,7 @@ def main() -> None:
         sections.append((comment, result))
         all_warnings.extend(warns)
 
-    run("# geo (top-level = region)", "region", REGION_HUES, "region")
+    run("# geo (top-level = region)", "region", region_hues, "region")
     run(
         "# clade (top-level = clade_truncated) — unknown = hash-based",
         "clade_truncated",
@@ -192,9 +221,9 @@ def main() -> None:
         "clade_truncated",
         use_hash=True,
     )
-    run("# host", "host", HOST_HUES, "host")
-    run("# source", "source", SOURCE_HUES, "source")
-    run("# data_use", "data_use", DATA_USE_HUES, "data_use")
+    run("# host", "host", host_hues, "host")
+    run("# source", "source", source_hues, "source")
+    run("# data_use", "data_use", data_use_hues, "data_use")
 
     os.makedirs(os.path.dirname(os.path.abspath(args.output)), exist_ok=True)
     total = 0

@@ -45,6 +45,41 @@ def base_params(min_date, min_completeness) -> dict:
     return p
 
 
+_RETRY_BACKOFF = [5, 15, 60]  # seconds to wait after 1st, 2nd, 3rd failure
+
+
+def _get_with_retry(url, *, retries: int = 3, **kwargs):
+    """GET *url* with exponential-ish backoff on transient errors (429, 5xx, timeouts)."""
+    for attempt in range(retries):
+        try:
+            resp = requests.get(url, **kwargs)
+            if resp.status_code == 429 or resp.status_code >= 500:
+                wait = _RETRY_BACKOFF[min(attempt, len(_RETRY_BACKOFF) - 1)]
+                logger.warning(
+                    "HTTP %d from %s (attempt %d/%d) — retrying in %ds",
+                    resp.status_code,
+                    url,
+                    attempt + 1,
+                    retries,
+                    wait,
+                )
+                time.sleep(wait)
+                continue
+            return resp
+        except (requests.Timeout, requests.ConnectionError) as exc:
+            wait = _RETRY_BACKOFF[min(attempt, len(_RETRY_BACKOFF) - 1)]
+            logger.warning(
+                "Request error (attempt %d/%d): %s — retrying in %ds",
+                attempt + 1,
+                retries,
+                exc,
+                wait,
+            )
+            time.sleep(wait)
+    # Last attempt — let the caller handle the error
+    return requests.get(url, **kwargs)
+
+
 def fetch_metadata(
     url: str,
     auth_token=None,
@@ -84,7 +119,7 @@ def fetch_metadata(
 
     while True:
         logger.info("Fetching metadata: offset=%d", params["offset"])
-        resp = requests.get(url, headers=headers, params=params, timeout=120)
+        resp = _get_with_retry(url, headers=headers, params=params, timeout=120)
         resp.raise_for_status()
 
         lines = resp.text.strip().splitlines()
@@ -141,7 +176,7 @@ def fetch_sequences(
 
     while True:
         logger.info("Fetching sequences: offset=%d", params["offset"])
-        resp = requests.get(url, headers=headers, params=params, timeout=300)
+        resp = _get_with_retry(url, headers=headers, params=params, timeout=300)
         resp.raise_for_status()
 
         text = resp.text.strip()
@@ -185,7 +220,7 @@ def main() -> None:
         sys.exit(1)
     meta_ep = ppx.get("metadata_endpoint", "details")
     seq_ep = ppx.get("sequences_endpoint", "unalignedNucleotideSequences")
-    auth_token = ppx.get("auth_token", "") or None
+    auth_token = ppx.get("auth_token", "") or os.environ.get("PPX_AUTH_TOKEN") or None
     min_completeness = ppx.get("min_completeness", None)
 
     # min_date: prefer explicit pathoplexus.min_date, fall back to subsampling.min_year

@@ -1,11 +1,17 @@
-configfile: "builds/yfv-brazil/config.yaml"
-
 from types import SimpleNamespace
 
-# Config file path passed to scripts that need it (e.g. flexpipe-curate).
-# workflow.configfiles is a list of all --configfile arguments; the first
-# element is the build-specific config.
-_config = str(workflow.configfiles[0]) if workflow.configfiles else "builds/yfv-brazil/config.yaml"
+# Path to the build config.yaml, passed to flexpipe-* CLI subprocesses (e.g. flexpipe-curate).
+# flexpipe-run injects the absolute path via --config build_config=<path>.
+# Direct snakemake invocations must supply --configfile <build>/config.yaml explicitly.
+_config = config.get("build_config")
+if not _config:
+    if workflow.configfiles:
+        _config = str(workflow.configfiles[0])
+    else:
+        raise ValueError(
+            "No build config found. Supply --configfile <build>/config.yaml or use "
+            "flexpipe-run --config <build>/config.yaml --workdir <path>."
+        )
 
 # Per-run output directory. Passed by flexpipe-run as --config workdir=<path>.
 # Defaults to "." so a direct snakemake invocation still works from the repo root.
@@ -16,6 +22,19 @@ _vqc     = config.get("viralqc", {})
 _sub     = config.get("subsampling", {})
 _coords  = config.get("coordinates", {})
 _colours = config.get("colours", {})
+_qc      = config.get("qc", {})
+
+# Derive augur-filter exclusion clauses from qc.genome_quality (pass-list → fail-list)
+_pass_grades = set(_qc.get("genome_quality", ["A", "B"]))
+_all_grades  = {"A", "B", "C", "D"}
+_fail_grades = sorted(_all_grades - _pass_grades)
+_quality_filter = " ".join(f'"genome_quality={g}"' for g in _fail_grades) + ' "genome_quality="'
+
+_req_cols        = _qc.get("required_columns", ["strain", "date"])
+_req_col_filter  = " ".join(f'"{col}="' for col in _req_cols)
+
+# Optional force-coordinates file
+_force_file_arg  = f"--force-file {_coords['force_file']}" if _coords.get("force_file") else ""
 
 # "pathoplexus" (default) or "ncbi" — never both simultaneously
 _source = config.get("data_source", "pathoplexus")
@@ -140,8 +159,10 @@ rule curate_qc:
         metadata  = f"{_wd}/results/ingest/final_metadata.tsv",
         sequences = f"{_wd}/results/ingest/final_sequences.fasta"
     params:
-        min_coverage = config.get("qc", {}).get("min_coverage", 0.70),
-        cfg          = _config
+        min_coverage    = _qc.get("min_coverage", 0.70),
+        quality_filter  = _quality_filter,
+        req_col_filter  = _req_col_filter,
+        cfg             = _config
     shell:
         """
         augur curate rename \
@@ -173,7 +194,7 @@ rule curate_qc:
             --sequences       {input.sequences} \
             --query-columns   coverage:float \
             --query           "coverage.isna() or coverage >= {params.min_coverage}" \
-            --exclude-where   "strain=" "date=" "genome_quality=C" "genome_quality=D" "genome_quality=" \
+            --exclude-where   {params.req_col_filter} {params.quality_filter} \
             --output-metadata  {output.metadata} \
             --output-sequences {output.sequences}
         """
@@ -233,7 +254,8 @@ rule coordinates:
         metadata = rules.prepare.output.metadata
     params:
         columns       = _coords.get("columns", "country division location"),
-        workdir_cache = _workdir_cache
+        workdir_cache = _workdir_cache,
+        force_file_arg = _force_file_arg
     output:
         latlongs = f"{_wd}/config/latlongs.tsv"
     shell:
@@ -243,7 +265,8 @@ rule coordinates:
             --metadata {input.metadata} \
             --columns  {params.columns} \
             --cache    {params.workdir_cache} \
-            --output   {output.latlongs}
+            --output   {output.latlongs} \
+            {params.force_file_arg}
 
         flexpipe-update-cache \
             --new-latlongs {output.latlongs} \

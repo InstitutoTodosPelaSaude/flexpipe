@@ -17,15 +17,63 @@ from __future__ import annotations
 import logging
 import re
 import unicodedata
+from pathlib import Path
 
 from flexpipe.data import load_data_table
 
 logger = logging.getLogger(__name__)
 
 
-def _build_region_map() -> dict:
-    df = load_data_table("flexpipe.data.regions", "country_to_continent.tsv")
+# ── Public factory functions (accept optional override paths) ─────────────────
+
+
+def build_region_map(override: str | Path | None = None) -> dict:
+    """Build the country → continent mapping dict.
+
+    Args:
+        override: Optional path to a replacement TSV (columns: country, continent).
+            When ``None`` the bundled ``country_to_continent.tsv`` is used.
+    """
+    df = load_data_table("flexpipe.data.regions", "country_to_continent.tsv", override=override)
     return dict(zip(df["country"], df["continent"]))
+
+
+def build_brazil_maps(
+    division_map_override: str | Path | None = None,
+    abbrev_override: str | Path | None = None,
+) -> tuple[dict, dict, dict]:
+    """Build Brazilian state → region lookup structures.
+
+    Args:
+        division_map_override: Optional path to a replacement state→region TSV.
+        abbrev_override: Optional path to a replacement abbreviation→state TSV.
+
+    Returns:
+        Tuple ``(region_map, norm_map, abbrev_map)`` where:
+
+        - *region_map*: ``{canonical_state: macro_region}``
+        - *norm_map*: ``{ascii_lowercased_state: macro_region}`` (accent-insensitive)
+        - *abbrev_map*: ``{UF_abbreviation: canonical_state}``
+    """
+    region_df = load_data_table(
+        "flexpipe.data.regions", "brazil_state_to_region.tsv", override=division_map_override
+    )
+    region_map = dict(zip(region_df["state"], region_df["region"]))
+
+    abbrev_df = load_data_table(
+        "flexpipe.data.regions", "brazil_abbreviations.tsv", override=abbrev_override
+    )
+    abbrev_map = dict(zip(abbrev_df["abbreviation"], abbrev_df["state"]))
+
+    norm_map = {
+        unicodedata.normalize("NFD", k).encode("ascii", "ignore").decode().lower().strip(): v
+        for k, v in region_map.items()
+    }
+    return region_map, norm_map, abbrev_map
+
+
+def _build_region_map() -> dict:
+    return build_region_map()
 
 
 def _build_brazil_region_map() -> dict:
@@ -66,7 +114,42 @@ def _normalize(s: str) -> str:
     return unicodedata.normalize("NFD", str(s)).encode("ascii", "ignore").decode().lower().strip()
 
 
-def _parse_brazil_division(division_str: str):
+def lookup_region_country(country: str, region_map: dict | None = None) -> str:
+    """Return the continent for a country name.
+
+    Args:
+        country: Country name string.
+        region_map: Optional custom map (e.g. from :func:`build_region_map`).
+            Falls back to the module-level ``REGION_MAP`` when ``None``.
+    """
+    m = region_map if region_map is not None else REGION_MAP
+    return m.get(str(country).strip(), "")
+
+
+def lookup_brazil_region(
+    division: str,
+    region_map: dict | None = None,
+    norm_map: dict | None = None,
+) -> str:
+    """Return the Brazilian macro-region for a division name.
+
+    Args:
+        division: Division (state) name, possibly accent-stripped.
+        region_map: Optional custom ``{state: region}`` dict.
+        norm_map: Optional custom ``{ascii_state: region}`` dict.
+    """
+    if not division or str(division).strip() in ("", "NA"):
+        return ""
+    d = str(division).strip()
+    rm = region_map if region_map is not None else BRAZIL_REGION_MAP
+    nm = norm_map if norm_map is not None else _BRAZIL_NORM
+    r = rm.get(d, "")
+    if r:
+        return r
+    return nm.get(_normalize(d), "")
+
+
+def _parse_brazil_division(division_str: str, abbrev: dict | None = None):
     """Parse a compound Pathoplexus division string into (canonical_state, city).
 
     Handles formats produced by Pathoplexus YFV::
@@ -82,6 +165,7 @@ def _parse_brazil_division(division_str: str):
         Tuple ``(canonical_state, city)`` where unrecognised input returns
         ``(original_string, "")``.
     """
+    _abbrev = abbrev if abbrev is not None else _BRAZIL_ABBREV
     d = str(division_str).strip()
     if not d:
         return "", ""
@@ -93,8 +177,8 @@ def _parse_brazil_division(division_str: str):
     uf_suffix = re.match(r"^(.+?)-([A-Z]{2})$", d_clean)
     if uf_suffix:
         city_part, uf = uf_suffix.group(1).strip(), uf_suffix.group(2)
-        if uf in _BRAZIL_ABBREV:
-            return _BRAZIL_ABBREV[uf], city_part
+        if uf in _abbrev:
+            return _abbrev[uf], city_part
 
     # Split on ", " or " - "
     tokens = [t.strip() for t in re.split(r",\s*|\s+-\s+", d_clean) if t.strip()]
@@ -102,8 +186,8 @@ def _parse_brazil_division(division_str: str):
     state_name, state_idx = "", -1
     for i, token in enumerate(tokens):
         # 2-letter abbreviation (e.g. "ES", "MG")
-        if re.match(r"^[A-Z]{2}$", token) and token in _BRAZIL_ABBREV:
-            state_name = _BRAZIL_ABBREV[token]
+        if re.match(r"^[A-Z]{2}$", token) and token in _abbrev:
+            state_name = _abbrev[token]
             state_idx = i
             break
         # Normalised state name (handles missing accents)
@@ -123,15 +207,4 @@ def _parse_brazil_division(division_str: str):
 
 def _lookup_brazil_region(division: str) -> str:
     """Return the Brazilian macro-region for a (possibly accent-stripped) division name."""
-    if not division or str(division).strip() in ("", "NA"):
-        return ""
-    d = str(division).strip()
-    r = BRAZIL_REGION_MAP.get(d, "")
-    if r:
-        return r
-    return _BRAZIL_NORM.get(_normalize(d), "")
-
-
-def lookup_region_country(country: str) -> str:
-    """Return the continent for a country name, or empty string if unknown."""
-    return REGION_MAP.get(str(country).strip(), "")
+    return lookup_brazil_region(division)

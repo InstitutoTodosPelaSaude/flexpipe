@@ -14,7 +14,14 @@ import logging
 
 import pandas as pd
 
+from flexpipe.data import load_data_yaml
+
 logger = logging.getLogger(__name__)
+
+
+def _load_drop_set() -> set[str]:
+    data = load_data_yaml("flexpipe.data.curation", "drop_columns.yaml")
+    return set(data.get("drop", []))
 
 
 def harmonize_column(df: pd.DataFrame, src: str, dst: str) -> pd.DataFrame:
@@ -79,125 +86,9 @@ def apply_harmonization(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-# ── Columns to drop ──────────────────────────────────────────────────────────
+# ── Columns to drop (loaded from flexpipe/data/curation/drop_columns.yaml) ───
 
-DROP: set[str] = {
-    # Internal Pathoplexus structure
-    "submissionId",
-    "isRevocation",
-    "version",
-    "versionStatus",
-    "versionComment",
-    "pipelineVersion",
-    "displayName",
-    "submittedAtTimestamp",
-    "releasedAtTimestamp",
-    "groupId",
-    "earliestReleaseDate",
-    "dataBecameOpenAt",
-    "dataUseTermsUrl",
-    "dataUseTermsRestrictedUntil",
-    # Redundant accessions
-    "insdcAccessionFull",
-    "insdcVersion",
-    # Redundant host fields (merged above)
-    "hostNameScientific",
-    "hostTaxonId",
-    # Redundant coverage (merged above)
-    "breadthOfCoverage",
-    # Geography computed by get_coordinates.py
-    "geoLocLatitude",
-    "geoLocLongitude",
-    "geoLocCity",
-    "geoLocSite",
-    # Very sparse / low-value LAPIS technical
-    "ampliconPcrPrimerScheme",
-    "ampliconSize",
-    "assemblyReferenceGenomeAccession",
-    "consensusSequenceSoftwareName",
-    "consensusSequenceSoftwareVersion",
-    "collectionDevice",
-    "collectionMethod",
-    "hostRole",
-    "hostVaccinationStatus",
-    "isLabHost",
-    "sequencingAssayType",
-    # Detailed mutation lists (redundant with counts)
-    "frameShifts",
-    "stopCodons",
-    "totalDeletedNucs",
-    "totalInsertedNucs",
-    "totalFrameShifts",
-    "totalStopCodons",
-    "totalUnknownNucs",
-    # NCBI cross-refs (low value, partially filled)
-    "ncbiReleaseDate",
-    "ncbiSourceDb",
-    "ncbiUpdateDate",
-    "ncbiVirusName",
-    "ncbiVirusTaxId",
-    "ncbiSubmitterCountry",
-    "gcaAccession",
-    # ITpS-specific already harmonized or not needed
-    "pathogen_common_name",
-    "sample_code",
-    "orig_lab_address",
-    "subm_lab_address",
-    # Always-empty clinical / environmental fields
-    "anatomicalMaterial",
-    "anatomicalPart",
-    "bodyProduct",
-    "cellLine",
-    "comment",
-    "cultureId",
-    "dehostingMethod",
-    "diagnosticMeasurementMethod",
-    "diagnosticMeasurementUnit",
-    "diagnosticMeasurementValue",
-    "diagnosticTargetGeneName",
-    "diagnosticTargetPresence",
-    "environmentalMaterial",
-    "environmentalSite",
-    "experimentalSpecimenRoleType",
-    "exposureDetails",
-    "exposureEvent",
-    "exposureSetting",
-    "foodProduct",
-    "foodProductProperties",
-    "hostAgeBin",
-    "hostDisease",
-    "hostHealthOutcome",
-    "hostHealthState",
-    "hostOriginCountry",
-    "passageMethod",
-    "passageNumber",
-    "presamplingActivity",
-    "previousInfectionDisease",
-    "previousInfectionOrganism",
-    "purposeOfSampling",
-    "purposeOfSequencing",
-    "qualityControlDetails",
-    "qualityControlDetermination",
-    "qualityControlIssues",
-    "qualityControlMethodName",
-    "qualityControlMethodVersion",
-    "rawSequenceDataProcessingMethod",
-    "sampleReceivedDate",
-    "sequencedByContactEmail",
-    "sequencedByContactName",
-    "sequencedByOrganization",
-    "sequencingDate",
-    "signsAndSymptoms",
-    "specimenProcessing",
-    "specimenProcessingDetails",
-    "travelHistory",
-    "travel_history",
-    # ITpS health fields (no PPX equivalent, very sparse)
-    "health_state",
-    "health_outcome",
-    "signs_and_symptoms",
-    "host_disease",
-}
+DROP: set[str] = _load_drop_set()
 
 
 def drop_columns(df: pd.DataFrame, drop_set: set[str] = DROP) -> pd.DataFrame:

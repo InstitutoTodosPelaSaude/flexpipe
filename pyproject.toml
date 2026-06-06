@@ -41,6 +41,7 @@ dependencies = [
 [project.optional-dependencies]
 test = [
     "pytest",
+    "pytest-cov",
     "pytest-mock",
     "responses",
 ]
@@ -49,6 +50,7 @@ dev = [
     "black",
     "mypy",
     "pytest",
+    "pytest-cov",
     "pytest-mock",
     "responses",
 ]
@@ -102,6 +104,6 @@ addopts = "-m 'not integration and not network'"
 testpaths = ["tests"]
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.11"
 ignore_missing_imports = true
 warn_unused_configs = true

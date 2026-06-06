@@ -137,11 +137,10 @@ class TestCurateHostNormalization:
         row = curated_div[curated_div["strain"] == "SEQ002"].iloc[0]
         assert row["host"] == "mosquito"
 
-    def test_haemagogus_fallback(self, curated_div):
-        """haemagogus janthinomys has no rule → lowercased fallback.
-        The HOST_HUES table maps it to the mosquito color bucket separately."""
+    def test_haemagogus_normalized_to_mosquito(self, curated_div):
+        """haemagogus janthinomys matches the mosquito genus rule → normalized to 'mosquito'."""
         row = curated_div[curated_div["strain"] == "SEQ007"].iloc[0]
-        assert row["host"] == "haemagogus janthinomys"
+        assert row["host"] == "mosquito"
 
     def test_primate_kept(self, curated_div):
         row = curated_div[curated_div["strain"] == "SEQ008"].iloc[0]
@@ -183,6 +182,32 @@ class TestCurateDeduplication:
 
     def test_no_duplicate_strains(self, curated_div):
         assert curated_div["strain"].nunique() == len(curated_div)
+
+
+@pytest.fixture()
+def curated_country(tmp_path):
+    """Run curate with country (global) build and return output DataFrame."""
+    out = tmp_path / "curated_country.tsv"
+    run_curate(str(CONFIG_CTY), str(METADATA), str(VIRALQC), str(out))
+    return pd.read_csv(out, sep="\t", dtype=str).fillna("")
+
+
+class TestCurateCountryRegionAssignment:
+    """Region must be derived from country for global builds (region_source=country)."""
+
+    def test_brazil_is_south_america(self, curated_country):
+        row = curated_country[curated_country["strain"] == "SEQ001"].iloc[0]
+        assert row["region"] == "South America"
+
+    def test_colombia_is_south_america(self, curated_country):
+        row = curated_country[curated_country["strain"] == "SEQ004"].iloc[0]
+        assert row["region"] == "South America"
+
+    def test_no_division_parsing_for_country_build(self, curated_country):
+        """Division strings should NOT be parsed (Brazil parser only runs for division builds)."""
+        row = curated_country[curated_country["strain"] == "SEQ001"].iloc[0]
+        # Raw division is "Espírito Santo, Domingos Martins" — should be left intact
+        assert "Espírito Santo" in row["division"]
 
 
 class TestCurateNoViralqc:

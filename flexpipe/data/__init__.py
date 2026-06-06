@@ -14,6 +14,7 @@ from __future__ import annotations
 import logging
 from importlib.resources import files
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 import yaml
@@ -61,7 +62,7 @@ def load_data_yaml(
     package: str,
     filename: str,
     override: str | Path | None = None,
-) -> object:
+) -> Any:
     """Load a YAML reference file from an override path or the bundled default.
 
     Args:

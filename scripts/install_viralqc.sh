@@ -102,7 +102,7 @@ fi
 
 # ─── 4. Install viralQC into the env (editable) ──────────────────────────────
 echo ">> Installing viralQC (pip install -e) into env '$ENV_NAME' ..."
-"$MGR" run -n "$ENV_NAME" pip install -e "$SUBMODULE_DIR" --quiet
+"$MGR" run -n "$ENV_NAME" pip install -e "$SUBMODULE_DIR[dev]" --quiet
 echo ">> viralQC installed."
 
 # Quick smoke check

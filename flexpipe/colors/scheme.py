@@ -135,7 +135,7 @@ def build_scheme(
     Returns:
         Nested dict ``{level_name: {value_name: hex_colour}}``.
     """
-    results = {level: {} for level in levels}
+    results: dict[str, dict[str, str]] = {level: {} for level in levels}
 
     for highest, dfG in df[levels].groupby(levels[0], as_index=False):
         dfG = dfG.drop_duplicates().sort_values(by=levels)

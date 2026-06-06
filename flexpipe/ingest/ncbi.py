@@ -69,12 +69,14 @@ def parse_gb_record(rec) -> dict:
 
     for feature in rec.features:
         if feature.type == "source":
-            host = feature.qualifiers.get("host", [""])[0]
+            host_q = feature.qualifiers.get("host") or [""]
+            host = host_q[0] if host_q else ""
             # INSDC migrated from "country" to "geo_loc_name" qualifier (~2023)
             raw_country = (
                 feature.qualifiers.get("geo_loc_name") or feature.qualifiers.get("country") or [""]
             )[0]
-            collection_date = feature.qualifiers.get("collection_date", [""])[0]
+            cdate_q = feature.qualifiers.get("collection_date") or [""]
+            collection_date = cdate_q[0] if cdate_q else ""
             break
 
     for ref in rec.annotations.get("references", []):
@@ -191,8 +193,8 @@ def main() -> None:
 
     taxid = ncbi.get("taxid")
     genome_size = ncbi.get("genome_size")
-    email = ncbi.get("email", "") or "pipeline@example.com"
-    api_key = ncbi.get("api_key", "") or None
+    email = ncbi.get("email", "") or os.environ.get("NCBI_EMAIL") or "pipeline@example.com"
+    api_key = ncbi.get("api_key", "") or os.environ.get("NCBI_API_KEY") or None
     min_frac = float(ncbi.get("min_length", 0.7))
     max_frac = float(ncbi.get("max_length", 1.1))
 
@@ -212,9 +214,9 @@ def main() -> None:
 
     extra_term = ncbi.get("extra_search_term") or None
 
-    Entrez.email = email
+    Entrez.email = email  # type: ignore[assignment]
     if api_key:
-        Entrez.api_key = api_key
+        Entrez.api_key = api_key  # type: ignore[assignment]
 
     os.makedirs(os.path.dirname(os.path.abspath(args.metadata_output)), exist_ok=True)
     os.makedirs(os.path.dirname(os.path.abspath(args.sequences_output)), exist_ok=True)

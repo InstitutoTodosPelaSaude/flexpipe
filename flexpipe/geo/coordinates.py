@@ -59,7 +59,7 @@ def find_coordinates(
     Returns:
         ``(latitude_str, longitude_str)`` or ``("NA", "NA")`` on failure.
     """
-    featuretype = FEATURETYPE.get(level)
+    featuretype = FEATURETYPE.get(level or "")
     for attempt in range(retries):
         try:
             time.sleep(RATE_LIMIT_SLEEP)
@@ -194,7 +194,7 @@ def geocode_metadata(
     """
     force_coordinates = force_coordinates or {}
     geolocator = _make_geolocator(user_agent=user_agent)
-    results = load_cache(cache_path, columns)
+    results = load_cache(cache_path or "", columns)
     unique_queries = build_queries(df, columns)
     not_found = []
 
@@ -247,6 +247,30 @@ def geocode_metadata(
         )
 
 
+def load_force_file(path: str) -> dict[str, tuple[str, str]]:
+    """Load a manual-override coordinates TSV (``place TAB lat TAB lon``).
+
+    Args:
+        path: Path to the TSV file.
+
+    Returns:
+        ``{place: (lat_str, lon_str)}`` dict, empty if the file does not exist.
+    """
+    result: dict[str, tuple[str, str]] = {}
+    if not path or not os.path.exists(path):
+        return result
+    with open(path) as fh:
+        for line in fh:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            parts = line.split("\t")
+            if len(parts) >= 3:
+                result[parts[0]] = (parts[1], parts[2])
+    logger.debug("Loaded %d force-coordinate overrides from %s", len(result), path)
+    return result
+
+
 def main() -> None:
     """Entry point for ``flexpipe-coordinates``."""
     parser = argparse.ArgumentParser(
@@ -265,11 +289,19 @@ def main() -> None:
         default=None,
         help="Writable workdir cache path (appended incrementally)",
     )
+    parser.add_argument(
+        "--force-file",
+        required=False,
+        default=None,
+        help="TSV file with manual coordinate overrides (place TAB lat TAB lon)",
+    )
     args = parser.parse_args()
 
     from flexpipe.logging_setup import configure_logging
 
     configure_logging()
+
+    force_coordinates = load_force_file(args.force_file) if args.force_file else {}
 
     df = pd.read_csv(args.metadata, sep="\t", dtype=str).fillna("")
     geocode_metadata(
@@ -278,6 +310,7 @@ def main() -> None:
         cache_path=args.cache,
         output_path=args.output,
         workdir_cache_path=args.workdir_cache,
+        force_coordinates=force_coordinates,
     )
     logger.info("Coordinates file successfully created.")
 

@@ -78,6 +78,9 @@ snakemake --snakefile ingest/Snakefile \
 # Run all unit tests (default: excludes integration and network tests)
 pytest
 
+# Run integration dry-run wiring tests (requires nextstrain env + snakemake)
+pytest -m integration
+
 # Run with coverage
 pytest --cov=flexpipe
 
@@ -131,6 +134,7 @@ config/
 ingest/Snakefile
 phylogenetic/Snakefile
 tests/{unit/, golden/, integration/, fixtures/}
+  integration/test_ingest_wiring.py   # dry-run wiring tests (pytest -m integration)
 ```
 
 ### Data Flow
@@ -171,17 +175,28 @@ augur align → mask → iqtree3 tree → augur refine (time-calibration)
 
 ### Ingest Pipeline (`ingest/Snakefile`)
 
-The Snakefile reads `builds/yfv-brazil/config.yaml` as its configfile and accepts `workdir` via
-`--config workdir=<path>`. All output paths are prefixed with `{workdir}/results/...` or
-`{workdir}/config/...`; the source tree is never written to.
+The Snakefile reads `builds/yfv-brazil/config.yaml` as its configfile and accepts two keys via
+`--config`:
+- `workdir=<path>` — per-run output directory
+- `build_config=<abs path>` — absolute path to the build `config.yaml`, injected by `flexpipe-run`
+
+All output paths are prefixed with `{workdir}/results/...` or `{workdir}/config/...`; the source
+tree is never written to.
+
+**Config wiring**: `flexpipe-run` invokes Snakemake with a **single** `--configfile`:
+- `<workdir>/config/snakemake_resolved.yaml` — written by `write_snakemake_config_overrides()`;
+  contains the **full** build `config.yaml` content merged with pydantic-resolved ViralQC paths.
+  Snakemake 9+ only loads the last `--configfile` when multiple are passed, so a single complete
+  file is required (Snakefiles have no `configfile:` directive).
+
+`flexpipe-*` CLI subprocesses (e.g. `flexpipe-curate`) need the original build `config.yaml`
+path, not the workdir-local resolved snapshot. The Snakefile reads
+`_config = config.get("build_config")` (injected via `--config build_config=<abs path>`) for all
+`params.cfg` values. Direct `snakemake` invocations fall back to `workflow.configfiles[0]`.
 
 **Data source switching** (controlled by `data_source` in `config.yaml`; only one active):
 - `fetch_pathoplexus`: downloads from Pathoplexus/LAPIS (chunked pagination with rate-limiting)
 - `fetch_ncbi`: downloads from NCBI Entrez by taxid
-
-Each rule calls the corresponding `flexpipe-*` console script (e.g. `flexpipe-fetch-pathoplexus`,
-`flexpipe-curate`, `flexpipe-coordinates`). The config file path is passed via `params.cfg =
-workflow.configfiles[0]`.
 
 **Merge local sequences** (optional):
 - `flexpipe-merge`: combines remote data with local surveillance sequences

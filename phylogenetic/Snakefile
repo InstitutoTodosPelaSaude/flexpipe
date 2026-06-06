@@ -1,5 +1,3 @@
-configfile: "builds/yfv-brazil/config.yaml"
-
 from types import SimpleNamespace
 
 # Per-run output directory (from flexpipe-run --config workdir=<path>)

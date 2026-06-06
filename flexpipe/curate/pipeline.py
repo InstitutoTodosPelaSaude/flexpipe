@@ -16,19 +16,24 @@ import logging
 import os
 
 import pandas as pd
-import yaml
+import pydantic
 
+from flexpipe.config import load_config
 from flexpipe.curate.clades import truncate_clade
 from flexpipe.curate.columns import apply_harmonization, drop_columns
-from flexpipe.curate.hosts import normalize_host
+from flexpipe.curate.hosts import build_rules, normalize_host
 from flexpipe.curate.regions import (
-    REGION_MAP,
-    _lookup_brazil_region,
     _parse_brazil_division,
+    build_brazil_maps,
+    build_region_map,
+    lookup_brazil_region,
+    lookup_region_country,
 )
 from flexpipe.curate.viralqc_join import join_viralqc
 
 logger = logging.getLogger(__name__)
+
+_ITPS_SOURCE = "ITpS"
 
 
 def run_curate(
@@ -40,8 +45,12 @@ def run_curate(
     """Run the full curation pipeline.
 
     Reads raw metadata, joins ViralQC results, harmonizes columns, assigns
-    region and clade_truncated, normalizes hosts, deduplicates, and writes
-    the curated TSV.
+    region and clade_truncated, normalizes hosts, deduplicates (preferring
+    local ITpS records), and writes the curated TSV.
+
+    Config is loaded via the validated ``FlexpipeConfig`` pydantic model so
+    that override keys (``regions.country_map``, ``curation.host_rules``,
+    ``colours.hue_tables.*``) are fully honoured.
 
     Args:
         config_path: Path to ``config.yaml``.
@@ -49,15 +58,27 @@ def run_curate(
         nextclade_path: Path to ViralQC ``results.tsv`` (may be ``None``).
         output_path: Destination path for the curated metadata TSV.
     """
-    cfg = yaml.safe_load(open(config_path))
-    nc_cfg = cfg.get("viralqc", cfg.get("nextclade", {}))
-    cur_cfg = cfg.get("curation", {})
+    try:
+        cfg = load_config(config_path, skip_viralqc=True)
+    except pydantic.ValidationError as exc:
+        raise SystemExit(f"Config validation failed:\n{exc}") from exc
 
-    _ds = cfg.get("data_source", "pathoplexus").lower()
+    nc_cfg = cfg.viralqc.model_dump()
+    _ds = cfg.data_source
     default_source = "NCBI" if _ds == "ncbi" else "Pathoplexus"
 
-    clade_levels = int(cur_cfg.get("clade_levels", 3))
-    clade_sep = str(cur_cfg.get("clade_separator", "."))
+    clade_levels = cfg.curation.clade_levels
+    clade_sep = cfg.curation.clade_separator
+    region_source = cfg.region_source
+    division_parser = cfg.regions.division_parser
+
+    # Build lookup maps — use config override paths when provided
+    region_map = build_region_map(override=cfg.regions.country_map)
+    brazil_region_map, brazil_norm, brazil_abbrev = build_brazil_maps(
+        division_map_override=cfg.regions.division_map,
+        abbrev_override=cfg.regions.division_abbreviations,
+    )
+    host_rules = build_rules(override=cfg.curation.host_rules)
 
     os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
 
@@ -65,8 +86,6 @@ def run_curate(
     logger.info("Loaded: %d rows", len(df))
 
     # ── join ViralQC (BLAST + Nextclade) ─────────────────────────────────────
-    # ViralQC runs on all sequences; left join preserves the Pathoplexus/NCBI
-    # clade when ViralQC does not assign one.
     df = join_viralqc(df, nextclade_path, nc_cfg)
 
     # ── harmonize duplicate columns (PPX field → standard name) ──────────────
@@ -81,10 +100,9 @@ def run_curate(
     # ── drop redundant / always-empty columns ─────────────────────────────────
     df = drop_columns(df)
 
-    # ── normalise compound division strings (Brazil-only builds) ─────────────
-    region_source = cfg.get("region_source", "country")
-    if region_source == "division" and "division" in df.columns:
-        parsed = df["division"].apply(_parse_brazil_division)
+    # ── normalise compound division strings (conditional on division_parser) ──
+    if region_source == "division" and "division" in df.columns and division_parser == "brazil":
+        parsed = df["division"].apply(lambda d: _parse_brazil_division(d, abbrev=brazil_abbrev))
         df["division"] = parsed.apply(lambda x: x[0])
         # Enrich location from the city part of compound division strings
         if "location" in df.columns:
@@ -95,12 +113,16 @@ def run_curate(
 
     # ── region ────────────────────────────────────────────────────────────────
     if region_source == "division" and "division" in df.columns:
-        df["region"] = df["division"].apply(_lookup_brazil_region)
+        df["region"] = df["division"].apply(
+            lambda d: lookup_brazil_region(d, region_map=brazil_region_map, norm_map=brazil_norm)
+        )
         missing = df[df["region"] == ""]["division"].unique()
         if len(missing):
             logger.warning("No Brazil region mapping for divisions: %s", list(missing))
     elif "country" in df.columns:
-        df["region"] = df["country"].apply(lambda c: REGION_MAP.get(str(c).strip(), ""))
+        df["region"] = df["country"].apply(
+            lambda c: lookup_region_country(c, region_map=region_map)
+        )
         missing = df[df["region"] == ""]["country"].unique()
         if len(missing):
             logger.warning("No region mapping for countries: %s", list(missing))
@@ -117,9 +139,9 @@ def run_curate(
     else:
         df["source"] = df["source"].replace("", default_source)
 
-    # ── normalise host ────────────────────────────────────────────────────────
+    # ── normalise host using config-driven rules ───────────────────────────────
     if "host" in df.columns:
-        df["host"] = df["host"].apply(normalize_host)
+        df["host"] = df["host"].apply(lambda h: normalize_host(h, rules=host_rules))
 
     # ── rename lab columns to display-friendly names ─────────────────────────
     df.rename(
@@ -134,9 +156,17 @@ def run_curate(
     if "data_use" in df.columns:
         df["data_use"] = df["data_use"].str.strip().str.upper()
 
-    # ── dedup ─────────────────────────────────────────────────────────────────
+    # ── dedup — prefer local ITpS records over remote sources ─────────────────
     before = len(df)
-    df = df.drop_duplicates("strain")
+    if "source" in df.columns:
+        df = (
+            df.assign(_prio=df["source"].apply(lambda s: 0 if s == _ITPS_SOURCE else 1))
+            .sort_values("_prio", kind="stable")
+            .drop_duplicates("strain")
+            .drop(columns=["_prio"])
+        )
+    else:
+        df = df.drop_duplicates("strain")
     if len(df) < before:
         logger.info("Deduplication: %d → %d", before, len(df))
 

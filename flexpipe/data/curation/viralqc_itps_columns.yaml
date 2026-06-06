@@ -1,0 +1,48 @@
+# ViralQC output columns in the ITpS TSV format (PascalCase).
+# These are dropped from local metadata during merge because they will be
+# re-assigned by the ViralQC pipeline run (flexpipe-curate joins fresh VQC output).
+viralqc_columns:
+  - Segment
+  - Clade
+  - TargetGene
+  - GenomeQuality
+  - TargetRegionsQuality
+  - TargetGeneQuality
+  - CodingDNASequenceCoverageQuality
+  - MissingDataQuality
+  - PrivateMutationsQuality
+  - MixedSitesQuality
+  - SingleNucleotidePolymorphismsClustersQuality
+  - FrameShiftsQuality
+  - StopCodonsQuality
+  - Coverage
+  - CodingDNASequenceCoverage
+  - QualityOverallStatus
+  - NucleotideSubstitutions
+  - NucleotideDeletions
+  - NucleotideInsertions
+  - FrameShifts
+  - AminoacidSubstitutions
+  - AminoacidDeletions
+  - AminoacidInsertions
+  - TotalSubstitutions
+  - TotalDeletions
+  - TotalInsertions
+  - TotalFrameShifts
+  - TotalMissing
+  - TotalNonACGTNs
+  - TotalAminoacidSubstitutions
+  - TotalAminoacidDeletions
+  - TotalAminoacidInsertions
+  - TotalUnknownAminoacids
+  - PrivateNucleotideMutationsTotalReversionSubstitutions
+  - PrivateNucleotideMutationsTotalPrivateSubstitutions
+  - MissingDataStatus
+  - SingleNucleotidePolymorphismsClustersStatus
+  - FrameShiftsStatus
+  - StopCodonsStatus
+  - Dataset
+  - DatasetVersion
+  - clade
+  - genomeQuality
+  - coverage
