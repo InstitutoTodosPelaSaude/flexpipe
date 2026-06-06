@@ -84,10 +84,12 @@ def _run_snakemake(
         "--snakefile",
         str(snakefile),
         "--configfile",
-        str(config_path),
+        # Resolved config is the sole --configfile: it contains the full build config
+        # merged with pydantic-resolved ViralQC paths.  Snakemake 9+ only loads the
+        # last --configfile when multiple are passed, so a single complete file is
+        # required.  Falls back to the raw build config for direct snakemake invocations.
+        str(config_overrides) if config_overrides is not None else str(config_path),
     ]
-    if config_overrides is not None:
-        cmd.extend(["--configfile", str(config_overrides)])
     cmd.extend(
         [
             "--config",
@@ -136,7 +138,9 @@ def run_pipeline(
     paths = WorkdirPaths.from_root(workdir)
     paths.ensure_dirs()
 
-    snakemake_overrides = write_snakemake_config_overrides(cfg, paths.snakemake_config_overrides)
+    snakemake_overrides = write_snakemake_config_overrides(
+        cfg, paths.snakemake_config_overrides, config_path
+    )
 
     # Seed coordinate cache (read-only source → writable workdir)
     _seed_coordinate_cache(build_dir, paths)

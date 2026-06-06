@@ -63,15 +63,24 @@ flexpipe-run --config builds/yfv-brazil/config.yaml --workdir /tmp/run --stage p
 
 #### Direct Snakemake invocation (advanced)
 
+`--configfile` is required — the Snakefiles have no built-in default.
+
 ```bash
 # Dry-run to preview ingest steps
-snakemake --snakefile ingest/Snakefile --config workdir=/tmp/run --dry-run --cores 4
+snakemake --snakefile ingest/Snakefile \
+    --configfile builds/yfv-brazil/config.yaml \
+    --config workdir=/tmp/run \
+    --dry-run --cores 4
 
 # Run ingest directly
-snakemake --snakefile ingest/Snakefile --config workdir=/tmp/run --cores 4
+snakemake --snakefile ingest/Snakefile \
+    --configfile builds/yfv-brazil/config.yaml \
+    --config workdir=/tmp/run --cores 4
 
 # Run phylogenetics directly
-snakemake --snakefile phylogenetic/Snakefile --config workdir=/tmp/run --cores 4
+snakemake --snakefile phylogenetic/Snakefile \
+    --configfile builds/yfv-brazil/config.yaml \
+    --config workdir=/tmp/run --cores 4
 ```
 
 ### ViralQC datasets

@@ -303,6 +303,9 @@ class TestResolveViralqcPaths:
 # ---------------------------------------------------------------------------
 
 
+FIXTURE_CONFIG = Path(__file__).parent.parent / "fixtures" / "config_division_build.yaml"
+
+
 class TestWriteSnakemakeConfigOverrides:
     def test_writes_resolved_viralqc_paths(self, tmp_path):
         cfg = FlexpipeConfig(
@@ -314,9 +317,31 @@ class TestWriteSnakemakeConfigOverrides:
                 blast_database_metadata="/data/viralQC/datasets/blast.tsv",
             ),
         )
-        out = write_snakemake_config_overrides(cfg, tmp_path / "snakemake_resolved.yaml")
+        out = write_snakemake_config_overrides(
+            cfg, tmp_path / "snakemake_resolved.yaml", FIXTURE_CONFIG
+        )
         assert out.exists()
         loaded = yaml.safe_load(out.read_text())
         assert loaded["viralqc"]["datasets_dir"] == "/data/viralQC/datasets"
         assert loaded["viralqc"]["blast_database"] == "/data/viralQC/datasets/blast.fasta"
         assert loaded["viralqc"]["blast_database_metadata"] == "/data/viralQC/datasets/blast.tsv"
+
+    def test_preserves_all_build_config_keys(self, tmp_path):
+        """Full build config is written, not just viralqc — Snakemake needs everything."""
+        cfg = FlexpipeConfig(
+            data_source="pathoplexus",
+            pathoplexus={"organism": "yellow-fever"},
+            viralqc=ViralqcConfig(
+                datasets_dir="/data/viralQC/datasets",
+                blast_database="/data/viralQC/datasets/blast.fasta",
+                blast_database_metadata="/data/viralQC/datasets/blast.tsv",
+            ),
+        )
+        out = write_snakemake_config_overrides(
+            cfg, tmp_path / "snakemake_resolved.yaml", FIXTURE_CONFIG
+        )
+        loaded = yaml.safe_load(out.read_text())
+        # All top-level keys from the fixture config must be present
+        fixture_keys = yaml.safe_load(FIXTURE_CONFIG.read_text()).keys()
+        for key in fixture_keys:
+            assert key in loaded, f"Key '{key}' from build config missing in resolved YAML"

@@ -172,7 +172,8 @@ class TestRunPipelineManifest:
 
 
 class TestRunSnakemakeCommand:
-    def test_includes_overrides_configfile(self, monkeypatch, tmp_path):
+    def test_uses_resolved_config_as_sole_configfile(self, monkeypatch, tmp_path):
+        """Resolved config is the only --configfile (Snakemake 9+ loads only the last one)."""
         captured = {}
 
         def fake_run(cmd, **kwargs):
@@ -183,10 +184,11 @@ class TestRunSnakemakeCommand:
 
         overrides = tmp_path / "snakemake_resolved.yaml"
         overrides.write_text("viralqc:\n  datasets_dir: /foo\n")
+        build_config = Path("builds/yfv-brazil/config.yaml")
 
         _run_snakemake(
             snakefile=Path("ingest/Snakefile"),
-            config_path=Path("builds/yfv-brazil/config.yaml"),
+            config_path=build_config,
             paths=WorkdirPaths.from_root(tmp_path / "workdir"),
             cores=2,
             config_overrides=overrides,
@@ -194,26 +196,29 @@ class TestRunSnakemakeCommand:
 
         cmd = captured["cmd"]
         configfile_args = [cmd[i + 1] for i, arg in enumerate(cmd) if arg == "--configfile"]
-        assert str(Path("builds/yfv-brazil/config.yaml")) in configfile_args
+        # Exactly one --configfile: the resolved config (not the raw build config)
+        assert len(configfile_args) == 1, f"Expected 1 --configfile, got: {configfile_args}"
         assert str(overrides) in configfile_args
-        assert configfile_args.index(str(overrides)) > configfile_args.index(
-            str(Path("builds/yfv-brazil/config.yaml"))
-        )
 
         # build_config must be passed as an explicit --config key so flexpipe-* CLIs
         # receive the full build config path without relying on path heuristics.
         config_tokens = [t for t in cmd if t.startswith("build_config=")]
         assert len(config_tokens) == 1, "build_config= not found in --config args"
-        assert config_tokens[0] == f"build_config={Path('builds/yfv-brazil/config.yaml')}"
+        assert config_tokens[0] == f"build_config={build_config}"
 
-    def test_writes_overrides_during_run(self, patch_run, tmp_path):
+    def test_writes_resolved_config_during_run(self, patch_run, tmp_path):
         run_pipeline(
             config_path=FIXTURE_CONFIG,
             workdir=tmp_path,
             run_date="2026-06-05",
             stage="ingest",
         )
-        overrides = tmp_path / "config" / "snakemake_resolved.yaml"
-        assert overrides.exists()
-        data = yaml.safe_load(overrides.read_text())
+        resolved = tmp_path / "config" / "snakemake_resolved.yaml"
+        assert resolved.exists()
+        data = yaml.safe_load(resolved.read_text())
+        # Resolved viralqc paths are written
         assert data["viralqc"]["datasets_dir"] == "/tmp/viralQC/datasets"
+        # Full build config keys are preserved (not just viralqc)
+        fixture_keys = yaml.safe_load(FIXTURE_CONFIG.read_text()).keys()
+        for key in fixture_keys:
+            assert key in data, f"Key '{key}' from build config missing in resolved config"
