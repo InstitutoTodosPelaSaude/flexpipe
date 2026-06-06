@@ -61,7 +61,9 @@ rule all:
         sequences     = f"{_wd}/results/subsampled/sequences.fasta",
         metadata      = f"{_wd}/results/subsampled/metadata.tsv",
         latlongs      = f"{_wd}/config/latlongs.tsv",
-        colour_scheme = f"{_wd}/config/colour_scheme.tsv"
+        colour_scheme = f"{_wd}/config/colour_scheme.tsv",
+        qc_report     = f"{_wd}/results/qc_report.json",
+        qc_summary    = f"{_wd}/results/qc_summary.tsv"
 
 
 # ─── Fetch + merge ────────────────────────────────────────────────────────────
@@ -160,11 +162,14 @@ rule curate_qc:
         sequences = rules.merge_local_sequences.output.sequences,
         viralqc   = rules.viralqc.output.tsv
     output:
-        renamed   = temp(f"{_wd}/results/ingest/renamed_metadata.tsv"),
-        dated     = temp(f"{_wd}/results/ingest/dated_metadata.tsv"),
-        curated   = temp(f"{_wd}/results/ingest/curated_metadata.tsv"),
-        metadata  = f"{_wd}/results/ingest/final_metadata.tsv",
-        sequences = f"{_wd}/results/ingest/final_sequences.fasta"
+        renamed    = temp(f"{_wd}/results/ingest/renamed_metadata.tsv"),
+        dated      = temp(f"{_wd}/results/ingest/dated_metadata.tsv"),
+        # curated is NOT temp: the qc_summary rule reads it to count per-grade stats
+        # before augur filter drops the low-quality rows.
+        curated    = f"{_wd}/results/ingest/curated_metadata.tsv",
+        metadata   = f"{_wd}/results/ingest/final_metadata.tsv",
+        sequences  = f"{_wd}/results/ingest/final_sequences.fasta",
+        filter_log = f"{_wd}/results/ingest/filter_log.tsv"
     params:
         min_coverage    = _qc.get("min_coverage", 0.70),
         quality_filter  = _quality_filter,
@@ -202,8 +207,39 @@ rule curate_qc:
             --query-columns   coverage:float \
             --query           "coverage.isna() or coverage >= {params.min_coverage}" \
             --exclude-where   {params.req_col_filter} {params.quality_filter} \
+            --output-log      {output.filter_log} \
             --output-metadata  {output.metadata} \
             --output-sequences {output.sequences}
+        """
+
+
+# ─── QC summary ──────────────────────────────────────────────────────────────
+
+rule qc_summary:
+    """Write per-run QC artifacts: qc_report.json + qc_summary.tsv.
+
+    Reads curated_metadata.tsv (all sequences before augur filter),
+    filter_log.tsv (per-strain exclusion reasons from augur filter --output-log),
+    and final_metadata.tsv (retained sequences after filter) to produce:
+    - <workdir>/results/qc_report.json — structured JSON with grade counts,
+      coverage stats, and exclusion-reason breakdown.
+    - <workdir>/results/qc_summary.tsv — flat TSV per genome-quality grade.
+    """
+    input:
+        curated    = rules.curate_qc.output.curated,
+        filter_log = rules.curate_qc.output.filter_log,
+        final      = rules.curate_qc.output.metadata
+    output:
+        qc_report  = f"{_wd}/results/qc_report.json",
+        qc_summary = f"{_wd}/results/qc_summary.tsv"
+    shell:
+        """
+        flexpipe-qc-summary \
+            --curated    {input.curated} \
+            --filter-log {input.filter_log} \
+            --final      {input.final} \
+            --qc-report  {output.qc_report} \
+            --qc-summary {output.qc_summary}
         """
 
 
