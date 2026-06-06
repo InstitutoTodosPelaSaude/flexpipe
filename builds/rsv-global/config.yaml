@@ -1,0 +1,93 @@
+files:
+  keep:             "builds/rsv-global/keep.txt"
+  ignore:           "builds/rsv-global/ignore.txt"
+  cache:            "builds/rsv-global/cache_coordinates.tsv"
+  reference:        "builds/rsv-global/reference.gb"   # ← see NOTES.md; must be downloaded
+  clades:           "builds/rsv-global/clades.tsv"     # ← see NOTES.md; must be populated
+  auspice_config:   "builds/rsv-global/auspice_config.json"
+  subsample_config: "builds/rsv-global/subsample.yaml"
+
+parameters:
+  # Terminal masking — values are REFERENCE-SPECIFIC.
+  # Set mask_5prime / mask_3prime to the correct bp counts for your chosen RSV-A reference.
+  # Current values (0) disable terminal masking; calibrate before a production run.
+  # See NOTES.md for guidance on the recommended reference (PP109421.1).
+  mask_5prime: 0
+  mask_3prime: 0
+  mask_sites: ""
+  mask_sites_file: ""   # optional BED file of problematic sites (leave blank for none)
+  ufboot: 1000
+  model: "MFP"
+  root: "least-squares"
+  coalescent: "skyline"
+  date_inference: "marginal"
+  divergence_units: "mutations"
+  clock_filter_iqd: 4
+  ancestral_inference: "joint"
+
+options:
+  threads: 4
+
+coordinates:
+  columns: "country"   # global build: only country-level coordinates
+
+colours:
+  clade:    "clade_truncated clade"
+  geo:      "region country"
+  source:   "source"
+  data_use: "data_use"
+
+traits:
+  columns: "region country clade"
+
+subsampling:
+  random_seed: 42
+
+curation:
+  clade_levels: 3      # RSV-A WHO nomenclature: group.genotype.sub-genotype (A.D.1.1 → A.D.1)
+  clade_separator: "."
+
+# ── Region source ────────────────────────────────────────────────────────────
+# "country"  : maps country → continent (global builds)
+# "division" : maps Brazilian state → macro-region (Brazil-only builds)
+region_source: "country"
+
+# ── Data source ──────────────────────────────────────────────────────────────
+# Use "pathoplexus" OR "ncbi" — never both at the same time.
+data_source: "ncbi"
+
+pathoplexus:
+  organism: ""          # unused for ncbi builds; kept for schema completeness
+
+ncbi:
+  taxid: 208893         # RSV-A (Orthopneumovirus hominis subgroup A)
+  genome_size: 15200    # bp — RSV-A genome is ~15.2 kb (RefSeq NC_038235.1)
+  min_length: 0.7       # minimum as a fraction of genome_size
+  max_length: 1.1       # maximum as a fraction of genome_size
+  email: ""             # NCBI Entrez email (recommended; avoids rate-limiting)
+  api_key: ""           # optional; raises rate limit to 10 req/s
+
+viralqc:
+  conda_env: "viralQC"
+  clade_column: "clade"
+  expected_virus: "RSV-A"       # vqc rejects sequences that do not match this virus
+  expected_segment: ""          # RSV is non-segmented — leave blank
+  datasets_dir: ""              # set VIRALQC_DATASETS_DIR env var or override here
+  blast_database: ""            # derived from datasets_dir by default
+  blast_database_metadata: ""   # derived from datasets_dir by default
+
+qc:
+  genome_quality:
+    - "A"
+    - "B"
+  min_coverage: 0.70
+  min_sequences: 10
+  required_columns:
+    - "strain"
+    - "date"
+    - "country"
+
+local_sequences:
+  enabled: false
+  metadata: "data/metadata.xlsx"
+  sequences: "data/new_sequences.fasta"

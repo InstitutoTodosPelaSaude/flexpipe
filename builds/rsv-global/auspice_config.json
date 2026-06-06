@@ -1,0 +1,79 @@
+{
+  "title": "RSV-A — Global",
+
+  "data_provenance": [
+    {
+      "name": "NCBI GenBank",
+      "url": "https://www.ncbi.nlm.nih.gov/genbank/"
+    }
+  ],
+
+  "build_url": "https://github.com/InstitutoTodosPelaSaude/flexpipe",
+
+  "maintainers": [
+    {
+      "name": "Instituto Todos pela Saúde",
+      "url": "https://www.itps.org.br/"
+    }
+  ],
+
+  "colorings": [
+    {
+      "key": "clade_truncated",
+      "title": "Genotype (truncated)",
+      "type": "categorical"
+    },
+    {
+      "key": "clade",
+      "title": "Clade",
+      "type": "categorical"
+    },
+    {
+      "key": "region",
+      "title": "Region",
+      "type": "categorical"
+    },
+    {
+      "key": "country",
+      "title": "Country",
+      "type": "categorical"
+    },
+    {
+      "key": "source",
+      "title": "Source",
+      "type": "categorical"
+    },
+    {
+      "key": "data_use",
+      "title": "Data Use Term",
+      "type": "categorical"
+    }
+  ],
+
+  "geo_resolutions": [
+    "country"
+  ],
+
+  "display_defaults": {
+    "color_by": "clade_truncated",
+    "distance_measure": "num_date",
+    "geo_resolution": "country",
+    "map_triplicate": true,
+    "branch_label": "clade"
+  },
+
+  "filters": [
+    "region",
+    "country",
+    "clade_truncated",
+    "clade",
+    "source",
+    "data_use"
+  ],
+
+  "panels": [
+    "tree",
+    "map",
+    "entropy"
+  ]
+}

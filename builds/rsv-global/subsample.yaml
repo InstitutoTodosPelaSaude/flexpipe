@@ -1,0 +1,18 @@
+# Subsampling for RSV-A global build
+#
+# Global representation: sequences are subsampled by country and year to
+# achieve even geographic and temporal sampling worldwide.
+#
+# include  forces strains regardless of other filters (builds/rsv-global/keep.txt)
+# exclude  removes strains from all samples (builds/rsv-global/ignore.txt)
+
+defaults:
+  min_date: 2010
+  exclude: builds/rsv-global/ignore.txt
+
+samples:
+  global:
+    group_by:
+      - country
+      - year
+    sequences_per_group: 10
