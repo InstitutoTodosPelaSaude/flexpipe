@@ -74,14 +74,17 @@ def _dry_run(tmp_path, resolved_config):
     workdir = tmp_path / "workdir"
     cmd = [
         "snakemake",
-        "--snakefile", str(INGEST_SNAKEFILE),
-        "--configfile", str(resolved_config),
+        "--snakefile",
+        str(INGEST_SNAKEFILE),
+        "--configfile",
+        str(resolved_config),
         "--config",
         f"workdir={workdir}",
         f"build_config={BUILD_CONFIG}",
         "--dry-run",
         "--printshellcmds",
-        "--cores", "1",
+        "--cores",
+        "1",
         "--nolock",
     ]
 
@@ -100,14 +103,9 @@ class TestIngestWiring:
     def test_dry_run_succeeds(self, tmp_path, resolved_config):
         """Snakemake can plan the full ingest DAG without errors."""
         output, rc = _dry_run(tmp_path, resolved_config)
-        assert rc == 0, (
-            f"snakemake dry-run exited with code {rc}.\n"
-            f"Output:\n{output}"
-        )
+        assert rc == 0, f"snakemake dry-run exited with code {rc}.\n" f"Output:\n{output}"
 
-    def test_flexpipe_curate_uses_build_config_not_resolved_config(
-        self, tmp_path, resolved_config
-    ):
+    def test_flexpipe_curate_uses_build_config_not_resolved_config(self, tmp_path, resolved_config):
         """flexpipe-curate must receive the build config path, not the workdir resolved config."""
         output, rc = _dry_run(tmp_path, resolved_config)
         assert rc == 0, f"dry-run failed:\n{output}"
@@ -136,10 +134,10 @@ class TestIngestWiring:
 
         for line in vqc_lines:
             idx = line.find("--datasets-dir")
-            remainder = line[idx + len("--datasets-dir"):].strip()
-            assert remainder and not remainder.startswith("--"), (
-                f"--datasets-dir is empty or missing its argument.\nLine: {line!r}"
-            )
+            remainder = line[idx + len("--datasets-dir") :].strip()
+            assert remainder and not remainder.startswith(
+                "--"
+            ), f"--datasets-dir is empty or missing its argument.\nLine: {line!r}"
             assert FAKE_DATASETS_DIR in line, (
                 f"Expected fake datasets dir {FAKE_DATASETS_DIR!r} in viralqc command.\n"
                 f"Line: {line!r}"
