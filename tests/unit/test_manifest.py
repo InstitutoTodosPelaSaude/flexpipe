@@ -43,6 +43,22 @@ class TestManifestBasics:
         m2 = Manifest(run_date="2025-01-01", build_name="test", config_path=cfg2)
         assert m1.config_hash != m2.config_hash
 
+    def test_config_hash_differs_for_different_run_date(self, tmp_path):
+        """Same config file but different run_date must produce different config_hash."""
+        cfg = tmp_path / "config.yaml"
+        cfg.write_text("data_source: pathoplexus\n")
+        m1 = Manifest(run_date="2026-01-01", build_name="test", config_path=cfg)
+        m2 = Manifest(run_date="2026-06-01", build_name="test", config_path=cfg)
+        assert m1.config_hash != m2.config_hash
+
+    def test_config_hash_stable_for_same_config_and_run_date(self, tmp_path):
+        """Same config file and same run_date must produce identical config_hash."""
+        cfg = tmp_path / "config.yaml"
+        cfg.write_text("data_source: pathoplexus\n")
+        m1 = Manifest(run_date="2026-01-01", build_name="test", config_path=cfg)
+        m2 = Manifest(run_date="2026-01-01", build_name="test", config_path=cfg)
+        assert m1.config_hash == m2.config_hash
+
 
 class TestManifestRecordCounts:
     """record_counts() accumulation."""

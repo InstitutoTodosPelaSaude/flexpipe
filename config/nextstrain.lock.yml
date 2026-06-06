@@ -1,0 +1,78 @@
+# nextstrain.lock.yml — version-pinned conda environment for reproducible pipeline runs.
+#
+# Generated from the solved nextstrain environment on 2026-06-06.
+# Pins direct and key transitive dependencies at specific versions with NO build-string
+# (only =X.Y.Z, not =X.Y.Z=<build>), so conda re-solves the build per architecture.
+# This means the file is portable across linux-64, osx-arm64, etc., while still bounding
+# the analysis window to the tool versions used at generation time.
+#
+# Usage (reproducible install):
+#   conda env create -f config/nextstrain.lock.yml
+#   conda activate nextstrain
+#   pip install -e .
+#
+# Usage (flexible/dev install — accepts newer versions):
+#   conda env create -f config/nextstrain.yml
+#
+# Update policy: regenerate this file when bumping floor versions in nextstrain.yml:
+#   conda env create -f config/nextstrain.yml -n nextstrain-fresh
+#   conda list -n nextstrain-fresh --no-pip > /tmp/new_versions.txt
+#   # Update pinned versions below from /tmp/new_versions.txt
+#   conda env remove -n nextstrain-fresh
+
+name: nextstrain
+
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+
+dependencies:
+  # Core bioinformatics tools
+  - augur=33.4.1
+  - nextalign=2.14.0
+  - nextstrain-cli=10.5.0
+  - iqtree=3.1.2
+  - mafft=7.526
+  - raxml=8.2.13
+  - seqkit=2.13.0
+  - treetime=0.12.1
+
+  # Python runtime
+  - python=3.13.13
+  - pip=26.1.2
+
+  # Snakemake
+  - snakemake-minimal=9.22.0
+  - snakemake-interface-common=1.23.0
+  - snakemake-interface-executor-plugins=9.4.0
+  - snakemake-interface-storage-plugins=4.4.1
+
+  # Data science stack
+  - pandas=2.3.3
+  - scipy=1.17.1
+  - matplotlib-base=3.10.9
+  - biopython=1.87
+  - pydantic=2.13.4
+  - pydantic-core=2.46.4
+
+  # Utilities bundled in nextstrain.yml
+  - beautifulsoup4=4.14.3
+  - geopy=2.4.1
+  - tabulate=0.10.0
+  - unidecode=1.4.0
+  - pyyaml=6.0.3
+  - requests=2.34.2
+
+  # Runtime: Node.js / git (used by nextstrain-cli / augur)
+  - nodejs=26.3.0
+  - git=2.54.0
+
+  # pip-only packages (not available on conda-forge/bioconda)
+  - pip:
+      - pycountry-convert==0.7.2
+      - pycountry==26.2.16
+      - xlrd==2.0.2
+      - lxml==6.1.1
+      - openpyxl==3.1.5
+      - colour==0.1.5

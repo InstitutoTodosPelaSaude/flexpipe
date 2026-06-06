@@ -63,8 +63,17 @@ def _run_version(cmd: list) -> str:
         return "unknown"
 
 
-def _hash_config(config_path: Union[str, Path]) -> str:
-    """Return a short SHA-256 digest covering config.yaml and adjacent build files."""
+def _hash_config(config_path: Union[str, Path], run_date: Optional[str] = None) -> str:
+    """Return a short SHA-256 digest covering config.yaml, adjacent build files, and run_date.
+
+    Including *run_date* in the digest ensures that two runs of the same build config on
+    different reference dates produce different ``config_hash`` values and therefore
+    different ``run_id``\\s — reflecting the distinct analysis windows.
+
+    Args:
+        config_path: Path to the build ``config.yaml``.
+        run_date: Reference date (``YYYY-MM-DD``) to bind the analysis window, or ``None``.
+    """
     try:
         config_path = Path(config_path)
         build_dir = config_path.parent
@@ -76,6 +85,9 @@ def _hash_config(config_path: Union[str, Path]) -> str:
             candidate = build_dir / name
             if candidate.exists():
                 h.update(candidate.read_bytes())
+        # Bind the analysis window so different run_dates yield different hashes
+        if run_date:
+            h.update(run_date.encode())
         return h.hexdigest()[:16]
     except Exception:
         return "unknown"
@@ -98,7 +110,7 @@ class Manifest:
     ) -> None:
         self.run_date = run_date
         self.build_name = build_name
-        self.config_hash = _hash_config(config_path) if config_path else "unknown"
+        self.config_hash = _hash_config(config_path, run_date) if config_path else "unknown"
         self.counts: dict[str, int] = {}
         self.extra: dict[str, object] = {}
         self._start_time: float = time.time()

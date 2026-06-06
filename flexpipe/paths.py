@@ -124,6 +124,11 @@ class WorkdirPaths:
     def snakemake_config_overrides(self) -> Path:
         return self.generated_config_dir / "snakemake_resolved.yaml"
 
+    @property
+    def subsample_config_resolved(self) -> Path:
+        """Workdir-local subsample config with ``defaults.max_date`` injected from run_date."""
+        return self.generated_config_dir / "subsample_resolved.yaml"
+
     # ── mutable cache ────────────────────────────────────────────────────────
     @property
     def cache_dir(self) -> Path:

@@ -1,0 +1,32 @@
+# requirements.lock.txt — pinned pip dependencies for flexpipe.
+#
+# Covers [project.dependencies] and [project.optional-dependencies] from pyproject.toml.
+# Generated from the solved nextstrain environment on 2026-06-06.
+#
+# These pins are for REPRODUCIBILITY in production/scheduled runs.
+# For development, install directly: pip install -e '.[test,dev]'
+#
+# Update policy: regenerate when bumping floor constraints in pyproject.toml:
+#   pip freeze | grep -E "^(pandas|PyYAML|biopython|geopy|requests|matplotlib|colour|openpyxl|beautifulsoup4|pydantic)==" | sort > /tmp/new_reqs.txt
+#   # Copy relevant lines back here
+
+# ── Runtime dependencies (pyproject.toml [project.dependencies]) ─────────────
+pandas==2.3.3
+PyYAML==6.0.3
+biopython==1.87
+geopy==2.4.1
+requests==2.34.2
+matplotlib==3.10.9
+colour==0.1.5
+openpyxl==3.1.5
+beautifulsoup4==4.14.3
+pydantic==2.13.4
+
+# ── Dev/test extras (pyproject.toml [project.optional-dependencies]) ─────────
+pytest==9.0.3
+pytest-cov==7.1.0
+pytest-mock==3.15.1
+responses==0.26.1
+ruff==0.15.16
+black==26.5.1
+mypy==2.1.0

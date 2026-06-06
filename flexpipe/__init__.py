@@ -9,4 +9,10 @@ Designed to run as an automated service: parameterized by (config, workdir, run-
 never mutates the source tree, and emits structured logs and run provenance manifests.
 """
 
-__version__ = "0.2.0"
+from importlib.metadata import PackageNotFoundError, version
+
+try:
+    __version__ = version("flexpipe")
+except PackageNotFoundError:
+    # Package is not installed (e.g. running directly from source without pip install)
+    __version__ = "0.0.0+unknown"

@@ -77,8 +77,23 @@ def _run_snakemake(
     paths: WorkdirPaths,
     cores: int,
     config_overrides: Path | None = None,
+    run_date: str = "",
 ) -> int:
-    """Invoke Snakemake for one stage and return the exit code."""
+    """Invoke Snakemake for one stage and return the exit code.
+
+    Args:
+        snakefile: Path to the Snakefile for this stage.
+        config_path: Path to the build config.yaml (passed as ``build_config=`` so
+            ``flexpipe-*`` CLI subprocesses can locate it).
+        paths: WorkdirPaths for the current run.
+        cores: Number of CPU cores to pass to Snakemake.
+        config_overrides: Resolved config YAML written by
+            ``write_snakemake_config_overrides``; used as the sole ``--configfile``.
+        run_date: Reference date (``YYYY-MM-DD``) to pass as ``--config run_date=``.
+            The ingest stage uses it to bound ``augur subsample`` via ``defaults.max_date``.
+            Phylo ignores it but receives it for forward-compatibility.  Empty string
+            means no date override (backwards-compatible for direct snakemake invocations).
+    """
     cmd = [
         "snakemake",
         "--snakefile",
@@ -90,16 +105,13 @@ def _run_snakemake(
         # required.  Falls back to the raw build config for direct snakemake invocations.
         str(config_overrides) if config_overrides is not None else str(config_path),
     ]
-    cmd.extend(
-        [
-            "--config",
-            f"workdir={paths.root}",
-            f"build_config={config_path}",
-            "--cores",
-            str(cores),
-            "--nolock",
-        ]
-    )
+    config_args = [
+        f"workdir={paths.root}",
+        f"build_config={config_path}",
+    ]
+    if run_date:
+        config_args.append(f"run_date={run_date}")
+    cmd.extend(["--config"] + config_args + ["--cores", str(cores), "--nolock"])
     logger.info("Running: %s", " ".join(cmd))
     result = subprocess.run(cmd)
     return result.returncode
@@ -157,7 +169,9 @@ def run_pipeline(
 
     if stage in ("ingest", "all"):
         logger.info("=== Stage: ingest ===")
-        rc = _run_snakemake(_INGEST_SNAKEFILE, config_path, paths, cores, snakemake_overrides)
+        rc = _run_snakemake(
+            _INGEST_SNAKEFILE, config_path, paths, cores, snakemake_overrides, run_date=run_date
+        )
         manifest.record("ingest_exit_code", rc)
         if rc != 0:
             logger.error("Ingest stage failed (exit code %d)", rc)
@@ -177,7 +191,9 @@ def run_pipeline(
                 manifest.save(paths.manifest)
                 return 1
         logger.info("=== Stage: phylogenetic ===")
-        rc = _run_snakemake(_PHYLO_SNAKEFILE, config_path, paths, cores, snakemake_overrides)
+        rc = _run_snakemake(
+            _PHYLO_SNAKEFILE, config_path, paths, cores, snakemake_overrides, run_date=run_date
+        )
         manifest.record("phylo_exit_code", rc)
         if rc != 0:
             logger.error("Phylogenetic stage failed (exit code %d)", rc)

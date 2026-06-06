@@ -206,6 +206,74 @@ class TestRunSnakemakeCommand:
         assert len(config_tokens) == 1, "build_config= not found in --config args"
         assert config_tokens[0] == f"build_config={build_config}"
 
+    def test_run_date_forwarded_to_snakemake(self, monkeypatch, tmp_path):
+        """run_date is passed as --config run_date=<date> to both ingest and phylo stages."""
+        captured = {}
+
+        def fake_run(cmd, **kwargs):
+            captured.setdefault("cmds", []).append(cmd)
+            return MagicMock(returncode=0)
+
+        monkeypatch.setattr("flexpipe.run.subprocess.run", fake_run)
+
+        overrides = tmp_path / "snakemake_resolved.yaml"
+        overrides.write_text("viralqc:\n  datasets_dir: /foo\n")
+        build_config = Path("builds/yfv-brazil/config.yaml")
+
+        _run_snakemake(
+            snakefile=Path("ingest/Snakefile"),
+            config_path=build_config,
+            paths=WorkdirPaths.from_root(tmp_path / "workdir"),
+            cores=2,
+            config_overrides=overrides,
+            run_date="2026-01-01",
+        )
+
+        cmd = captured["cmds"][0]
+        run_date_tokens = [t for t in cmd if t.startswith("run_date=")]
+        assert run_date_tokens == ["run_date=2026-01-01"]
+
+    def test_run_date_absent_when_empty(self, monkeypatch, tmp_path):
+        """No run_date= token when run_date is empty (direct snakemake invocation path)."""
+        captured = {}
+
+        def fake_run(cmd, **kwargs):
+            captured["cmd"] = cmd
+            return MagicMock(returncode=0)
+
+        monkeypatch.setattr("flexpipe.run.subprocess.run", fake_run)
+
+        overrides = tmp_path / "snakemake_resolved.yaml"
+        overrides.write_text("viralqc:\n  datasets_dir: /foo\n")
+        build_config = Path("builds/yfv-brazil/config.yaml")
+
+        _run_snakemake(
+            snakefile=Path("ingest/Snakefile"),
+            config_path=build_config,
+            paths=WorkdirPaths.from_root(tmp_path / "workdir"),
+            cores=2,
+            config_overrides=overrides,
+            run_date="",
+        )
+
+        cmd = captured["cmd"]
+        run_date_tokens = [t for t in cmd if t.startswith("run_date=")]
+        assert run_date_tokens == [], "run_date= token must be absent when run_date is empty"
+
+    def test_run_pipeline_forwards_run_date_to_snakemake(self, patch_run, tmp_path):
+        """run_pipeline passes run_date through to _run_snakemake."""
+        run_pipeline(
+            config_path=FIXTURE_CONFIG,
+            workdir=tmp_path,
+            run_date="2026-03-15",
+            stage="ingest",
+        )
+        call_args = patch_run.call_args_list
+        assert len(call_args) == 1
+        # _run_snakemake receives run_date as a keyword arg
+        _, kwargs = call_args[0]
+        assert kwargs.get("run_date") == "2026-03-15"
+
     def test_writes_resolved_config_during_run(self, patch_run, tmp_path):
         run_pipeline(
             config_path=FIXTURE_CONFIG,

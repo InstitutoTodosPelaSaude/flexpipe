@@ -98,6 +98,39 @@ def _dry_run(tmp_path, resolved_config):
     return combined, result.returncode
 
 
+def _dry_run_with_run_date(tmp_path, resolved_config, run_date):
+    """Like _dry_run but also passes --config run_date=<run_date>."""
+    if not shutil.which("snakemake"):
+        pytest.skip("snakemake not found on PATH — activate the nextstrain conda env")
+
+    workdir = tmp_path / "workdir"
+    cmd = [
+        "snakemake",
+        "--snakefile",
+        str(INGEST_SNAKEFILE),
+        "--configfile",
+        str(resolved_config),
+        "--config",
+        f"workdir={workdir}",
+        f"build_config={BUILD_CONFIG}",
+        f"run_date={run_date}",
+        "--dry-run",
+        "--printshellcmds",
+        "--cores",
+        "1",
+        "--nolock",
+    ]
+
+    result = subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
+    )
+    combined = result.stdout + "\n" + result.stderr
+    return combined, result.returncode
+
+
 @pytest.mark.integration
 class TestIngestWiring:
     def test_dry_run_succeeds(self, tmp_path, resolved_config):
@@ -140,5 +173,29 @@ class TestIngestWiring:
             ), f"--datasets-dir is empty or missing its argument.\nLine: {line!r}"
             assert FAKE_DATASETS_DIR in line, (
                 f"Expected fake datasets dir {FAKE_DATASETS_DIR!r} in viralqc command.\n"
+                f"Line: {line!r}"
+            )
+
+    def test_dry_run_with_run_date_schedules_resolve_subsample_config(
+        self, tmp_path, resolved_config
+    ):
+        """Passing run_date causes the resolve_subsample_config rule to be scheduled."""
+        output, rc = _dry_run_with_run_date(tmp_path, resolved_config, "2026-01-01")
+        assert rc == 0, f"dry-run with run_date failed:\n{output}"
+        assert "resolve_subsample_config" in output, (
+            "resolve_subsample_config rule was not scheduled.\n" f"Output:\n{output}"
+        )
+
+    def test_dry_run_with_run_date_subsample_uses_resolved_config(self, tmp_path, resolved_config):
+        """The prepare rule (augur subsample) must consume subsample_resolved.yaml."""
+        output, rc = _dry_run_with_run_date(tmp_path, resolved_config, "2026-01-01")
+        assert rc == 0, f"dry-run with run_date failed:\n{output}"
+
+        subsample_lines = [ln for ln in output.splitlines() if "augur subsample" in ln]
+        assert subsample_lines, "augur subsample command not found in dry-run output"
+
+        for line in subsample_lines:
+            assert "subsample_resolved.yaml" in line, (
+                f"augur subsample was not given the workdir-resolved subsample config.\n"
                 f"Line: {line!r}"
             )

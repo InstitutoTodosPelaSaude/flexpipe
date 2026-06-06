@@ -331,6 +331,35 @@ def resolve_viralqc_paths(viralqc_cfg: ViralqcConfig) -> ViralqcConfig:
     return ViralqcConfig(**data)
 
 
+def resolve_subsample_config(raw: dict, run_date: str | None) -> dict:
+    """Return a copy of the subsample config dict with ``defaults.max_date`` injected.
+
+    When *run_date* is provided, it is written into the ``defaults`` section of the
+    subsample config as the ``max_date`` upper bound for ``augur subsample``.  This
+    ensures a scheduled rerun with ``--run-date 2026-01-01`` is bounded by that date
+    rather than anchored to the system clock.
+
+    When *run_date* is empty or ``None`` the dict is returned unchanged — preserving
+    current behaviour for direct ``snakemake`` invocations that do not pass
+    ``--config run_date=``.
+
+    Args:
+        raw: Parsed subsample config dict (e.g. from ``builds/<name>/subsample.yaml``).
+        run_date: Reference date in ``YYYY-MM-DD`` format, or ``None`` / ``""`` to skip.
+
+    Returns:
+        A shallow copy of *raw* with the ``defaults`` section updated.
+    """
+    import copy
+
+    if not run_date:
+        return raw
+    out = copy.deepcopy(raw)
+    out.setdefault("defaults", {})["max_date"] = run_date
+    logger.debug("resolve_subsample_config: set defaults.max_date=%s", run_date)
+    return out
+
+
 def write_snakemake_config_overrides(
     cfg: FlexpipeConfig, path: str | Path, config_path: str | Path
 ) -> Path:
