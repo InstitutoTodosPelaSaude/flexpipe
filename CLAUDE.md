@@ -307,9 +307,13 @@ flexpipe-run --config builds/my-pathogen/config.yaml --workdir /tmp/my-run
 Key fields to update in `config.yaml`:
 - `data_source` (pathoplexus or ncbi)
 - `pathoplexus.organism` / `ncbi.taxid`
-- `parameters.mask_5prime/3prime` (terminal masking in bp; 0 for full-genome)
+- `parameters.mask_5prime/3prime` (terminal masking in bp; 0 for full-genome) — **these values
+  are per-reference**: YFV uses 142/548 (X03700.1); you must re-derive them for any new reference
+- `parameters.mask_sites_file` (optional BED file path for problematic-site masking; leave blank
+  if unused)
 - `curation.clade_levels` (hierarchy depth for `clade_truncated`)
 - `region_source` (country for global, division for Brazil-only builds)
+- `qc.min_sequences` (minimum subsampled sequences required before phylogenetics; default 10)
 - `viralqc.*` (or set `VIRALQC_DATASETS_DIR`)
 - `traits.columns` (which metadata fields to infer ancestral states for)
 
@@ -332,6 +336,22 @@ Package version is managed via **hatch-vcs** (`dynamic = ["version"]` in `pyproj
 - `git tag v0.2.0 && git push --tags` — tag the release; hatch-vcs resolves `0.2.0` at install time
 - Without a tag, the installed version is a dev string (e.g. `0.1.dev65+g50db586`)
 - In environments without `.git` (e.g. Docker), set `SETUPTOOLS_SCM_PRETEND_VERSION=0.2.0` before `pip install`
+
+## Segmented viruses (out of scope for v0.x)
+
+The ViralQC join supports per-segment contamination filtering via `viralqc.expected_segment`
+(e.g. `"L"` for Lassa virus L segment) — sequences with a non-matching segment are flagged
+`genome_quality="D"` and excluded. However, the rest of the pipeline (single reference, single
+MAFFT alignment, single IQ-TREE tree) has **no per-segment fan-out or reassortment handling**.
+Multi-segment builds must be run as **separate single-segment builds** (one per segment, each
+with its own reference, clades, and workdir).
+
+## Workdir locking
+
+`flexpipe-run` acquires a workdir-level lock (`<workdir>/.flexpipe.lock`) using `filelock` before
+running Snakemake. A second `flexpipe-run` targeting the same workdir exits with code 2 immediately
+rather than corrupting the ongoing run. Snakemake's native `--nolock` flag is still passed
+because its own lock is scoped to the process invocation directory, not the workdir.
 
 ## Lock file maintenance
 

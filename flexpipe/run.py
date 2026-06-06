@@ -31,7 +31,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-from flexpipe.config import load_config, write_snakemake_config_overrides
+import filelock
+
+from flexpipe.config import FlexpipeConfig, load_config, write_snakemake_config_overrides
 from flexpipe.logging_setup import configure_logging
 from flexpipe.manifest import Manifest
 from flexpipe.paths import WorkdirPaths
@@ -150,6 +152,47 @@ def run_pipeline(
     paths = WorkdirPaths.from_root(workdir)
     paths.ensure_dirs()
 
+    # Acquire workdir-level lock to prevent concurrent runs on the same workdir.
+    # Snakemake's native lock is scoped to the invocation directory (not the workdir),
+    # so we manage the guard explicitly here.  timeout=0 → fail immediately if locked.
+    lock = filelock.FileLock(str(paths.lock_file), timeout=0)
+    try:
+        lock.acquire()
+    except filelock.Timeout:
+        logger.error(
+            "Another flexpipe-run process already holds the workdir lock: %s\n"
+            "Wait for that run to finish, or remove the lock file manually: %s",
+            workdir,
+            paths.lock_file,
+        )
+        return 2
+
+    try:
+        return _run_pipeline_locked(
+            cfg=cfg,
+            config_path=config_path,
+            build_dir=build_dir,
+            build_name=build_name,
+            paths=paths,
+            run_date=run_date,
+            stage=stage,
+            cores=cores,
+        )
+    finally:
+        lock.release()
+
+
+def _run_pipeline_locked(
+    cfg: FlexpipeConfig,
+    config_path: Path,
+    build_dir: Path,
+    build_name: str,
+    paths: WorkdirPaths,
+    run_date: str,
+    stage: str,
+    cores: int,
+) -> int:
+    """Inner pipeline body — called inside the workdir lock."""
     snakemake_overrides = write_snakemake_config_overrides(
         cfg, paths.snakemake_config_overrides, config_path
     )
@@ -164,6 +207,8 @@ def run_pipeline(
     )
 
     manifest = Manifest(run_date=run_date, build_name=build_name, config_path=config_path)
+
+    min_sequences = cfg.qc.min_sequences
 
     rc = 0
 
@@ -181,15 +226,15 @@ def run_pipeline(
         _record_row_counts(manifest, paths)
 
     if stage in ("phylo", "all"):
-        # Boundary check before phylogenetics
-        if stage == "all":
-            try:
-                manifest.validate_boundary(paths.subsampled_metadata)
-            except SystemExit as exc:
-                logger.error("Boundary check failed: %s", exc)
-                manifest.record("status", "boundary_failed")
-                manifest.save(paths.manifest)
-                return 1
+        # Boundary check before phylogenetics: column contract + min-sequences guardrail.
+        # Run for both "all" and standalone "phylo" so the guardrail always applies.
+        try:
+            manifest.validate_boundary(paths.subsampled_metadata, min_sequences=min_sequences)
+        except SystemExit as exc:
+            logger.error("Boundary check failed: %s", exc)
+            manifest.record("status", "boundary_failed")
+            manifest.save(paths.manifest)
+            return 1
         logger.info("=== Stage: phylogenetic ===")
         rc = _run_snakemake(
             _PHYLO_SNAKEFILE, config_path, paths, cores, snakemake_overrides, run_date=run_date

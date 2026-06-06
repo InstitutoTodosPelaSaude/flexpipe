@@ -49,15 +49,22 @@ rule align:
         """
 
 
+_mask_sites_file = config["parameters"].get("mask_sites_file", "")
+
 rule mask:
     message:
         "Masking {params.mask_from_beginning} bp from start, {params.mask_from_end} bp from end"
     input:
-        alignment = rules.align.output.alignment
+        alignment  = rules.align.output.alignment,
+        # Only declare the BED file as an explicit input when set, so Snakemake tracks the
+        # dependency correctly. When empty the rule does not depend on any extra file.
+        **({} if not _mask_sites_file else {"mask_bed": _mask_sites_file})
     params:
         mask_from_beginning = parameters.mask_5prime,
         mask_from_end       = parameters.mask_3prime,
-        mask_sites          = parameters.mask_sites
+        mask_sites          = parameters.mask_sites,
+        # Build the --mask flag string once; avoids shell-conditional awkwardness.
+        mask_bed_flag = f"--mask {_mask_sites_file}" if _mask_sites_file else ""
     output:
         alignment = f"{_wd}/results/alignments/masked.fasta"
     shell:
@@ -67,6 +74,7 @@ rule mask:
             --mask-from-beginning {params.mask_from_beginning} \
             --mask-from-end       {params.mask_from_end} \
             --mask-sites          {params.mask_sites} \
+            {params.mask_bed_flag} \
             --output              {output.alignment}
         """
 

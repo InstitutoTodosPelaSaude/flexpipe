@@ -36,6 +36,7 @@ dependencies = [
     "openpyxl",
     "beautifulsoup4",
     "pydantic>=2",
+    "filelock",
 ]
 
 [project.optional-dependencies]

@@ -151,6 +151,28 @@ class WorkdirPaths:
     def phylo_log(self) -> Path:
         return self.logs_dir / "phylo.log"
 
+    # ── QC artifacts ─────────────────────────────────────────────────────────
+    @property
+    def filter_log(self) -> Path:
+        """Per-strain filter log written by ``augur filter --output-log``."""
+        return self.ingest_dir / "filter_log.tsv"
+
+    @property
+    def qc_report(self) -> Path:
+        """Structured JSON QC report written by ``flexpipe-qc-summary``."""
+        return self.results / "qc_report.json"
+
+    @property
+    def qc_summary(self) -> Path:
+        """Flat TSV QC summary (per-grade counts) written by ``flexpipe-qc-summary``."""
+        return self.results / "qc_summary.tsv"
+
+    # ── concurrency ───────────────────────────────────────────────────────────
+    @property
+    def lock_file(self) -> Path:
+        """Workdir-level lock file used by ``filelock`` to prevent concurrent runs."""
+        return self.root / ".flexpipe.lock"
+
     # ── provenance ───────────────────────────────────────────────────────────
     @property
     def manifest(self) -> Path:

@@ -50,6 +50,9 @@ class ParametersConfig(BaseModel):
     mask_5prime: int = 0
     mask_3prime: int = 0
     mask_sites: str = ""
+    mask_sites_file: str = (
+        ""  # optional BED file of problematic sites; positional values are per-reference
+    )
     ufboot: int = 1000
     model: str = "MFP"
     root: str = "least-squares"
@@ -146,6 +149,7 @@ class ViralqcConfig(BaseModel):
     blast_database: str = ""
     blast_database_metadata: str = ""
     expected_virus: str | None = None
+    expected_segment: str = ""  # single expected segment (e.g. "L", "S"); flags wrong-segment reads
 
 
 class QcConfig(BaseModel):
@@ -153,6 +157,7 @@ class QcConfig(BaseModel):
     genome_quality: list[str] = ["A", "B"]
     min_coverage: float = 0.70
     required_columns: list[str] = Field(default_factory=lambda: ["strain", "date", "clade"])
+    min_sequences: int = 10  # minimum subsampled sequences required before phylogenetics
 
 
 class LocalSequencesConfig(BaseModel):
