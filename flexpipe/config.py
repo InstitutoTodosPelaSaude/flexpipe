@@ -331,6 +331,30 @@ def resolve_viralqc_paths(viralqc_cfg: ViralqcConfig) -> ViralqcConfig:
     return ViralqcConfig(**data)
 
 
+def write_snakemake_config_overrides(cfg: FlexpipeConfig, path: str | Path) -> Path:
+    """Write resolved config values for Snakemake to consume.
+
+    Snakemake reads the build ``config.yaml`` directly, so pydantic resolution
+    (e.g. ViralQC dataset auto-discovery) would otherwise be bypassed.  This
+    snapshot is passed as a second ``--configfile`` and overrides empty or
+    placeholder values from the build config.
+
+    Args:
+        cfg: Validated config with resolved ViralQC paths.
+        path: Output YAML path (parent directories are created if needed).
+
+    Returns:
+        The path written.
+    """
+    out = Path(path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    overrides = {"viralqc": cfg.viralqc.model_dump()}
+    with open(out, "w", encoding="utf-8") as f:
+        yaml.safe_dump(overrides, f, default_flow_style=False, sort_keys=False)
+    logger.debug("Wrote Snakemake config overrides to %s", out)
+    return out
+
+
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------

@@ -4,12 +4,14 @@ from pathlib import Path
 
 import pydantic
 import pytest
+import yaml
 
 from flexpipe.config import (
     FlexpipeConfig,
     ViralqcConfig,
     load_config,
     resolve_viralqc_paths,
+    write_snakemake_config_overrides,
 )
 
 # ---------------------------------------------------------------------------
@@ -294,3 +296,27 @@ class TestResolveViralqcPaths:
             )
         )
         assert v.blast_database == str(custom_blast)
+
+
+# ---------------------------------------------------------------------------
+# write_snakemake_config_overrides
+# ---------------------------------------------------------------------------
+
+
+class TestWriteSnakemakeConfigOverrides:
+    def test_writes_resolved_viralqc_paths(self, tmp_path):
+        cfg = FlexpipeConfig(
+            data_source="pathoplexus",
+            pathoplexus={"organism": "yellow-fever"},
+            viralqc=ViralqcConfig(
+                datasets_dir="/data/viralQC/datasets",
+                blast_database="/data/viralQC/datasets/blast.fasta",
+                blast_database_metadata="/data/viralQC/datasets/blast.tsv",
+            ),
+        )
+        out = write_snakemake_config_overrides(cfg, tmp_path / "snakemake_resolved.yaml")
+        assert out.exists()
+        loaded = yaml.safe_load(out.read_text())
+        assert loaded["viralqc"]["datasets_dir"] == "/data/viralQC/datasets"
+        assert loaded["viralqc"]["blast_database"] == "/data/viralQC/datasets/blast.fasta"
+        assert loaded["viralqc"]["blast_database_metadata"] == "/data/viralQC/datasets/blast.tsv"

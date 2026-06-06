@@ -31,7 +31,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from flexpipe.config import load_config
+from flexpipe.config import load_config, write_snakemake_config_overrides
 from flexpipe.logging_setup import configure_logging
 from flexpipe.manifest import Manifest
 from flexpipe.paths import WorkdirPaths
@@ -71,7 +71,13 @@ def _seed_coordinate_cache(build_dir: Path, paths: WorkdirPaths) -> None:
         logger.info("Seeded coordinate cache from %s → %s", seed, target)
 
 
-def _run_snakemake(snakefile: Path, config_path: Path, paths: WorkdirPaths, cores: int) -> int:
+def _run_snakemake(
+    snakefile: Path,
+    config_path: Path,
+    paths: WorkdirPaths,
+    cores: int,
+    config_overrides: Path | None = None,
+) -> int:
     """Invoke Snakemake for one stage and return the exit code."""
     cmd = [
         "snakemake",
@@ -79,12 +85,18 @@ def _run_snakemake(snakefile: Path, config_path: Path, paths: WorkdirPaths, core
         str(snakefile),
         "--configfile",
         str(config_path),
-        "--config",
-        f"workdir={paths.root}",
-        "--cores",
-        str(cores),
-        "--nolock",
     ]
+    if config_overrides is not None:
+        cmd.extend(["--configfile", str(config_overrides)])
+    cmd.extend(
+        [
+            "--config",
+            f"workdir={paths.root}",
+            "--cores",
+            str(cores),
+            "--nolock",
+        ]
+    )
     logger.info("Running: %s", " ".join(cmd))
     result = subprocess.run(cmd)
     return result.returncode
@@ -114,7 +126,7 @@ def run_pipeline(
 
     # Load and validate config
     try:
-        load_config(config_path, workdir=workdir)
+        cfg = load_config(config_path, workdir=workdir)
     except SystemExit as exc:
         logger.error("Configuration error: %s", exc)
         return 2
@@ -122,6 +134,8 @@ def run_pipeline(
     # Ensure workdir layout
     paths = WorkdirPaths.from_root(workdir)
     paths.ensure_dirs()
+
+    snakemake_overrides = write_snakemake_config_overrides(cfg, paths.snakemake_config_overrides)
 
     # Seed coordinate cache (read-only source → writable workdir)
     _seed_coordinate_cache(build_dir, paths)
@@ -138,7 +152,7 @@ def run_pipeline(
 
     if stage in ("ingest", "all"):
         logger.info("=== Stage: ingest ===")
-        rc = _run_snakemake(_INGEST_SNAKEFILE, config_path, paths, cores)
+        rc = _run_snakemake(_INGEST_SNAKEFILE, config_path, paths, cores, snakemake_overrides)
         manifest.record("ingest_exit_code", rc)
         if rc != 0:
             logger.error("Ingest stage failed (exit code %d)", rc)
@@ -158,7 +172,7 @@ def run_pipeline(
                 manifest.save(paths.manifest)
                 return 1
         logger.info("=== Stage: phylogenetic ===")
-        rc = _run_snakemake(_PHYLO_SNAKEFILE, config_path, paths, cores)
+        rc = _run_snakemake(_PHYLO_SNAKEFILE, config_path, paths, cores, snakemake_overrides)
         manifest.record("phylo_exit_code", rc)
         if rc != 0:
             logger.error("Phylogenetic stage failed (exit code %d)", rc)

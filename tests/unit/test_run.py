@@ -5,15 +5,26 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
+import yaml
 
-from flexpipe.run import run_pipeline
+from flexpipe.config import FlexpipeConfig, ViralqcConfig
+from flexpipe.paths import WorkdirPaths
+from flexpipe.run import _run_snakemake, run_pipeline
 
 FIXTURE_CONFIG = Path(__file__).parent.parent / "fixtures" / "config_division_build.yaml"
 
 
 def _make_mock_cfg():
-    """Return a minimal valid FlexpipeConfig-like mock."""
-    return MagicMock()
+    """Return a minimal valid FlexpipeConfig for orchestrator tests."""
+    return FlexpipeConfig(
+        data_source="pathoplexus",
+        pathoplexus={"organism": "yellow-fever"},
+        viralqc=ViralqcConfig(
+            datasets_dir="/tmp/viralQC/datasets",
+            blast_database="/tmp/viralQC/datasets/blast.fasta",
+            blast_database_metadata="/tmp/viralQC/datasets/blast.tsv",
+        ),
+    )
 
 
 @pytest.fixture()
@@ -158,3 +169,45 @@ class TestRunPipelineManifest:
         )
         data = json.loads((tmp_path / "manifest.json").read_text())
         assert data.get("run_date") == "2026-06-05"
+
+
+class TestRunSnakemakeCommand:
+    def test_includes_overrides_configfile(self, monkeypatch, tmp_path):
+        captured = {}
+
+        def fake_run(cmd, **kwargs):
+            captured["cmd"] = cmd
+            return MagicMock(returncode=0)
+
+        monkeypatch.setattr("flexpipe.run.subprocess.run", fake_run)
+
+        overrides = tmp_path / "snakemake_resolved.yaml"
+        overrides.write_text("viralqc:\n  datasets_dir: /foo\n")
+
+        _run_snakemake(
+            snakefile=Path("ingest/Snakefile"),
+            config_path=Path("builds/yfv-brazil/config.yaml"),
+            paths=WorkdirPaths.from_root(tmp_path / "workdir"),
+            cores=2,
+            config_overrides=overrides,
+        )
+
+        cmd = captured["cmd"]
+        configfile_args = [cmd[i + 1] for i, arg in enumerate(cmd) if arg == "--configfile"]
+        assert str(Path("builds/yfv-brazil/config.yaml")) in configfile_args
+        assert str(overrides) in configfile_args
+        assert configfile_args.index(str(overrides)) > configfile_args.index(
+            str(Path("builds/yfv-brazil/config.yaml"))
+        )
+
+    def test_writes_overrides_during_run(self, patch_run, tmp_path):
+        run_pipeline(
+            config_path=FIXTURE_CONFIG,
+            workdir=tmp_path,
+            run_date="2026-06-05",
+            stage="ingest",
+        )
+        overrides = tmp_path / "config" / "snakemake_resolved.yaml"
+        assert overrides.exists()
+        data = yaml.safe_load(overrides.read_text())
+        assert data["viralqc"]["datasets_dir"] == "/tmp/viralQC/datasets"

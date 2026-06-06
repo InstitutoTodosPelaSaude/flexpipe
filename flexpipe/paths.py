@@ -120,6 +120,10 @@ class WorkdirPaths:
     def name2hue(self) -> Path:
         return self.generated_config_dir / "name2hue.tsv"
 
+    @property
+    def snakemake_config_overrides(self) -> Path:
+        return self.generated_config_dir / "snakemake_resolved.yaml"
+
     # ── mutable cache ────────────────────────────────────────────────────────
     @property
     def cache_dir(self) -> Path:
