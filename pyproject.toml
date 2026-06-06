@@ -41,6 +41,7 @@ dependencies = [
 [project.optional-dependencies]
 test = [
     "pytest",
+    "pytest-cov",
     "pytest-mock",
     "responses",
 ]
@@ -49,6 +50,7 @@ dev = [
     "black",
     "mypy",
     "pytest",
+    "pytest-cov",
     "pytest-mock",
     "responses",
 ]
