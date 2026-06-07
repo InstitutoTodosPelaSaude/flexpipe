@@ -18,6 +18,7 @@ Key changes vs the original:
 """
 
 import argparse
+import hashlib
 import logging
 
 import matplotlib.colors
@@ -120,6 +121,30 @@ def _colormap_sample(cmap_name: str, n_members: int) -> list:
     ]
 
 
+def _stable_shade_index(*parts: str, slots: int = 101) -> int:
+    """Return a deterministic non-extreme gradient index for a hierarchy member."""
+    digest = hashlib.sha256("|".join(str(part) for part in parts).encode("utf-8")).hexdigest()
+    return 5 + (int(digest, 16) % max(1, slots - 10))
+
+
+def _stable_member_colour(hue_val: str, root: str, level: str, member: str) -> str:
+    """Assign a stable shade within a root hue family."""
+    idx = _stable_shade_index(root, level, member)
+    if str(hue_val).isdigit():
+        start, end = HUE_TO_HEX[int(hue_val)]
+        return linear_gradient(start, end, 101)[idx]
+
+    colours = _colormap_sample(str(hue_val), 101)
+    return colours[min(idx, len(colours) - 1)]
+
+
+def _root_colour(hue_val: str) -> str:
+    if str(hue_val).isdigit():
+        start, end = HUE_TO_HEX[int(hue_val)]
+        return linear_gradient(start, end, 11)[3]
+    return _colormap_sample(str(hue_val), 1)[0]
+
+
 def build_scheme(
     df: pd.DataFrame,
     levels: list,
@@ -140,35 +165,21 @@ def build_scheme(
     for highest, dfG in df[levels].groupby(levels[0], as_index=False):
         dfG = dfG.drop_duplicates().sort_values(by=levels)
         hue_val = colour_wheel.get(str(highest), "")
+        if not hue_val:
+            logger.warning("No hue configured for hierarchy root '%s'", highest)
+            continue
 
         for level in levels:
             members = dfG[level].drop_duplicates().tolist()
-
-            if str(hue_val).isdigit():
-                # Integer hue → use the pre-computed HUE_TO_HEX gradient
-                start, end = HUE_TO_HEX[int(hue_val)]
-                n = len(members)
-                if n == 1:
-                    gradient = linear_gradient(start, end, 11)
-                    gradient = [gradient[3]]
-                elif n == 2:
-                    gradient = linear_gradient(start, end, 11)
-                    gradient = [gradient[2], gradient[8]]
-                elif n == 3:
-                    gradient = linear_gradient(start, end, 11)
-                    gradient = [gradient[1], gradient[5], gradient[9]]
-                elif n == 4:
-                    gradient = linear_gradient(start, end, 11)
-                    gradient = [gradient[0], gradient[3], gradient[6], gradient[9]]
+            for member in members:
+                if str(member).strip() == "":
+                    continue
+                if level == levels[0]:
+                    results[level][member] = _root_colour(str(hue_val))
                 else:
-                    gradient = linear_gradient(start, end, n)
-                for memb, colour in zip(members, gradient):
-                    results[level][memb] = colour
-            elif hue_val:
-                # Named matplotlib colormap
-                colours = _colormap_sample(hue_val, len(members))
-                for memb, colour in zip(members, colours):
-                    results[level][memb] = colour
+                    results[level][member] = _stable_member_colour(
+                        str(hue_val), str(highest), level, str(member)
+                    )
 
     return results
 

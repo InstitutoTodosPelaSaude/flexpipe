@@ -66,6 +66,7 @@ flexpipe-disambiguate-geo  = "flexpipe.cli:disambiguate_geo"
 flexpipe-update-cache      = "flexpipe.cli:update_cache"
 flexpipe-name2hue          = "flexpipe.cli:name2hue"
 flexpipe-colours           = "flexpipe.cli:colours"
+flexpipe-collapse-traits   = "flexpipe.cli:collapse_traits"
 flexpipe-qc-summary        = "flexpipe.cli:qc_summary"
 flexpipe-run               = "flexpipe.cli:run"
 

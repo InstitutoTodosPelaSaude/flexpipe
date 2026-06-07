@@ -19,6 +19,29 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 
+def _normalized_viralqc_seq_name(value: str) -> str:
+    """Return the metadata-compatible accession from a ViralQC sequence name."""
+    return str(value).split("|", 1)[0].strip()
+
+
+def _joinable_viralqc_table(nc: pd.DataFrame, nc_cols: dict) -> pd.DataFrame:
+    """Return ViralQC rows keyed by exact and normalized sequence names."""
+    nc_sub = nc[list(nc_cols)].rename(columns=nc_cols)
+    nc_sub["strain"] = nc_sub["strain"].astype(str).str.strip()
+
+    exact = nc_sub.copy()
+    exact["_join_priority"] = 0
+
+    normalized = nc_sub.copy()
+    normalized["strain"] = normalized["strain"].map(_normalized_viralqc_seq_name)
+    normalized["_join_priority"] = 1
+
+    combined = pd.concat([exact, normalized], ignore_index=True)
+    combined = combined[combined["strain"] != ""]
+    combined = combined.sort_values("_join_priority").drop_duplicates("strain", keep="first")
+    return combined.drop(columns=["_join_priority"])
+
+
 def join_viralqc(
     df: pd.DataFrame,
     nextclade_path: Optional[Union[str, Path]],
@@ -75,7 +98,7 @@ def join_viralqc(
         if "segment" in nc.columns:
             nc_cols["segment"] = "_nc_segment"
 
-        nc_sub = nc[list(nc_cols)].rename(columns=nc_cols)
+        nc_sub = _joinable_viralqc_table(nc, nc_cols)
         nc_sub["_has_viralqc"] = "1"
         df = df.merge(nc_sub, on="strain", how="left")
 
@@ -111,9 +134,10 @@ def join_viralqc(
 
         if "_nc_virus" in df.columns:
             if expected_virus:
-                present = df["_nc_virus"].str.strip() != ""
-                bad_virus = present & (df["_nc_virus"].str.strip() != expected_virus)
-                unclassified = present & df["_nc_virus"].str.lower().str.contains(
+                virus_values = df["_nc_virus"].fillna("").astype(str).str.strip()
+                present = virus_values != ""
+                bad_virus = present & (virus_values != expected_virus)
+                unclassified = present & virus_values.str.lower().str.contains(
                     "unclassified", na=False
                 )
                 exclude = bad_virus | unclassified
@@ -132,8 +156,9 @@ def join_viralqc(
 
         if "_nc_segment" in df.columns:
             if expected_segment:
-                present = df["_nc_segment"].str.strip() != ""
-                bad_seg = present & (df["_nc_segment"].str.strip() != expected_segment)
+                segment_values = df["_nc_segment"].fillna("").astype(str).str.strip()
+                present = segment_values != ""
+                bad_seg = present & (segment_values != expected_segment)
                 n = int(bad_seg.sum())
                 if n:
                     logger.warning(

@@ -218,6 +218,8 @@ class ParametersConfig(BaseModel):
     date_inference: Literal["marginal", "joint"] = "marginal"
     divergence_units: Literal["mutations", "mutations-per-site"] = "mutations"
     clock_filter_iqd: int = Field(default=4, ge=0)
+    date_confidence: bool = True
+    traits_confidence: bool = True
     ancestral_inference: Literal["joint", "marginal"] = "joint"
 
 
@@ -264,11 +266,21 @@ class ColoursConfig(BaseModel):
 class TraitsConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
     columns: str = "division location clade"
+    max_states: int = Field(default=200, ge=1)
+    rare_state_label: str = Field(default="other", min_length=1)
 
     @field_validator("columns")
     @classmethod
     def validate_columns(cls, value: str) -> str:
         return _validate_column_list(value, "traits.columns")
+
+    @field_validator("rare_state_label")
+    @classmethod
+    def validate_rare_state_label(cls, value: str) -> str:
+        value = str(value).strip()
+        if not value:
+            raise ValueError("traits.rare_state_label must be non-empty")
+        return value
 
 
 class SubsamplingConfig(BaseModel):
@@ -276,11 +288,34 @@ class SubsamplingConfig(BaseModel):
     random_seed: int = 42
 
 
+class LineageColumnsConfig(BaseModel):
+    """Output columns populated by the optional lineage parser."""
+
+    model_config = ConfigDict(extra="forbid")
+    serotype: str = "serotype"
+    genotype: str = "genotype"
+    major_lineage: str = "major_lineage"
+    minor_lineage: str = "minor_lineage"
+
+    @field_validator("serotype", "genotype", "major_lineage", "minor_lineage")
+    @classmethod
+    def validate_column_name(cls, value: str) -> str:
+        value = str(value).strip()
+        if not value or not re.match(r"^[A-Za-z_][A-Za-z0-9_]*$", value):
+            raise ValueError(
+                "lineage column names must be non-empty identifiers with letters, "
+                "numbers, and underscores"
+            )
+        return value
+
+
 class CurationConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
     clade_levels: int = 1
     clade_separator: str = "."
     host_rules: str | None = None
+    lineage_parser: Literal["none", "dengue", "pango", "generic_dot"] = "none"
+    lineage_columns: LineageColumnsConfig = Field(default_factory=LineageColumnsConfig)
 
 
 class RegionsConfig(BaseModel):
@@ -300,6 +335,8 @@ class PathoplexusConfig(BaseModel):
     metadata_endpoint: str = "details"
     sequences_endpoint: str = "unalignedNucleotideSequences"
     min_completeness: float = 0.70
+    query_params: dict = Field(default_factory=dict)
+    strip_fasta_id_suffix: bool = False
 
 
 class NcbiConfig(BaseModel):

@@ -98,6 +98,13 @@ def colours() -> None:
     main()
 
 
+def collapse_traits() -> None:
+    """flexpipe-collapse-traits — cap trait states before TreeTime inference."""
+    from flexpipe.phylo.traits import main
+
+    main()
+
+
 # ── Orchestrator ─────────────────────────────────────────────────────────────
 
 

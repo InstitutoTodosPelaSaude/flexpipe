@@ -1,10 +1,10 @@
 {
-  "title": "Yellow Fever Virus — Brazil",
+  "title": "Dengue Virus 1 - Brazil",
 
   "data_provenance": [
     {
       "name": "Pathoplexus",
-      "url": "https://pathoplexus.org/"
+      "url": "https://pathoplexus.org/dengue"
     }
   ],
 
@@ -12,7 +12,7 @@
 
   "maintainers": [
     {
-      "name": "Instituto Todos pela Saúde",
+      "name": "Instituto Todos pela Saude",
       "url": "https://www.itps.org.br/"
     }
   ],
@@ -20,7 +20,27 @@
   "colorings": [
     {
       "key": "clade",
+      "title": "Dengue lineage",
+      "type": "categorical"
+    },
+    {
+      "key": "serotype",
+      "title": "Serotype",
+      "type": "categorical"
+    },
+    {
+      "key": "genotype",
       "title": "Genotype",
+      "type": "categorical"
+    },
+    {
+      "key": "major_lineage",
+      "title": "Major lineage",
+      "type": "categorical"
+    },
+    {
+      "key": "minor_lineage",
+      "title": "Minor lineage",
       "type": "categorical"
     },
     {
@@ -35,17 +55,17 @@
     },
     {
       "key": "region",
-      "title": "Macro-região",
+      "title": "Macro-region",
       "type": "categorical"
     },
     {
       "key": "division",
-      "title": "Estado",
+      "title": "State",
       "type": "categorical"
     },
     {
       "key": "location",
-      "title": "Município",
+      "title": "Municipality",
       "type": "categorical"
     },
     {
@@ -67,7 +87,7 @@
   ],
 
   "display_defaults": {
-    "color_by": "division",
+    "color_by": "clade",
     "distance_measure": "num_date",
     "geo_resolution": "location",
     "map_triplicate": true,
@@ -80,6 +100,10 @@
     "region",
     "division",
     "location",
+    "serotype",
+    "genotype",
+    "major_lineage",
+    "minor_lineage",
     "clade",
     "source",
     "data_use"

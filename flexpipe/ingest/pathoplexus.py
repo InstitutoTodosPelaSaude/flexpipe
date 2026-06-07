@@ -35,9 +35,41 @@ def build_url(base_url: str, organism: str, endpoint: str) -> str:
     return f"{base_url.rstrip('/')}/{organism}/sample/{endpoint}"
 
 
-def base_params(min_date, min_completeness, max_date=None) -> dict:
+def _clean_query_params(query_params: dict | None) -> dict:
+    """Return non-empty LAPIS query params from build config."""
+    if not query_params:
+        return {}
+    cleaned = {}
+    for key, value in query_params.items():
+        if value is None:
+            continue
+        if isinstance(value, str) and value.strip() == "":
+            continue
+        cleaned[key] = value
+    return cleaned
+
+
+def normalize_fasta_entry_id(entry: str, *, strip_pipe_suffix: bool = False) -> str:
+    """Normalize a FASTA entry header when LAPIS adds non-metadata suffixes."""
+    if not strip_pipe_suffix:
+        return entry
+    lines = entry.splitlines()
+    if not lines:
+        return entry
+    header = lines[0].strip()
+    if "|" in header:
+        header = header.split("|", 1)[0]
+    lines[0] = header
+    trailing_newline = "\n" if entry.endswith("\n") else ""
+    return "\n".join(lines) + trailing_newline
+
+
+def base_params(
+    min_date, min_completeness, max_date=None, query_params: dict | None = None
+) -> dict:
     """Build the common LAPIS query parameters."""
-    p = {"versionStatus": "LATEST_VERSION"}
+    p = _clean_query_params(query_params)
+    p["versionStatus"] = "LATEST_VERSION"
     if min_date:
         p["sampleCollectionDateRangeLowerFrom"] = min_date
     if max_date:
@@ -88,6 +120,7 @@ def fetch_metadata(
     min_date=None,
     max_date=None,
     min_completeness=None,
+    query_params: dict | None = None,
     chunk_size: int = 10000,
 ):
     """Paginate through the LAPIS metadata endpoint and return (header, rows).
@@ -108,7 +141,12 @@ def fetch_metadata(
     if auth_token:
         headers["Authorization"] = f"Bearer {auth_token}"
 
-    params = base_params(min_date, min_completeness, max_date=max_date)
+    params = base_params(
+        min_date,
+        min_completeness,
+        max_date=max_date,
+        query_params=query_params,
+    )
     params.update(
         {
             "downloadAsFile": "false",
@@ -156,6 +194,7 @@ def fetch_sequences(
     min_date=None,
     max_date=None,
     min_completeness=None,
+    query_params: dict | None = None,
     chunk_size: int = 10000,
 ) -> list:
     """Paginate through the LAPIS sequences endpoint and return FASTA entry strings.
@@ -175,7 +214,12 @@ def fetch_sequences(
     if auth_token:
         headers["Authorization"] = f"Bearer {auth_token}"
 
-    params = base_params(min_date, min_completeness, max_date=max_date)
+    params = base_params(
+        min_date,
+        min_completeness,
+        max_date=max_date,
+        query_params=query_params,
+    )
     params.update({"limit": chunk_size, "offset": 0})
 
     all_fasta = []
@@ -229,6 +273,10 @@ def main() -> None:
     seq_ep = ppx.get("sequences_endpoint", "unalignedNucleotideSequences")
     auth_token = ppx.get("auth_token", "") or os.environ.get("PPX_AUTH_TOKEN") or None
     min_completeness = ppx.get("min_completeness", None)
+    query_params = ppx.get("query_params") or {}
+    if not isinstance(query_params, dict):
+        sys.exit("ERROR: pathoplexus.query_params must be a mapping of LAPIS query keys")
+    strip_fasta_id_suffix = bool(ppx.get("strip_fasta_id_suffix", False))
 
     # min_date: prefer explicit pathoplexus.min_date, fall back to subsampling.min_year
     min_date = ppx.get("min_date") or None
@@ -256,6 +304,7 @@ def main() -> None:
         min_date,
         max_date=max_date,
         min_completeness=min_completeness,
+        query_params=query_params,
     )
 
     if header is None:
@@ -277,10 +326,15 @@ def main() -> None:
         min_date,
         max_date=max_date,
         min_completeness=min_completeness,
+        query_params=query_params,
     )
 
     with open(args.sequences_output, "w") as fh:
         for entry in fasta_entries:
+            entry = normalize_fasta_entry_id(
+                entry,
+                strip_pipe_suffix=strip_fasta_id_suffix,
+            )
             fh.write(">" + entry)
             if not entry.endswith("\n"):
                 fh.write("\n")

@@ -282,15 +282,26 @@ All parameters are in `builds/<name>/config.yaml` under `parameters` and `option
 **Region source** (controls how `region` column is derived):
 - `"country"`: country → continent mapping (global builds); loaded from `flexpipe/data/regions/country_to_continent.tsv`
 - `"division"`: Brazilian state → macro-region (Norte, Nordeste, Centro-Oeste, Sudeste, Sul); loaded from `flexpipe/data/regions/brazil_state_to_region.tsv`
+- `continent` is always derived separately from `country` when possible. For Brazil builds,
+  `region` remains the Brazilian macro-region while `continent` is the geographic continent.
 
 **Clade truncation**:
 - `clade_levels: N` in config → `clade_truncated` column (e.g., A.B.C.D with `clade_levels: 2` → A.B)
 - YFV uses `clade_levels: 1` (single-level genotypes: I, II, III, etc.)
 
 **Colour hierarchy** (`colours` in config):
-- Top-level categories get manual hues (loaded from `flexpipe/data/colors/*_hues.tsv`)
-- Sub-levels derive colors as gradients
-- Lineage/clade use hash-based deterministic hues (same name → same hue across runs)
+- Configure levels from most-general to most-specific, e.g. `continent country division location`
+  or `serotype genotype major_lineage minor_lineage clade`.
+- Top-level categories get fixed hues when available (`region_hues.tsv` also contains continents)
+  or stable hash hues persisted in the workdir `name2hue.tsv` cache.
+- Sub-levels derive deterministic shades within the top-level hue family.
+- Raw lineage stays in `clade`; optional parsers add prefix-safe lineage columns for filters/colors.
+
+**Trait state cap** (`traits` in config):
+- `traits.columns` drives `augur traits`, but flexpipe first writes
+  `<workdir>/results/subsampled/metadata_traits.tsv`.
+- If a trait has more than `traits.max_states` non-empty states, rare states are collapsed to
+  `traits.rare_state_label` in that sidecar only; primary subsampled metadata is not mutated.
 
 **PPX column contract**: Pathoplexus-style column names (`accessionVersion`, `geoLocCountry`, `geoLocAdmin1`, `geoLocAdmin2`, `dataUseTerms`, `lineage`) flow through the pipeline without modification until renamed by `augur curate rename` in the `curate_qc` rule. Never change these column names in ingest/merge logic.
 
@@ -312,10 +323,13 @@ Key fields to update in `config.yaml`:
 - `parameters.mask_sites_file` (optional BED file path for problematic-site masking; leave blank
   if unused)
 - `curation.clade_levels` (hierarchy depth for `clade_truncated`)
+- `curation.lineage_parser` (`none`, `dengue`, `pango`, `generic_dot`) for optional derived lineage
+  columns; DENV outputs are prefix-safe (e.g. `3III_B.3.2`, not bare `B`)
 - `region_source` (country for global, division for Brazil-only builds)
 - `qc.min_sequences` (minimum subsampled sequences required before phylogenetics; default 10)
 - `viralqc.*` (or set `VIRALQC_DATASETS_DIR`)
 - `traits.columns` (which metadata fields to infer ancestral states for)
+- `traits.max_states` / `traits.rare_state_label` (TreeTime-safe categorical cap)
 
 ## Dependencies
 
@@ -366,4 +380,3 @@ conda env remove -n nextstrain-fresh
 pip freeze | grep -E "^(pandas|PyYAML|biopython|geopy|requests|matplotlib|colour|openpyxl|beautifulsoup4|pydantic)==" | sort > requirements.lock.txt
 # Append dev/test deps manually
 ```
-

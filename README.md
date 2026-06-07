@@ -195,6 +195,8 @@ with remote data. Set `local_sequences.enabled: true` in `config.yaml` to activa
 - Renames and standardises metadata fields (`strain`, `date`, `country`, `division`, `location`, `data_use`, `clade`)
 - Computes `clade_truncated` by trimming hierarchical clade names to `clade_levels` levels
 - Assigns a `region` column from either country names (global builds) or state names (Brazil-only builds — see `region_source` below)
+- Adds a `continent` column from `country`; for Brazil builds this is separate from `region`
+- Optionally decomposes structured lineage strings into prefix-safe columns such as `serotype`, `genotype`, `major_lineage`, and `minor_lineage`
 - Marks each sequence with a `source` label (`Pathoplexus`, `NCBI`, or `ITpS`)
 - Deduplicates sequences, preferring local ITpS records
 
@@ -217,7 +219,22 @@ The `region_source` field in `config.yaml` controls how the `region` column is d
 
 Brazilian macro-regions: **Norte**, **Nordeste**, **Centro-Oeste**, **Sudeste**, **Sul**.
 
-The YFV example uses `region_source: "division"`.
+The YFV example uses `region_source: "division"`, so `region` is the Brazilian macro-region while
+`continent` is still derived from `country` for phylogeographic traits.
+
+### Lineage parser
+
+Builds can keep the raw Nextclade/ViralQC lineage in `clade` and additionally expose derived,
+prefix-safe lineage columns:
+
+```yaml
+curation:
+  lineage_parser: "dengue"   # none | dengue | pango | generic_dot
+```
+
+For DENV, values such as `3III_B.3.2` become `serotype=3`, `genotype=3III`,
+`major_lineage=3III_B`, and `minor_lineage=3III_B.3.2`. Prefixes are retained so lineage names do
+not collide across genotypes. Set `lineage_parser: "none"` to preserve legacy behavior.
 
 ---
 
@@ -253,11 +270,14 @@ produces `<workdir>/config/colour_scheme.tsv`. Both are configured via `colours`
 
 ```yaml
 colours:
-  clade:    "clade_truncated clade"
-  geo:      "region division location"
+  clade:    "serotype genotype major_lineage minor_lineage clade"
+  geo:      "continent country division location"
   source:   "source"
   data_use: "data_use"
 ```
+
+The order is most-general to most-specific. The first level gets a stable root hue; child levels
+receive deterministic shades within that root hue family.
 
 ---
 
@@ -282,7 +302,9 @@ Steps: `align` (MAFFT) → `mask` → `tree` (IQ-TREE 3 UFBoot) → `refine` (Tr
 | `parameters.mask_3prime` | `548` | Bases masked at 3′ end (**reference-specific** — X03700.1) |
 | `parameters.mask_sites_file` | `""` | Optional BED file of problematic sites (`augur mask --mask`) |
 | `options.threads` | `4` | Threads for MAFFT and IQ-TREE |
-| `traits.columns` | `division location clade` | Columns for ancestral trait inference |
+| `traits.columns` | `continent country division location clade` | Columns for ancestral trait inference |
+| `traits.max_states` | `200` | Maximum states per trait column before rare states are collapsed |
+| `traits.rare_state_label` | `other` | Label used for collapsed rare trait states |
 
 > **Terminal masking is reference-specific.** The values `mask_5prime: 142` and `mask_3prime: 548`
 > are calibrated for the YFV reference X03700.1. When using a different reference, recalculate
@@ -293,6 +315,13 @@ Steps: `align` (MAFFT) → `mask` → `tree` (IQ-TREE 3 UFBoot) → `refine` (Tr
 
 Clade labels are defined in `clades.tsv` and applied by `augur clades`. YFV genotypes are
 single-level (`I`, `II`, `III`…), so `clade_levels: 1` keeps `clade_truncated` equal to `clade`.
+
+### Trait state cap
+
+Before `augur traits`, flexpipe writes `<workdir>/results/subsampled/metadata_traits.tsv` and
+collapses rare states per configured trait column when a column exceeds `traits.max_states`. The
+primary subsampled metadata used for export is not mutated; the collapsed sidecar is only for
+TreeTime ancestral-state inference.
 
 ### Segmented viruses (out of scope for v0.x)
 
@@ -325,12 +354,14 @@ Key fields to update:
 | `parameters.mask_5prime/3prime` | Terminal masking in bp; **reference-specific** — set 0 for new builds and calibrate |
 | `parameters.mask_sites_file` | Optional BED file of additional problematic sites |
 | `curation.clade_levels` | Hierarchy depth for `clade_truncated` |
+| `curation.lineage_parser` | Optional parser for structured lineage strings (`none`, `dengue`, `pango`, `generic_dot`) |
 | `qc.min_sequences` | Minimum subsampled sequences before phylogenetics (default 10; 0 disables) |
 | `region_source` | `"country"` for global builds; `"division"` for Brazil-only |
 | `viralqc.expected_virus` | Expected virus name (ViralQC rejects mismatches) |
 | `viralqc.expected_segment` | Expected segment name for single-segment builds; leave blank for non-segmented |
 | `viralqc.*` | ViralQC paths (or set `VIRALQC_DATASETS_DIR`) |
 | `traits.columns` | Columns for ancestral trait reconstruction |
+| `traits.max_states` | Per-trait state cap for TreeTime ancestral-state inference |
 
 ---
 

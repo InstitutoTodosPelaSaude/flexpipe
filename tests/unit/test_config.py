@@ -34,6 +34,10 @@ class TestDefaults:
         assert cfg.options.threads == 4
         assert cfg.subsampling.random_seed == 42
         assert cfg.curation.clade_levels == 1
+        assert cfg.curation.lineage_parser == "none"
+        assert cfg.curation.lineage_columns.genotype == "genotype"
+        assert cfg.traits.max_states == 200
+        assert cfg.traits.rare_state_label == "other"
         assert cfg.paths.workdir == "workdir"
 
     def test_ncbi_source_defaults(self):
@@ -297,6 +301,20 @@ class TestLoadConfig:
                 data_source="pathoplexus",
                 pathoplexus={"organism": "yellow-fever"},
                 traits={"columns": "division; rm -rf"},
+            )
+
+        with pytest.raises(pydantic.ValidationError, match="curation.lineage_parser"):
+            FlexpipeConfig(
+                data_source="pathoplexus",
+                pathoplexus={"organism": "yellow-fever"},
+                curation={"lineage_parser": "invented"},
+            )
+
+        with pytest.raises(pydantic.ValidationError, match="lineage column names"):
+            FlexpipeConfig(
+                data_source="pathoplexus",
+                pathoplexus={"organism": "yellow-fever"},
+                curation={"lineage_columns": {"genotype": "bad name"}},
             )
 
     def test_resolve_subsample_paths_makes_includes_absolute(self, tmp_path):

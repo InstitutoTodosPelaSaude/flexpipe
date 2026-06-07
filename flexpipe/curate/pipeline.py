@@ -22,6 +22,7 @@ from flexpipe.config import load_config
 from flexpipe.curate.clades import truncate_clade
 from flexpipe.curate.columns import apply_harmonization, drop_columns
 from flexpipe.curate.hosts import build_rules, normalize_host
+from flexpipe.curate.lineage_parser import apply_lineage_parser
 from flexpipe.curate.regions import (
     _parse_brazil_division,
     build_brazil_canonical_map,
@@ -70,6 +71,8 @@ def run_curate(
 
     clade_levels = cfg.curation.clade_levels
     clade_sep = cfg.curation.clade_separator
+    lineage_parser = cfg.curation.lineage_parser
+    lineage_columns = cfg.curation.lineage_columns.model_dump()
     region_source = cfg.region_source
     division_parser = cfg.regions.division_parser
 
@@ -135,10 +138,35 @@ def run_curate(
         if len(missing):
             logger.warning("No region mapping for countries: %s", list(missing))
 
+    # ── continent ─────────────────────────────────────────────────────────────
+    # ``region`` may mean Brazilian macro-region for region_source=division.
+    # Keep a separate continent column so global geography can still be inferred.
+    if "country" in df.columns:
+        continent_values = df["country"].apply(
+            lambda c: lookup_region_country(c, region_map=region_map)
+        )
+        if "continent" in df.columns:
+            existing = df["continent"].fillna("").astype(str)
+            df["continent"] = existing.where(existing.str.strip() != "", continent_values)
+        else:
+            df["continent"] = continent_values
+        missing = df[df["continent"] == ""]["country"].unique()
+        if len(missing):
+            logger.warning("No continent mapping for countries: %s", list(missing))
+
     # ── clade_truncated ───────────────────────────────────────────────────────
     if "clade" in df.columns:
         df["clade_truncated"] = df["clade"].apply(
             lambda x: truncate_clade(x, clade_levels, clade_sep) if str(x).strip() else ""
+        )
+
+    # ── derived lineage columns ───────────────────────────────────────────────
+    if "clade" in df.columns:
+        df = apply_lineage_parser(
+            df,
+            parser=lineage_parser,
+            columns=lineage_columns,
+            clade_column="clade",
         )
 
     # ── source ────────────────────────────────────────────────────────────────

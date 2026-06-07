@@ -12,6 +12,12 @@ REPO_ROOT = Path(__file__).parent.parent.parent
 PHYLO_SNAKEFILE = REPO_ROOT / "phylogenetic" / "Snakefile"
 YFV_BUILD_CONFIG = REPO_ROOT / "builds" / "yfv-brazil" / "config.yaml"
 RSV_BUILD_CONFIG = REPO_ROOT / "builds" / "rsv-global" / "config.yaml"
+DENV_BUILD_CONFIGS = [
+    REPO_ROOT / "builds" / "denv1-brazil" / "config.yaml",
+    REPO_ROOT / "builds" / "denv2-brazil" / "config.yaml",
+    REPO_ROOT / "builds" / "denv3-brazil" / "config.yaml",
+    REPO_ROOT / "builds" / "denv4-brazil" / "config.yaml",
+]
 
 
 def _seed_phylo_inputs(workdir: Path) -> None:
@@ -22,9 +28,12 @@ def _seed_phylo_inputs(workdir: Path) -> None:
     config_dir.mkdir(parents=True)
     (subsampled / "sequences.fasta").write_text(">seq1\nACGT\n>seq2\nACGT\n")
     (subsampled / "metadata.tsv").write_text(
-        "strain\tdate\tcountry\tdivision\tlocation\tclade\tclade_truncated\tregion\tsource\tdata_use\n"
-        "seq1\t2025-01-01\tBrazil\tSao Paulo\tSao Paulo\tI\tI\tSudeste\tPathoplexus\tOPEN\n"
-        "seq2\t2025-01-02\tBrazil\tRio de Janeiro\tRio de Janeiro\tI\tI\tSudeste\tPathoplexus\tOPEN\n"
+        "strain\tdate\tcontinent\tcountry\tdivision\tlocation\tclade\tclade_truncated\t"
+        "serotype\tgenotype\tmajor_lineage\tminor_lineage\tregion\tsource\tdata_use\n"
+        "seq1\t2025-01-01\tSouth America\tBrazil\tSao Paulo\tSao Paulo\t3III_B.3.2\t"
+        "3III_B.3.2\t3\t3III\t3III_B\t3III_B.3.2\tSudeste\tPathoplexus\tOPEN\n"
+        "seq2\t2025-01-02\tSouth America\tBrazil\tRio de Janeiro\tRio de Janeiro\t3III_B.3.2\t"
+        "3III_B.3.2\t3\t3III\t3III_B\t3III_B.3.2\tSudeste\tPathoplexus\tOPEN\n"
     )
     (config_dir / "latlongs.tsv").write_text("country\tBrazil\t-14.235\t-51.9253\n")
     (config_dir / "colour_scheme.tsv").write_text("trait\tvalue\tdisplay_name\tcolor\n")
@@ -87,15 +96,19 @@ class TestPhyloWiring:
         assert str(REPO_ROOT / "builds" / "yfv-brazil" / "reference.gb") in output
         assert str(REPO_ROOT / "builds" / "yfv-brazil" / "clades.tsv") in output
         assert str(REPO_ROOT / "builds" / "yfv-brazil" / "auspice_config.json") in output
+        assert "flexpipe-collapse-traits" in output
+        assert "metadata_traits.tsv" in output
+        assert "--columns          continent country division location clade" in output
         assert "-m     MFP" in output
-        assert "-B     1000" in output
+        assert "-B 1000" in output
+        assert "--date-confidence" in output
+        assert "--confidence" in output
 
     def test_rsv_dry_run_from_outside_repo_omits_empty_mask_sites(self, tmp_path, monkeypatch):
         output, rc = _dry_run(tmp_path, RSV_BUILD_CONFIG, monkeypatch)
         assert rc == 0, f"RSV phylo dry-run failed:\n{output}"
-        mask_cmd = _mask_command(output)
-        assert "augur mask" in mask_cmd
-        assert "--mask-sites" not in mask_cmd
+        assert "augur mask" not in output
+        assert "cp " in output
         assert str(REPO_ROOT / "builds" / "rsv-global" / "reference.gb") in output
         assert str(REPO_ROOT / "builds" / "rsv-global" / "clades.tsv") in output
         assert str(REPO_ROOT / "builds" / "rsv-global" / "auspice_config.json") in output
@@ -111,3 +124,28 @@ class TestPhyloWiring:
         output, rc = _dry_run(tmp_path, YFV_BUILD_CONFIG, monkeypatch, "work dir with spaces")
         assert rc == 0, f"YFV phylo dry-run with spaced workdir failed:\n{output}"
         assert "work dir with spaces" in output
+
+    @pytest.mark.parametrize("build_config", DENV_BUILD_CONFIGS, ids=lambda p: p.parent.name)
+    def test_denv_phylo_dry_run_when_reference_is_real(self, tmp_path, monkeypatch, build_config):
+        """DENV phylo dry-runs are deferred while reference.gb is an intentional placeholder."""
+        reference = build_config.parent / "reference.gb"
+        if "PLACEHOLDER" in reference.read_text():
+            pytest.skip(f"{build_config.parent.name} reference.gb is still a placeholder")
+
+        output, rc = _dry_run(tmp_path, build_config, monkeypatch)
+        assert rc == 0, f"{build_config.parent.name} phylo dry-run failed:\n{output}"
+        assert str(reference) in output
+        assert "flexpipe-collapse-traits" in output
+        assert "metadata_traits.tsv" in output
+        assert "--max-states       200" in output
+        assert "--rare-state-label other" in output
+        assert (
+            "--columns          continent country division location serotype genotype major_lineage minor_lineage clade"
+            in output
+        )
+        assert "augur mask" not in output
+        assert "cp " in output
+        assert "-m     JC" in output
+        assert "-B " not in output
+        assert "--date-confidence" not in output
+        assert "--confidence" not in output

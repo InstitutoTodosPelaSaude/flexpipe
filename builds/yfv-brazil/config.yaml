@@ -25,16 +25,18 @@ options:
   threads: 4
 
 coordinates:
-  columns: "division location"   # Brazil-only build: no country-level coordinates
+  columns: "country division location"
 
 colours:
   clade:    "clade_truncated clade"
-  geo:      "region division location"
+  geo:      "continent country division location"
   source:   "source"
   data_use: "data_use"
 
 traits:
-  columns: "division location clade"
+  columns: "continent country division location clade"
+  max_states: 200
+  rare_state_label: "other"
 
 subsampling:
   random_seed: 42
@@ -42,6 +44,7 @@ subsampling:
 curation:
   clade_levels: 1      # YFV genotypes are single-level (I, II, III, ...)
   clade_separator: "."
+  lineage_parser: "none"
 
 # ── Region source ────────────────────────────────────────────────────────────
 # "country"  : maps country → continent (global builds)

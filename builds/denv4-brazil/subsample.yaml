@@ -1,0 +1,28 @@
+# Subsampling for DENV-4 Brazil build
+#
+# Brazil-focal with global context:
+# - up to 2 sequences per Brazilian state-month
+# - up to 1 sequence per non-Brazil country-month
+
+defaults:
+  min_date: 2010
+  exclude: builds/denv4-brazil/ignore.txt
+  exclude_ambiguous_dates_by: month
+
+samples:
+  brazil:
+    query: "country == 'Brazil'"
+    include: builds/denv4-brazil/keep.txt
+    group_by:
+      - division
+      - year
+      - month
+    sequences_per_group: 2
+
+  context:
+    query: "country != 'Brazil'"
+    group_by:
+      - country
+      - year
+      - month
+    sequences_per_group: 1

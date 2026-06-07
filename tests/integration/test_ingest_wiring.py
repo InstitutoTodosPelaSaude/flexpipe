@@ -24,6 +24,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
+import yaml
 
 from flexpipe.config import FlexpipeConfig, ViralqcConfig, write_snakemake_config_overrides
 
@@ -32,6 +33,13 @@ REPO_ROOT = Path(__file__).parent.parent.parent
 INGEST_SNAKEFILE = REPO_ROOT / "ingest" / "Snakefile"
 BUILD_CONFIG = REPO_ROOT / "builds" / "yfv-brazil" / "config.yaml"
 RSV_BUILD_CONFIG = REPO_ROOT / "builds" / "rsv-global" / "config.yaml"
+DENV_BUILD_CONFIGS = [
+    REPO_ROOT / "builds" / "denv1-brazil" / "config.yaml",
+    REPO_ROOT / "builds" / "denv2-brazil" / "config.yaml",
+    REPO_ROOT / "builds" / "denv3-brazil" / "config.yaml",
+    REPO_ROOT / "builds" / "denv4-brazil" / "config.yaml",
+]
+BUILD_CONFIGS = [BUILD_CONFIG, RSV_BUILD_CONFIG, *DENV_BUILD_CONFIGS]
 
 # Sentinel paths used in the fake ViralQC config; chosen to be distinctive and
 # absolute so they appear verbatim in the rendered shell commands.
@@ -159,8 +167,71 @@ def _dry_run_with_run_date(tmp_path, resolved_config, run_date):
     return combined, result.returncode
 
 
+def _resolved_config_for_build(tmp_path, build_config: Path):
+    """Write a fake-ViralQC resolved config for any scaffold build."""
+    raw = yaml.safe_load(build_config.read_text())
+    data_source = raw.get("data_source", "pathoplexus")
+    cfg_kwargs = {
+        "data_source": data_source,
+        "viralqc": ViralqcConfig(
+            datasets_dir=FAKE_DATASETS_DIR,
+            blast_database=FAKE_BLAST_DB,
+            blast_database_metadata=FAKE_BLAST_META,
+        ),
+    }
+    if data_source == "pathoplexus":
+        cfg_kwargs["pathoplexus"] = raw.get("pathoplexus", {})
+    elif data_source == "ncbi":
+        ncbi = dict(raw.get("ncbi", {}))
+        ncbi.setdefault("email", "ops@example.org")
+        if not ncbi.get("email"):
+            ncbi["email"] = "ops@example.org"
+        cfg_kwargs["ncbi"] = ncbi
+
+    cfg = FlexpipeConfig(**cfg_kwargs)
+    p = tmp_path / f"snakemake_resolved_{build_config.parent.name}.yaml"
+    return write_snakemake_config_overrides(cfg, p, build_config)
+
+
 @pytest.mark.integration
 class TestIngestWiring:
+    @pytest.mark.parametrize("build_config", BUILD_CONFIGS, ids=lambda p: p.parent.name)
+    def test_all_scaffold_builds_dry_run(self, tmp_path, build_config):
+        """Every build scaffold can plan the ingest DAG without real data or ViralQC paths."""
+        resolved_config = _resolved_config_for_build(tmp_path, build_config)
+        output, rc = _dry_run(tmp_path, resolved_config, build_config=build_config)
+        assert rc == 0, (
+            f"{build_config.parent.name} snakemake dry-run exited with code {rc}.\n"
+            f"Output:\n{output}"
+        )
+
+    @pytest.mark.parametrize("build_config", DENV_BUILD_CONFIGS, ids=lambda p: p.parent.name)
+    def test_denv_builds_schedule_pathoplexus_not_ncbi(self, tmp_path, build_config):
+        """DENV builds use the shared Pathoplexus dengue endpoint plus config query params."""
+        resolved_config = _resolved_config_for_build(tmp_path, build_config)
+        output, rc = _dry_run(tmp_path, resolved_config, build_config=build_config)
+        assert rc == 0, f"dry-run failed:\n{output}"
+        assert "fetch_pathoplexus" in output
+        assert "fetch_ncbi" not in output
+        assert str(build_config) in output
+
+    @pytest.mark.parametrize(
+        "build_config",
+        [
+            REPO_ROOT / "builds" / "denv3-brazil" / "config.yaml",
+            REPO_ROOT / "builds" / "denv4-brazil" / "config.yaml",
+        ],
+        ids=lambda p: p.parent.name,
+    )
+    def test_denv_reference_builds_render_new_visual_hierarchies(self, tmp_path, build_config):
+        """DENV3/4 ingest dry-runs carry the new geo and lineage color levels."""
+        resolved_config = _resolved_config_for_build(tmp_path, build_config)
+        output, rc = _dry_run(tmp_path, resolved_config, build_config=build_config)
+        assert rc == 0, f"dry-run failed:\n{output}"
+        assert "--columns  country division location" in output
+        assert "--levels  continent country division location" in output
+        assert "--levels  serotype genotype major_lineage minor_lineage clade" in output
+
     def test_dry_run_succeeds(self, tmp_path, resolved_config):
         """Snakemake can plan the full ingest DAG without errors."""
         output, rc = _dry_run(tmp_path, resolved_config)

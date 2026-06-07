@@ -252,11 +252,16 @@ def main() -> None:
     source_hues = SOURCE_HUES
     data_use_hues = DATA_USE_HUES
 
+    geo_root = "region"
+    clade_root = "clade_truncated"
+
     if args.config:
         try:
             from flexpipe.config import load_config
 
             cfg = load_config(args.config, skip_viralqc=True)
+            geo_root = cfg.colours.geo.split()[0]
+            clade_root = cfg.colours.clade.split()[0]
             ht = cfg.colours.hue_tables
             if ht.region:
                 region_hues = load_hue_table("region_hues.tsv", override=ht.region)
@@ -285,12 +290,18 @@ def main() -> None:
         sections.append((comment, result))
         all_warnings.extend(warns)
 
-    run("# geo (top-level = region)", "region", region_hues, "region")
     run(
-        "# clade (top-level = clade_truncated) — unknown = hash-based",
-        "clade_truncated",
+        f"# geo (top-level = {geo_root})",
+        geo_root,
+        region_hues,
+        geo_root,
+        use_hash=True,
+    )
+    run(
+        f"# clade (top-level = {clade_root}) — unknown = hash-based",
+        clade_root,
         CLADE_HUES,
-        "clade_truncated",
+        clade_root,
         use_hash=True,
     )
     run("# host", "host", host_hues, "host")
