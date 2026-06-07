@@ -2,7 +2,59 @@
 
 from unittest.mock import MagicMock
 
-from flexpipe.ingest.ncbi import parse_country_field, parse_gb_record, search_ncbi
+from flexpipe.ingest.ncbi import _normalize_insdc, parse_country_field, parse_gb_record, search_ncbi
+
+
+class TestNormalizeInsdc:
+    def test_missing_reason_normalized_to_empty(self):
+        assert _normalize_insdc("missing: synthetic construct") == ""
+        assert _normalize_insdc("missing: lab stock") == ""
+        assert _normalize_insdc("missing") == ""
+
+    def test_not_applicable_normalized(self):
+        assert _normalize_insdc("not applicable") == ""
+
+    def test_not_collected_normalized(self):
+        assert _normalize_insdc("not collected") == ""
+
+    def test_not_provided_normalized(self):
+        assert _normalize_insdc("not provided") == ""
+
+    def test_real_value_passes_through(self):
+        assert _normalize_insdc("2022-03-15") == "2022-03-15"
+        assert _normalize_insdc("Brazil") == "Brazil"
+
+    def test_empty_string_passes_through(self):
+        assert _normalize_insdc("") == ""
+
+
+class TestParseGbRecordInsdc:
+    def _make_record(self, *, collection_date="", country=""):
+        feature = MagicMock()
+        feature.type = "source"
+        qualifiers = {}
+        if collection_date:
+            qualifiers["collection_date"] = [collection_date]
+        if country:
+            qualifiers["geo_loc_name"] = [country]
+        feature.qualifiers = qualifiers
+        rec = MagicMock()
+        rec.id = "PQ869266.1"
+        rec.features = [feature]
+        rec.annotations = {"references": []}
+        return rec
+
+    def test_missing_date_normalized_to_empty(self):
+        """INSDC 'missing: synthetic construct' in collection_date must become empty string."""
+        rec = self._make_record(collection_date="missing: synthetic construct")
+        result = parse_gb_record(rec)
+        assert result["sampleCollectionDate"] == ""
+
+    def test_missing_country_normalized_to_empty(self):
+        """INSDC 'missing' in geo_loc_name must produce empty country, not 'missing'."""
+        rec = self._make_record(country="missing")
+        result = parse_gb_record(rec)
+        assert result["geoLocCountry"] == ""
 
 
 class TestParseCountryField:

@@ -1,0 +1,112 @@
+LOCUS       MW626062                1752 bp    cRNA    linear   VRL 23-FEB-2021
+DEFINITION  Influenza A virus (A/Wisconsin/588/2019(H1N1)) segment 4
+            hemagglutinin (HA) gene, complete cds.
+ACCESSION   MW626062
+VERSION     MW626062.1
+DBLINK      BioProject: PRJNA37813
+KEYWORDS    .
+SOURCE      Influenza A virus
+  ORGANISM  Influenza A virus
+            Viruses; Riboviria; Orthornavirae; Negarnaviricota;
+            Polyploviricotina; Insthoviricetes; Articulavirales;
+            Orthomyxoviridae; Alphainfluenzavirus; Alphainfluenzavirus
+            influenzae.
+REFERENCE   1  (bases 1 to 1752)
+  AUTHORS   Jernigan,D., Wentworth,D., Barnes,J., Garten,R. and Xu,X.
+  TITLE     Influenza Sequencing Activity group
+  JOURNAL   Unpublished
+REFERENCE   2  (bases 1 to 1752)
+  AUTHORS   Jernigan,D., Wentworth,D., Barnes,J., Garten,R. and Xu,X.
+  TITLE     Direct Submission
+  JOURNAL   Submitted (17-FEB-2021) WHO Collaborating Center for Surveillance,
+            Epidemiology and Control of Influenza, Influenza Division, Centers
+            for Disease Control and Prevention, 1600 Clifton Road, N.E.,
+            Atlanta, GA 30333, USA
+COMMENT     ##FluData-START##
+            EPI_ISOLATE_ID   :: EPI_ISL_628888
+            NAME             :: A/Wisconsin/588/2019
+            TYPE             :: H1N1
+            Segment_name     :: HA
+            HOST_AGE         :: 66
+            HOST_GENDER      :: M
+            PASSAGE          :: C2S1 (2020-05-15)
+            LOCATION         :: United States / Wisconsin
+            COLLECT_DATE     :: 19-Dec-2019
+            Lineage          :: A(H1N1)pdm09
+            SPECIMEN_ID      :: 19VR015562 ORIGINAL
+            SENDER_LAB       :: Wisconsin State Laboratory of Hygiene
+            SEQLAB_SAMPLE_ID :: 3026054333
+            EPI_SEQUENCE_ID  :: EPI1812046
+            ##FluData-END##
+FEATURES             Location/Qualifiers
+     source          1..1752
+                     /organism="Influenza A virus"
+                     /mol_type="viral cRNA"
+                     /strain="A/Wisconsin/588/2019"
+                     /serotype="H1N1"
+                     /host="Homo sapiens"
+                     /db_xref="taxon:11320"
+                     /segment="4"
+                     /geo_loc_name="USA: Wisconsin"
+                     /collection_date="19-Dec-2019"
+                     /note="passage details:C2S1 (2020-05-15)"
+     gene            21..1721
+                     /gene="HA"
+     CDS             21..1721
+                     /gene="HA"
+                     /function="receptor binding and fusion protein"
+                     /codon_start=1
+                     /product="hemagglutinin"
+                     /protein_id="QRV63266.1"
+                     /translation="MKAILVVMLYTFTTANADTLCIGYHANNSTDTVDTVLEKNVTVT
+                     HSVNLLEDKHNGKLCKLRGVAPLHLGKCNIAGWILGNPECESLSTARSWSYIVETSNS
+                     DNGTCYPGDFINYEELREQLSSVSSFERFEIFPKTSSWPNHDSDNGVTAACPHAGAKS
+                     FYKNLIWLVKKGKSYPKINQTYINDKGKEVLVLWGIHHPPTIADQQSLYQNADAYVFV
+                     GTSRYSKKFKPEIATRPKVRDQEGRMNYYWTLVEPGDKITFEATGNLVAPRYAFTMER
+                     DAGSGIIISDTPVHDCNTTCQTPEGAINTSLPFQNVHPITIGKCPKYVKSTKLRLATG
+                     LRNVPSIQSRGLFGAIAGFIEGGWTGMVDGWYGYHHQNEQGSGYAADLKSTQNAIDKI
+                     TNKVNSVIEKMNTQFTAVGKEFNHLEKRIENLNKKVDDGFLDIWTYNAELLVLLENER
+                     TLDYHDSNVKNLYEKVRNQLKNNAKEIGNGCFEFYHKCDNTCMESVKNGTYDYPKYSE
+                     EAKLNREKIDGVKLDSTRIYQILAIYSTVASSLVLVVSLGAISFWMCSNGSLQCRICI
+                     "
+     sig_peptide     21..71
+                     /gene="HA"
+     mat_peptide     72..1052
+                     /gene="HA"
+                     /product="HA1"
+     mat_peptide     1053..1718
+                     /gene="HA"
+                     /product="HA2"
+ORIGIN      
+        1 ggaaaacaaa agcaacaaaa atgaaggcaa tactagtagt tatgctgtat acatttacaa
+       61 ccgcaaatgc agacacatta tgtataggtt atcatgcgaa caattcaaca gacactgtgg
+      121 acacagtact agaaaagaat gtaacagtaa cacactctgt caatcttctg gaagacaagc
+      181 ataacggaaa actatgcaaa ctaagagggg tagccccatt gcatttgggt aaatgtaaca
+      241 ttgctggctg gatcctggga aatccagagt gtgaatcact ctccacagca agatcatggt
+      301 cctacattgt ggaaacatct aattcagaca atggaacgtg ttacccagga gatttcatca
+      361 attatgagga gctaagagag caattgagct cagtgtcatc atttgaaagg tttgaaatat
+      421 tccccaagac aagttcatgg cctaatcatg actcggacaa tggtgtaacg gcagcatgtc
+      481 ctcacgctgg agcaaaaagc ttctacaaaa acttgatatg gctggttaaa aaaggaaaat
+      541 catacccaaa gatcaaccaa acctacatta atgataaagg gaaagaagtc ctcgtgctgt
+      601 ggggcattca ccatccacct actattgctg accaacaaag tctctatcag aatgcagatg
+      661 catatgtttt tgtggggaca tcaagataca gcaagaagtt caagccggaa atagcaacaa
+      721 gacccaaagt gagggatcaa gaagggagaa tgaactatta ctggacacta gtagaaccgg
+      781 gagacaaaat aacattcgaa gcaactggta atctagtggc accgagatat gcattcacaa
+      841 tggaaagaga tgctggatct ggtattatca tttcagatac accagtccac gattgcaata
+      901 caacttgtca gacacccgag ggtgctataa acaccagcct cccatttcag aatgtacatc
+      961 cgatcacaat tgggaaatgt ccaaagtatg taaaaagcac aaaattgaga ctggccacag
+     1021 gattgaggaa tgtcccgtct attcaatcta gaggcctatt cggggccatt gctggcttca
+     1081 tcgaaggggg gtggacaggg atggtagatg gatggtacgg ttatcaccat caaaatgagc
+     1141 aggggtcagg atatgcagcc gatctgaaga gcacacaaaa tgccattgat aagattacta
+     1201 acaaagtaaa ttctgttatt gaaaagatga atacacagtt cacagcagtt ggtaaagagt
+     1261 tcaaccacct tgaaaaaaga atagagaatc taaataaaaa ggttgatgat ggtttcctgg
+     1321 acatttggac ttacaatgcc gaactgttgg ttctactgga aaacgaaaga actttggact
+     1381 atcacgattc aaatgtgaag aacttgtatg aaaaagtaag aaaccagtta aaaaacaatg
+     1441 ccaaggaaat tggaaacggc tgctttgaat tttaccacaa atgcgacaac acatgcatgg
+     1501 aaagtgtcaa gaatgggact tatgactacc caaaatactc agaggaagca aaattaaaca
+     1561 gagaaaaaat agatggagta aagctggact caacaaggat ctaccagatt ttggcgatct
+     1621 attcaactgt tgccagttca ttggtactgg tagtctccct gggggcaatc agcttctgga
+     1681 tgtgctctaa tgggtctcta cagtgtagaa tatgtattta acattaggat ttcagaatca
+     1741 tgagaaaaac ac
+//
+

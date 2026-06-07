@@ -1,0 +1,88 @@
+files:
+  keep:             "builds/rsv-b-brazil/keep.txt"
+  ignore:           "builds/rsv-b-brazil/ignore.txt"
+  cache:            "builds/rsv-b-brazil/cache_coordinates.tsv"
+  reference:        "builds/rsv-b-brazil/reference.gb"
+  clades:           "builds/rsv-b-brazil/clades.tsv"
+  auspice_config:   "builds/rsv-b-brazil/auspice_config.json"
+  subsample_config: "builds/rsv-b-brazil/subsample.yaml"
+
+parameters:
+  # Terminal masking — values are REFERENCE-SPECIFIC for NC_001781.1.
+  # Current values (0) disable terminal masking; calibrate before a production run.
+  mask_5prime: 0
+  mask_3prime: 0
+  mask_sites: ""
+  mask_sites_file: ""
+  ufboot: 0
+  model: "JC"
+  root: "least-squares"
+  coalescent: "skyline"
+  date_inference: "marginal"
+  date_confidence: false
+  divergence_units: "mutations"
+  clock_filter_iqd: 4
+  ancestral_inference: "joint"
+  traits_confidence: false
+
+options:
+  threads: 4
+
+coordinates:
+  columns: "country division location"
+
+colours:
+  geo:      "continent country region division location"
+  source:   "source"
+  data_use: "data_use"
+  clade:    "clade_truncated clade"
+
+traits:
+  columns: "continent country region division"
+  max_states: 50
+  rare_state_label: "other"
+
+subsampling:
+  random_seed: 42
+
+curation:
+  clade_levels: 2
+  clade_separator: "."
+  lineage_parser: "none"
+
+qc:
+  genome_quality: ["A", "B"]
+  min_coverage: 0.7
+  min_sequences: 10
+  required_columns: []
+
+# ── Region source ────────────────────────────────────────────────────────────
+# "division" : maps Brazilian state → macro-region (Brazil-focal builds)
+region_source: "division"
+
+# ── Data source ──────────────────────────────────────────────────────────────
+data_source: "pathoplexus"
+
+pathoplexus:
+  organism: "rsv-b"
+  metadata_fields:
+    - accessionVersion
+    - sampleCollectionDate
+    - geoLocCountry
+    - geoLocAdmin1
+    - geoLocAdmin2
+    - dataUseTerms
+    - lineage
+  query_params:
+    dataUseTerms: "OPEN"
+  strip_fasta_id_suffix: false
+  genome_size: 15225
+
+ncbi:
+  taxid: 0
+  genome_size: 0
+
+viralqc:
+  expected_virus: "human respiratory syncytial virus"
+  expected_segment: ""
+  datasets_dir: ""

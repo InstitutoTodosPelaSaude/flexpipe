@@ -1,0 +1,37 @@
+{
+  "title": "Oropouche Virus (L segment) - Brazil",
+  "maintainers": [
+    {"name": "Instituto Todos pela Saúde", "url": "https://www.itps.org.br"}
+  ],
+  "data_provenance": [
+    {"name": "NCBI"}
+  ],
+  "colorings": [
+    {"key": "clade",           "title": "Clade",           "type": "categorical"},
+    {"key": "clade_truncated", "title": "Clade (truncated)","type": "categorical"},
+    {"key": "continent",       "title": "Continent",        "type": "categorical"},
+    {"key": "country",         "title": "Country",          "type": "categorical"},
+    {"key": "region",          "title": "Region",           "type": "categorical"},
+    {"key": "division",        "title": "State",            "type": "categorical"},
+    {"key": "location",        "title": "City",             "type": "categorical"},
+    {"key": "source",          "title": "Data source",      "type": "categorical"},
+    {"key": "data_use",        "title": "Data use terms",   "type": "categorical"}
+  ],
+  "geo_resolutions": [
+    {"key": "country"},
+    {"key": "division"},
+    {"key": "location"}
+  ],
+  "filters": [
+    "clade",
+    "clade_truncated",
+    "continent",
+    "country",
+    "region",
+    "division",
+    "location",
+    "source",
+    "data_use"
+  ],
+  "panels": ["tree", "map", "entropy"]
+}

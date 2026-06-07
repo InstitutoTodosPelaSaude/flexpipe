@@ -18,6 +18,21 @@
 - DENV1-4 use `model: "JC"`, `ufboot: 0`, `date_confidence: false`, and `traits_confidence: false` for the first analyses, per maintainer request and limited local hardware.
 - Production profiles still need reference-specific terminal masks, mutation-based clade definitions, and an approved support/model policy.
 
+## NCBI INSDC Sentinel-Value Normalization (Batch 2)
+
+- Added `_normalize_insdc()` in `flexpipe/ingest/ncbi.py` to convert INSDC `missing: *`, `not applicable`, `not collected`, `not provided`, and `restricted access` values to empty string before writing metadata.
+- Applied to both `collection_date` and `geo_loc_name` qualifiers in `parse_gb_record`.
+- Root cause: NCBI returns synthetic-construct and control sequences with `'missing: synthetic construct'` as the collection date, which `augur curate format-dates` cannot parse.
+- Covered by `TestNormalizeInsdc` and `TestParseGbRecordInsdc` in `tests/unit/test_ncbi.py`.
+
+## New Builds Scaffolded (Batch 3)
+
+- RSV-A and RSV-B Brazil (Pathoplexus): `expected_virus: "human respiratory syncytial virus"` (lowercase) from BLAST metadata; no RSV-A/RSV-B distinction at BLAST level.
+- OROV-L Brazil (NCBI): `expected_virus: "Oropouche virus"`, `expected_segment: "L"`, reference PP154172.1 (Tefé outbreak, 6814 bp).
+- Flu H1N1/H3N2/B HA Brazil (NCBI): `expected_virus: ""` (flu BLAST entries are strain-specific and cannot be matched globally); `expected_segment: "4"` (HA = segment 4 in NCBI RefSeq flu).
+- All new builds use the first-pass profile: `model: JC`, `ufboot: 0`, `date_confidence: false`, `traits_confidence: false`.
+- Integration tests cover dry-run wiring for all new builds; 51 integration tests pass.
+
 ## Visualization and Trait Hardening
 
 - Added a `continent` column during curation so Brazil builds can keep `region` as Brazilian macro-region while still inferring continent/country traits.

@@ -39,7 +39,28 @@ DENV_BUILD_CONFIGS = [
     REPO_ROOT / "builds" / "denv3-brazil" / "config.yaml",
     REPO_ROOT / "builds" / "denv4-brazil" / "config.yaml",
 ]
-BUILD_CONFIGS = [BUILD_CONFIG, RSV_BUILD_CONFIG, *DENV_BUILD_CONFIGS]
+NCBI_BRAZIL_BUILD_CONFIGS = [
+    REPO_ROOT / "builds" / "zikv-brazil" / "config.yaml",
+    REPO_ROOT / "builds" / "chikv-brazil" / "config.yaml",
+]
+PPX_BRAZIL_BUILD_CONFIGS = [
+    REPO_ROOT / "builds" / "rsv-a-brazil" / "config.yaml",
+    REPO_ROOT / "builds" / "rsv-b-brazil" / "config.yaml",
+]
+SEGMENT_BRAZIL_BUILD_CONFIGS = [
+    REPO_ROOT / "builds" / "orov-l-brazil" / "config.yaml",
+    REPO_ROOT / "builds" / "flu-h1n1-ha-brazil" / "config.yaml",
+    REPO_ROOT / "builds" / "flu-h3n2-ha-brazil" / "config.yaml",
+    REPO_ROOT / "builds" / "flu-b-ha-brazil" / "config.yaml",
+]
+BUILD_CONFIGS = [
+    BUILD_CONFIG,
+    RSV_BUILD_CONFIG,
+    *DENV_BUILD_CONFIGS,
+    *NCBI_BRAZIL_BUILD_CONFIGS,
+    *PPX_BRAZIL_BUILD_CONFIGS,
+    *SEGMENT_BRAZIL_BUILD_CONFIGS,
+]
 
 # Sentinel paths used in the fake ViralQC config; chosen to be distinctive and
 # absolute so they appear verbatim in the rendered shell commands.

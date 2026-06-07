@@ -19,6 +19,20 @@ DENV_BUILD_CONFIGS = [
     REPO_ROOT / "builds" / "denv3-brazil" / "config.yaml",
     REPO_ROOT / "builds" / "denv4-brazil" / "config.yaml",
 ]
+NCBI_BRAZIL_BUILD_CONFIGS = [
+    REPO_ROOT / "builds" / "zikv-brazil" / "config.yaml",
+    REPO_ROOT / "builds" / "chikv-brazil" / "config.yaml",
+]
+PPX_BRAZIL_BUILD_CONFIGS = [
+    REPO_ROOT / "builds" / "rsv-a-brazil" / "config.yaml",
+    REPO_ROOT / "builds" / "rsv-b-brazil" / "config.yaml",
+]
+SEGMENT_BRAZIL_BUILD_CONFIGS = [
+    REPO_ROOT / "builds" / "orov-l-brazil" / "config.yaml",
+    REPO_ROOT / "builds" / "flu-h1n1-ha-brazil" / "config.yaml",
+    REPO_ROOT / "builds" / "flu-h3n2-ha-brazil" / "config.yaml",
+    REPO_ROOT / "builds" / "flu-b-ha-brazil" / "config.yaml",
+]
 
 
 def _seed_phylo_inputs(workdir: Path) -> None:
@@ -144,6 +158,68 @@ class TestPhyloWiring:
             "--columns          continent country division location serotype genotype major_lineage minor_lineage clade"
             in output
         )
+        assert "augur mask" not in output
+        assert "cp " in output
+        assert "-m     JC" in output
+        assert "-B " not in output
+        assert "--date-confidence" not in output
+        assert "--confidence" not in output
+
+    @pytest.mark.parametrize("build_config", NCBI_BRAZIL_BUILD_CONFIGS, ids=lambda p: p.parent.name)
+    def test_ncbi_brazil_builds_first_pass_profile(self, tmp_path, monkeypatch, build_config):
+        """ZIKV/CHIKV Brazil phylo dry-runs use the first-pass profile: JC, no support, no confidence."""
+        reference = build_config.parent / "reference.gb"
+        if "PLACEHOLDER" in reference.read_text():
+            pytest.skip(f"{build_config.parent.name} reference.gb is still a placeholder")
+
+        output, rc = _dry_run(tmp_path, build_config, monkeypatch)
+        assert rc == 0, f"{build_config.parent.name} phylo dry-run failed:\n{output}"
+        assert str(reference) in output
+        assert "flexpipe-collapse-traits" in output
+        assert "metadata_traits.tsv" in output
+        assert "--columns          continent country division location clade" in output
+        assert "augur mask" not in output
+        assert "cp " in output
+        assert "-m     JC" in output
+        assert "-B " not in output
+        assert "--date-confidence" not in output
+        assert "--confidence" not in output
+
+    @pytest.mark.parametrize("build_config", PPX_BRAZIL_BUILD_CONFIGS, ids=lambda p: p.parent.name)
+    def test_ppx_brazil_builds_first_pass_profile(self, tmp_path, monkeypatch, build_config):
+        """RSV-A/B Brazil phylo dry-runs use the first-pass profile: JC, no support, no confidence."""
+        reference = build_config.parent / "reference.gb"
+        if "PLACEHOLDER" in reference.read_text():
+            pytest.skip(f"{build_config.parent.name} reference.gb is still a placeholder")
+
+        output, rc = _dry_run(tmp_path, build_config, monkeypatch)
+        assert rc == 0, f"{build_config.parent.name} phylo dry-run failed:\n{output}"
+        assert str(reference) in output
+        assert "flexpipe-collapse-traits" in output
+        assert "metadata_traits.tsv" in output
+        assert "--columns          continent country region division" in output
+        assert "augur mask" not in output
+        assert "cp " in output
+        assert "-m     JC" in output
+        assert "-B " not in output
+        assert "--date-confidence" not in output
+        assert "--confidence" not in output
+
+    @pytest.mark.parametrize(
+        "build_config", SEGMENT_BRAZIL_BUILD_CONFIGS, ids=lambda p: p.parent.name
+    )
+    def test_segment_brazil_builds_first_pass_profile(self, tmp_path, monkeypatch, build_config):
+        """OROV-L Brazil phylo dry-runs use the first-pass profile: JC, no support, no confidence."""
+        reference = build_config.parent / "reference.gb"
+        if "PLACEHOLDER" in reference.read_text():
+            pytest.skip(f"{build_config.parent.name} reference.gb is still a placeholder")
+
+        output, rc = _dry_run(tmp_path, build_config, monkeypatch)
+        assert rc == 0, f"{build_config.parent.name} phylo dry-run failed:\n{output}"
+        assert str(reference) in output
+        assert "flexpipe-collapse-traits" in output
+        assert "metadata_traits.tsv" in output
+        assert "--columns          continent country region division" in output
         assert "augur mask" not in output
         assert "cp " in output
         assert "-m     JC" in output

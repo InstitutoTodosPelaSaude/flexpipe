@@ -1,0 +1,9 @@
+subsamples:
+  brazil:
+    filters: "--query \"country == 'Brazil' and genome_quality in ['A', 'B']\""
+    group_by: "division year"
+    sequences_per_group: 2
+  context:
+    filters: "--query \"country != 'Brazil' and genome_quality in ['A', 'B']\""
+    group_by: "country year"
+    sequences_per_group: 1

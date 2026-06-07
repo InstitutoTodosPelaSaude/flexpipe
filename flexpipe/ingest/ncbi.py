@@ -41,6 +41,29 @@ DELAY_SEC = 0.4  # ≤ 3 req/s without API key, ≤ 10 with API key
 # ── Parsing helpers ───────────────────────────────────────────────────────────
 
 
+_INSDC_MISSING_PREFIXES = (
+    "missing",
+    "not applicable",
+    "not collected",
+    "not provided",
+    "restricted access",
+    "n/a",
+    "na",
+)
+
+
+def _normalize_insdc(value: str) -> str:
+    """Return empty string for INSDC 'missing:*' / 'not applicable' sentinels.
+
+    NCBI encodes absent metadata as 'missing: reason', 'not collected', etc.
+    These are not real field values and must not be passed to augur curation.
+    """
+    v = (value or "").strip()
+    if v.lower().split(":")[0].strip() in _INSDC_MISSING_PREFIXES:
+        return ""
+    return v
+
+
 def parse_country_field(raw: str):
     """Parse NCBI country field ``'Country: Division, Location'`` → ``(country, div, loc)``."""
     country = division = location = ""
@@ -76,7 +99,7 @@ def parse_gb_record(rec) -> dict:
                 feature.qualifiers.get("geo_loc_name") or feature.qualifiers.get("country") or [""]
             )[0]
             cdate_q = feature.qualifiers.get("collection_date") or [""]
-            collection_date = cdate_q[0] if cdate_q else ""
+            collection_date = _normalize_insdc(cdate_q[0] if cdate_q else "")
             break
 
     for ref in rec.annotations.get("references", []):
@@ -84,7 +107,7 @@ def parse_gb_record(rec) -> dict:
             first = ref.authors.split(",")[0].strip()
             authors = f"{first} et al"
 
-    country, division, location = parse_country_field(raw_country)
+    country, division, location = parse_country_field(_normalize_insdc(raw_country))
 
     return {
         "accessionVersion": rec.id,

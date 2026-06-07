@@ -72,6 +72,22 @@
 - Priority: P2.
 - Status: Implemented in `phylogenetic/Snakefile`; DENV1-4 live outputs were run or refreshed with both confidence flags disabled.
 
+## NCBI INSDC sentinel dates break augur curate format-dates
+
+- Symptom: `augur curate format-dates` exits with `Unable to format date string 'missing: synthetic construct'` during ZIKV live ingest.
+- Evidence: NCBI returns synthetic-construct records with INSDC sentinel values (`missing: <reason>`, `not applicable`, etc.) in the `collection_date` qualifier. flexpipe-fetch-ncbi previously passed these through verbatim.
+- Suggested fix: Normalize INSDC sentinel values (`missing:*`, `not applicable`, `not collected`, `not provided`) to empty string in `parse_gb_record()` before writing the metadata TSV, so `augur filter --exclude-where date=` can drop them cleanly.
+- Priority: P1.
+- Status: Implemented in `flexpipe/ingest/ncbi.py` with unit tests in `tests/unit/test_ncbi.py`.
+
+## Flu HA expected_virus cannot use a single stable string
+
+- Symptom: `expected_virus` filtering for flu builds requires an exact match against the `virus` column in ViralQC output, which originates from the BLAST database `virus_name` field. For flu, each RefSeq reference entry has a strain-specific name (e.g. "Influenza A virus (A/California/07/2009(H1N1))"), so no single string covers all H1N1 pdm09 sequences — different strains produce different BLAST hits.
+- Evidence: The blast.tsv entries for flu A H1N1 pdm09 are all attributed to A/California/07/2009; other strains (H3N2, H7N9) each have distinct per-strain names. A global `expected_virus: "Influenza A virus"` would never match since names include strain designations.
+- Suggested fix: Leave `expected_virus: ""` for flu builds; rely on `expected_segment: "4"` (HA = segment 4 in NCBI RefSeq flu) to filter non-HA segments. A future improvement could use partial-match (prefix or regex) in viralqc_join.py.
+- Priority: P3 (documentation-only; not blocking first analyses).
+- Status: Documented; flu builds use `expected_segment: "4"` and empty `expected_virus`.
+
 ## Geocoding dominates live ingest for location-rich builds
 
 - Symptom: Brazil-plus-global DENV subsamples can contain hundreds of uncached `division` and `location` values, causing long Nominatim-bound coordinate runs.
