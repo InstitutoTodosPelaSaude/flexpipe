@@ -73,6 +73,8 @@ pathoplexus:
 ncbi:
   taxid: 118655   # Oropouche virus
   genome_size: 6814  # PP154172.1 (Tefé L segment, 6814 bp)
+  email: ""        # set via NCBI_EMAIL env var
+  api_key: ""      # set via NCBI_API_KEY env var (optional)
 
 viralqc:
   expected_virus: "Oropouche virus"

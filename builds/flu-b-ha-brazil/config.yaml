@@ -74,6 +74,8 @@ ncbi:
   taxid: 11520   # Influenza B virus
   genome_size: 1885  # KX058884.1 (B/Brisbane/60/2008 Victoria) HA gene, 1885 bp
   # min_length/max_length default to 0.7/1.1 × genome_size (1319–2073 bp)
+  email: ""        # set via NCBI_EMAIL env var
+  api_key: ""      # set via NCBI_API_KEY env var (optional)
 
 viralqc:
   expected_virus: ""   # Flu B BLAST strain name is "Influenza B virus (B/Lee/1940)";

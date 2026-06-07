@@ -74,6 +74,8 @@ ncbi:
   taxid: 119210   # Influenza A virus H3N2 subtype
   genome_size: 1737  # CY163680.1 (A/Wisconsin/67/2005(H3N2)) HA gene, 1737 bp
   # min_length/max_length default to 0.7/1.1 × genome_size (1216–1911 bp)
+  email: ""        # set via NCBI_EMAIL env var
+  api_key: ""      # set via NCBI_API_KEY env var (optional)
 
 viralqc:
   expected_virus: ""   # Flu strain names in BLAST db are strain-specific; leave unset

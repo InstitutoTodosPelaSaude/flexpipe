@@ -74,6 +74,8 @@ ncbi:
   taxid: 114727   # Influenza A virus H1N1 subtype
   genome_size: 1752  # MW626062.1 (A/Wisconsin/588/2019(H1N1)) HA gene, 1752 bp
   # min_length/max_length default to 0.7/1.1 × genome_size (1226–1927 bp)
+  email: ""        # set via NCBI_EMAIL env var
+  api_key: ""      # set via NCBI_API_KEY env var (optional)
 
 viralqc:
   expected_virus: ""   # Flu strain names in BLAST db are strain-specific; leave unset
