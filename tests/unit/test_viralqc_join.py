@@ -237,3 +237,24 @@ class TestJoinViralqcContamination:
 
         with pytest.raises(SystemExit, match="seqName"):
             join_viralqc(df, path, {})
+
+    def test_wrong_virus_reason_is_not_overwritten_by_wrong_segment(self, tmp_path):
+        """When both virus and segment are wrong, wrong_virus wins (first-found priority)."""
+        df = _make_metadata("SEQ001")
+        path = _write_viralqc(
+            tmp_path,
+            [
+                {
+                    "seqName": "SEQ001",
+                    "virus": "DENV",
+                    "segment": "N",
+                    "genomeQuality": "A",
+                }
+            ],
+        )
+        cfg = {"expected_virus": "YFV", "expected_segment": "L"}
+        result = join_viralqc(df, path, cfg)
+        # Both checks fire; wrong_virus must survive because it is set first
+        # and wrong_segment must not overwrite a non-blank reason.
+        assert result.loc[0, "genome_quality"] == "D"
+        assert result.loc[0, "qc_exclusion_reason"] == "wrong_virus"

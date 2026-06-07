@@ -5,6 +5,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
+import yaml
 
 from flexpipe.config import load_config, write_snakemake_config_overrides
 
@@ -149,3 +150,56 @@ class TestPhyloWiring:
         assert "-B " not in output
         assert "--date-confidence" not in output
         assert "--confidence" not in output
+
+    def test_empty_bed_mask_file_takes_copy_path_not_augur_mask(self, tmp_path, monkeypatch):
+        """A mask_sites_file that exists but is empty must not render --mask; copy path is taken."""
+        if not shutil.which("snakemake"):
+            pytest.skip("snakemake not found on PATH — activate the nextstrain conda env")
+
+        workdir = tmp_path / "workdir"
+        _seed_phylo_inputs(workdir)
+
+        # Build a resolved config from YFV but with zero terminal/site masks and an empty BED.
+        empty_bed = tmp_path / "empty.bed"
+        empty_bed.write_text("")  # exists but has no content
+
+        monkeypatch.setenv("NCBI_EMAIL", "ops@example.org")
+        cfg = load_config(YFV_BUILD_CONFIG, workdir=workdir, skip_viralqc=True)
+        resolved_path = workdir / "config" / "snakemake_resolved.yaml"
+        write_snakemake_config_overrides(cfg, resolved_path, YFV_BUILD_CONFIG)
+
+        # Patch the resolved config: clear all mask inputs, point mask_sites_file at the empty BED.
+        with resolved_path.open() as f:
+            resolved = yaml.safe_load(f)
+        resolved["parameters"]["mask_5prime"] = 0
+        resolved["parameters"]["mask_3prime"] = 0
+        resolved["parameters"]["mask_sites"] = ""
+        resolved["parameters"]["mask_sites_file"] = str(empty_bed)
+        with resolved_path.open("w") as f:
+            yaml.dump(resolved, f)
+
+        outside = tmp_path / "outside"
+        outside.mkdir()
+        cmd = [
+            "snakemake",
+            "--snakefile",
+            str(PHYLO_SNAKEFILE),
+            "--configfile",
+            str(resolved_path),
+            "--config",
+            f"workdir={workdir}",
+            f"build_config={YFV_BUILD_CONFIG}",
+            "--dry-run",
+            "--printshellcmds",
+            "--cores",
+            "1",
+            "--nolock",
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True, cwd=outside)
+        output = result.stdout + "\n" + result.stderr
+        assert result.returncode == 0, f"Dry-run with empty BED failed:\n{output}"
+        # An empty BED must trigger the copy branch, not the augur mask branch.
+        assert (
+            "augur mask" not in output
+        ), "augur mask was rendered even though mask_sites_file is empty"
+        assert "cp " in output

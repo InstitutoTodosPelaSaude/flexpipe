@@ -215,16 +215,9 @@ class TestIngestWiring:
         assert "fetch_ncbi" not in output
         assert str(build_config) in output
 
-    @pytest.mark.parametrize(
-        "build_config",
-        [
-            REPO_ROOT / "builds" / "denv3-brazil" / "config.yaml",
-            REPO_ROOT / "builds" / "denv4-brazil" / "config.yaml",
-        ],
-        ids=lambda p: p.parent.name,
-    )
+    @pytest.mark.parametrize("build_config", DENV_BUILD_CONFIGS, ids=lambda p: p.parent.name)
     def test_denv_reference_builds_render_new_visual_hierarchies(self, tmp_path, build_config):
-        """DENV3/4 ingest dry-runs carry the new geo and lineage color levels."""
+        """All DENV ingest dry-runs carry the new geo and lineage color levels."""
         resolved_config = _resolved_config_for_build(tmp_path, build_config)
         output, rc = _dry_run(tmp_path, resolved_config, build_config=build_config)
         assert rc == 0, f"dry-run failed:\n{output}"

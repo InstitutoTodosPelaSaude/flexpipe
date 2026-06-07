@@ -169,7 +169,10 @@ def join_viralqc(
                     if "genome_quality" not in df.columns:
                         df["genome_quality"] = ""
                     df.loc[bad_seg, "genome_quality"] = "D"
-                    df.loc[bad_seg, "qc_exclusion_reason"] = "wrong_segment"
+                    # Preserve a more specific reason already set (e.g. wrong_virus);
+                    # only write wrong_segment when the reason is still blank.
+                    blank_reason = df["qc_exclusion_reason"].str.strip() == ""
+                    df.loc[bad_seg & blank_reason, "qc_exclusion_reason"] = "wrong_segment"
             df.drop(columns=["_nc_segment"], inplace=True)
     else:
         df["qc_exclusion_reason"] = "missing_viralqc"

@@ -24,6 +24,21 @@ def _resolve_path(value):
     return str(build_candidate)
 
 
+def _bed_has_content(path: str) -> bool:
+    """Return True only when *path* is non-empty and the file contains actual content.
+
+    An empty or whitespace-only BED file is treated as equivalent to no file:
+    ``augur mask --mask`` would silently produce no mask, but we prefer to take
+    the copy-alignment path to make the intent explicit.
+    """
+    if not path:
+        return False
+    try:
+        return bool(Path(path).read_text().strip())
+    except OSError:
+        return False
+
+
 def _resolve_section_paths(section, keys):
     section = dict(section or {})
     for key in keys:
@@ -109,8 +124,12 @@ _mask_from_beginning = int(parameters.mask_5prime)
 _mask_from_end = int(parameters.mask_3prime)
 _date_confidence = bool(config["parameters"].get("date_confidence", True))
 _traits_confidence = bool(config["parameters"].get("traits_confidence", True))
+# A BED file is "active" only when the path is set and the file has actual content.
+# An empty or whitespace-only file is equivalent to no mask; we skip the --mask flag
+# rather than passing an empty file that augur mask would silently accept.
+_mask_bed_active = _bed_has_content(_mask_sites_file)
 _mask_requested = bool(
-    _mask_from_beginning > 0 or _mask_from_end > 0 or _mask_sites or _mask_sites_file
+    _mask_from_beginning > 0 or _mask_from_end > 0 or _mask_sites or _mask_bed_active
 )
 
 if _mask_requested:
@@ -122,14 +141,14 @@ if _mask_requested:
             alignment  = rules.align.output.alignment,
             # Only declare the BED file as an explicit input when set, so Snakemake tracks
             # the dependency correctly. When empty the rule has no extra file dependency.
-            **({} if not _mask_sites_file else {"mask_bed": _mask_sites_file})
+            **({} if not _mask_bed_active else {"mask_bed": _mask_sites_file})
         params:
             mask_from_beginning = _mask_from_beginning,
             mask_from_end       = _mask_from_end,
             mask_beginning_args = ["--mask-from-beginning", str(_mask_from_beginning)] if _mask_from_beginning > 0 else [],
             mask_end_args       = ["--mask-from-end", str(_mask_from_end)] if _mask_from_end > 0 else [],
             mask_sites_args     = ["--mask-sites", _mask_sites] if _mask_sites else [],
-            mask_bed_args       = ["--mask", parameters.mask_sites_file] if parameters.mask_sites_file else []
+            mask_bed_args       = ["--mask", _mask_sites_file] if _mask_bed_active else []
         output:
             alignment = f"{_wd}/results/alignments/masked.fasta"
         shell:
