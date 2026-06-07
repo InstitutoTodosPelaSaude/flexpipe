@@ -27,7 +27,7 @@
 
 ## New Builds Scaffolded (Batch 3)
 
-- RSV-A and RSV-B Brazil (Pathoplexus): `expected_virus: "human respiratory syncytial virus"` (lowercase) from BLAST metadata; no RSV-A/RSV-B distinction at BLAST level.
+- RSV-A and RSV-B Brazil (Pathoplexus): `expected_virus: ""` — ViralQC `results.tsv` `virus` column uses Nextclade dataset naming ("Respiratory syncytial virus A") which differs from blast.tsv `virus_name`; Pathoplexus organism slug already restricts to the correct subtype so the filter is unnecessary.
 - OROV-L Brazil (NCBI): `expected_virus: "Oropouche virus"`, `expected_segment: "L"`, reference PP154172.1 (Tefé outbreak, 6814 bp).
 - Flu H1N1/H3N2/B HA Brazil (NCBI): `expected_virus: ""` (flu BLAST entries are strain-specific and cannot be matched globally); `expected_segment: "4"` (HA = segment 4 in NCBI RefSeq flu).
 - All new builds use the first-pass profile: `model: JC`, `ufboot: 0`, `date_confidence: false`, `traits_confidence: false`.

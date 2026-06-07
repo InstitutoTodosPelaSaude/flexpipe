@@ -1,9 +1,26 @@
-subsamples:
+# Subsampling for Flu H1N1 HA Brazil build
+#
+# Brazil-focal with global context:
+# - up to 2 sequences per Brazilian state-year
+# - up to 1 sequence per non-Brazil country-year
+
+defaults:
+  min_date: 2009
+  exclude: builds/flu-h1n1-ha-brazil/ignore.txt
+  exclude_ambiguous_dates_by: year
+
+samples:
   brazil:
-    filters: "--query \"country == 'Brazil' and genome_quality in ['A', 'B']\""
-    group_by: "division year"
+    query: "country == 'Brazil'"
+    include: builds/flu-h1n1-ha-brazil/keep.txt
+    group_by:
+      - division
+      - year
     sequences_per_group: 2
+
   context:
-    filters: "--query \"country != 'Brazil' and genome_quality in ['A', 'B']\""
-    group_by: "country year"
+    query: "country != 'Brazil'"
+    group_by:
+      - country
+      - year
     sequences_per_group: 1

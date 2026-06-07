@@ -88,6 +88,22 @@
 - Priority: P3 (documentation-only; not blocking first analyses).
 - Status: Documented; flu builds use `expected_segment: "4"` and empty `expected_virus`.
 
+## New build subsample.yaml files used wrong `subsamples:` key instead of `samples:`
+
+- Symptom: RSV-A ingest (second attempt) failed with `Unexpected property 'subsamples'` / `Missing required property 'samples'` from augur subsample schema validation.
+- Evidence: Batch 3 scaffold generated `subsamples:` with inline `--query "..."` filter strings and string-form `group_by`. Augur subsample expects `samples:` with plain `query:` strings and list-form `group_by:`. ZIKV/CHIKV had the correct format (ran successfully); RSV-A/B, OROV-L, flu H1N1/H3N2/B used the wrong format.
+- Suggested fix: Use DENV subsample.yaml as the authoritative template for future scaffolds.
+- Priority: P1 (blocked RSV/OROV/flu live runs).
+- Status: Fixed in all 5 affected builds (rsv-b-brazil, orov-l-brazil, flu-h1n1/h3n2/b-ha-brazil).
+
+## ViralQC results.tsv `virus` column differs from blast.tsv `virus_name`
+
+- Symptom: RSV-A ingest dropped all 40,657 sequences as `genome_quality=D` (wrong_virus) despite correct Pathoplexus fetch.
+- Evidence: `expected_virus: "human respiratory syncytial virus"` was derived from `viralQC/datasets/blast.tsv virus_name` for NC_038235.1. However, ViralQC's `results.tsv` `virus` column uses Nextclade dataset naming (`"Respiratory syncytial virus A"`, `"Human respiratory syncytial virus A"`), not the BLAST db virus_name. The exact-match comparison in `viralqc_join.py` flagged every RSV-A sequence as wrong_virus.
+- Suggested fix: For Pathoplexus builds the organism slug already restricts the fetch; leave `expected_virus: ""` for RSV-A and RSV-B. A broader fix would make `viralqc_join.py` use case-insensitive substring matching so blast.tsv-derived names work across both name formats.
+- Priority: P1 (blocked RSV live runs).
+- Status: Fixed by setting `expected_virus: ""` in rsv-a-brazil and rsv-b-brazil configs.
+
 ## Geocoding dominates live ingest for location-rich builds
 
 - Symptom: Brazil-plus-global DENV subsamples can contain hundreds of uncached `division` and `location` values, causing long Nominatim-bound coordinate runs.

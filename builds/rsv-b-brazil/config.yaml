@@ -83,6 +83,8 @@ ncbi:
   genome_size: 0
 
 viralqc:
-  expected_virus: "human respiratory syncytial virus"
+  # ViralQC results.tsv uses "Respiratory syncytial virus B" (Nextclade naming),
+  # not blast.tsv virus_name. Leave unset — Pathoplexus organism=rsv-b restricts.
+  expected_virus: ""
   expected_segment: ""
   datasets_dir: ""

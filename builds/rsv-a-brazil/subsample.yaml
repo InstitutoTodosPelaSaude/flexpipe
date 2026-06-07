@@ -1,11 +1,28 @@
-subsamples:
+# Subsampling for RSV-A Brazil build
+#
+# Brazil-focal with global context:
+# - up to 2 sequences per Brazilian state-month
+# - up to 1 sequence per non-Brazil country-month
+
+defaults:
+  min_date: 2010
+  exclude: builds/rsv-a-brazil/ignore.txt
+  exclude_ambiguous_dates_by: month
+
+samples:
   brazil:
-    filters: "--query \"country == 'Brazil' and genome_quality in ['A', 'B']\""
-    group_by: "division year month"
+    query: "country == 'Brazil'"
+    include: builds/rsv-a-brazil/keep.txt
+    group_by:
+      - division
+      - year
+      - month
     sequences_per_group: 2
-    min_date: "2010"
+
   context:
-    filters: "--query \"country != 'Brazil' and genome_quality in ['A', 'B']\""
-    group_by: "country year month"
+    query: "country != 'Brazil'"
+    group_by:
+      - country
+      - year
+      - month
     sequences_per_group: 1
-    min_date: "2010"
