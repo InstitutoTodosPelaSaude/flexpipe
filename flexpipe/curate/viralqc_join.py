@@ -16,6 +16,8 @@ from typing import Optional, Union
 
 import pandas as pd
 
+from flexpipe.curate.viralqc_aliases import label_matches_entry, resolve_expected_entry
+
 logger = logging.getLogger(__name__)
 
 
@@ -131,12 +133,21 @@ def join_viralqc(
         # Cross-contamination filter: sequences with wrong/unclassified virus
         expected_virus = viralqc_cfg.get("expected_virus", None)
         expected_segment = viralqc_cfg.get("expected_segment", None)
+        aliases_file = viralqc_cfg.get("aliases_file", None)
 
         if "_nc_virus" in df.columns:
             if expected_virus:
+                virus_entry = resolve_expected_entry(
+                    expected_virus,
+                    "viruses",
+                    aliases_file=aliases_file,
+                )
+                assert virus_entry is not None
                 virus_values = df["_nc_virus"].fillna("").astype(str).str.strip()
                 present = virus_values != ""
-                bad_virus = present & (virus_values != expected_virus)
+                bad_virus = present & ~virus_values.map(
+                    lambda label: label_matches_entry(label, virus_entry)
+                )
                 unclassified = present & virus_values.str.lower().str.contains(
                     "unclassified", na=False
                 )
@@ -144,9 +155,11 @@ def join_viralqc(
                 n = int(exclude.sum())
                 if n:
                     logger.warning(
-                        "Excluding %d sequences with wrong/unclassified virus (expected: %s)",
+                        "Excluding %d sequences with wrong/unclassified virus "
+                        "(expected: %s; alias key: %s)",
                         n,
                         expected_virus,
+                        virus_entry.key if virus_entry else expected_virus,
                     )
                     if "genome_quality" not in df.columns:
                         df["genome_quality"] = ""
@@ -156,15 +169,25 @@ def join_viralqc(
 
         if "_nc_segment" in df.columns:
             if expected_segment:
+                segment_entry = resolve_expected_entry(
+                    expected_segment,
+                    "segments",
+                    aliases_file=aliases_file,
+                )
+                assert segment_entry is not None
                 segment_values = df["_nc_segment"].fillna("").astype(str).str.strip()
                 present = segment_values != ""
-                bad_seg = present & (segment_values != expected_segment)
+                bad_seg = present & ~segment_values.map(
+                    lambda label: label_matches_entry(label, segment_entry)
+                )
                 n = int(bad_seg.sum())
                 if n:
                     logger.warning(
-                        "Excluding %d sequences with wrong segment (expected: %s)",
+                        "Excluding %d sequences with wrong segment "
+                        "(expected: %s; alias key: %s)",
                         n,
                         expected_segment,
+                        segment_entry.key if segment_entry else expected_segment,
                     )
                     if "genome_quality" not in df.columns:
                         df["genome_quality"] = ""

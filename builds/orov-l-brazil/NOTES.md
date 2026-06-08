@@ -15,7 +15,7 @@
 - [x] Live phylo / end-to-end
 
 ## Open Questions
-- Terminal mask values (mask_5prime, mask_3prime) for PP154172.1 — not calibrated, set to 0.
+- Terminal BED: `masks/reference_terminal.bed` generated from PP154172.1 CDS boundaries; review/calibrate before production use.
 - Clade definitions — header-only placeholder; Nextclade provides `clade` from ViralQC.
 
 ## Run Log
@@ -23,4 +23,4 @@
 - **Ingest**: 902 fetched, 827 QC-passed, 128 subsampled
 - **expected_virus**: "Oropouche virus" confirmed correct from ViralQC blast.tsv
 - **Phylo**: IQ-TREE3 JC model; auspice/results.json 520K on 2026-06-07
-- **Config**: `model: JC`, `ufboot: 0`, `date_confidence: false`, `traits_confidence: false`, `mask_5prime: 0`, `mask_3prime: 0`
+- **Config**: `model: JC`, `ufboot: 0`, `date_confidence: false`, `traits_confidence: false`, `mask_sites_file: masks/reference_terminal.bed`

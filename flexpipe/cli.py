@@ -105,6 +105,20 @@ def collapse_traits() -> None:
     main()
 
 
+def normalize_dates() -> None:
+    """flexpipe-normalize-dates — normalize flexible metadata date strings."""
+    from flexpipe.curate.dates import main
+
+    main()
+
+
+def reference_mask() -> None:
+    """flexpipe-reference-mask — generate BED masks from reference annotations."""
+    from flexpipe.phylo.reference_mask import main
+
+    main()
+
+
 # ── Orchestrator ─────────────────────────────────────────────────────────────
 
 

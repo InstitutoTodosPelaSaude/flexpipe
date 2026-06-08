@@ -10,7 +10,7 @@
 - [x] Live phylo / end-to-end — OK 2026-06-07
 
 ## Open Questions
-- Terminal mask values (mask_5prime, mask_3prime) for NC_035889.1 — not yet calibrated, set to 0.
+- Terminal BED: `masks/reference_terminal.bed` generated from NC_035889.1 CDS boundaries; review/calibrate before production use.
 
 ## Run Log
 
@@ -30,5 +30,5 @@
 - Auspice JSON: `/tmp/flexpipe-runs/zikv-brazil/auspice/results.json` (2.5 MB)
 - Exit code: 0
 
-**Remaining gaps:** clade TSV header-only (ViralQC Nextclade provides `clade`); terminal masks
-uncalibrated; no mutation-based clade definitions yet.
+**Remaining gaps:** clade TSV header-only (ViralQC Nextclade provides `clade`);
+generated terminal BED needs review; no mutation-based clade definitions yet.

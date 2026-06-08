@@ -115,6 +115,13 @@ viralqc:
   executable: vqc
 ```
 
+Virus and segment expectations are alias-aware. Built-in aliases live in
+`flexpipe/data/viralqc/aliases.yaml`; build-local experiments can set
+`viralqc.aliases_file`. Prefer operational keys such as `rsv_a`, `flu_a_h1n1`, or `ha`
+when ViralQC output labels vary across Nextclade datasets, BLAST records, or segment naming
+conventions. ICTV species names are stored as metadata in the registry but are not broad
+matching shortcuts unless explicitly listed as aliases.
+
 To re-download just the datasets without reinstalling the environment:
 
 ```bash
@@ -193,6 +200,7 @@ with remote data. Set `local_sequences.enabled: true` in `config.yaml` to activa
 `flexpipe-curate` entry point then:
 
 - Renames and standardises metadata fields (`strain`, `date`, `country`, `division`, `location`, `data_use`, `clade`)
+- Normalizes flexible date strings via `flexpipe-normalize-dates` and writes `results/ingest/date_normalization.tsv`
 - Computes `clade_truncated` by trimming hierarchical clade names to `clade_levels` levels
 - Assigns a `region` column from either country names (global builds) or state names (Brazil-only builds — see `region_source` below)
 - Adds a `continent` column from `country`; for Brazil builds this is separate from `region`
@@ -261,9 +269,10 @@ For global builds, replace `division` with `country` and add `clade_truncated` t
 
 **Coordinates**: `flexpipe-coordinates` queries Nominatim (OpenStreetMap) to geocode the
 columns listed in `coordinates.columns`. Results are cached in `<workdir>/cache/cache_coordinates.tsv`;
-the output `<workdir>/config/latlongs.tsv` is consumed by `augur export`. The geocoding seed
-from the build directory (`builds/<name>/cache_coordinates.tsv`) is copied into the workdir on
-first run — the source tree is never written to.
+the output `<workdir>/config/latlongs.tsv` is consumed by `augur export`. Workdirs are seeded
+from the bundled shared cache (`flexpipe/data/geo/cache_coordinates.tsv`) first, then the
+build-specific `builds/<name>/cache_coordinates.tsv` so manual build entries win. Use
+`coordinates.shared_cache` to point at a project-local shared seed cache.
 
 **Colours**: `flexpipe-name2hue` assigns hues from the subsampled metadata. `flexpipe-colours`
 produces `<workdir>/config/colour_scheme.tsv`. Both are configured via `colours` in `config.yaml`:
@@ -310,6 +319,15 @@ Steps: `align` (MAFFT) → `mask` → `tree` (IQ-TREE 3 UFBoot) → `refine` (Tr
 > are calibrated for the YFV reference X03700.1. When using a different reference, recalculate
 > these values from a pilot alignment. Set both to `0` to disable terminal masking (safe default
 > for new builds). Use `mask_sites_file` to point at a BED file of additional problematic sites.
+> `flexpipe-reference-mask` can generate first-draft terminal BED masks from GenBank
+> annotations, including explicit UTR features, UTR-like qualifiers on other feature types, or
+> CDS/gene boundary fallback. Review generated BEDs before production surveillance use.
+
+```bash
+flexpipe-reference-mask \
+  --reference builds/<name>/reference.gb \
+  --output builds/<name>/masks/reference_terminal.bed
+```
 
 ### Clade annotation
 
@@ -352,13 +370,16 @@ Key fields to update:
 | `ncbi.taxid` | NCBI taxonomy ID |
 | `ncbi.genome_size` | Reference genome size in bp |
 | `parameters.mask_5prime/3prime` | Terminal masking in bp; **reference-specific** — set 0 for new builds and calibrate |
-| `parameters.mask_sites_file` | Optional BED file of additional problematic sites |
+| `parameters.mask_sites_file` | Optional BED file of additional problematic sites or generated terminal masks |
 | `curation.clade_levels` | Hierarchy depth for `clade_truncated` |
 | `curation.lineage_parser` | Optional parser for structured lineage strings (`none`, `dengue`, `pango`, `generic_dot`) |
+| `curation.date_formats` | Optional override for flexible date-normalization policy |
 | `qc.min_sequences` | Minimum subsampled sequences before phylogenetics (default 10; 0 disables) |
 | `region_source` | `"country"` for global builds; `"division"` for Brazil-only |
-| `viralqc.expected_virus` | Expected virus name (ViralQC rejects mismatches) |
-| `viralqc.expected_segment` | Expected segment name for single-segment builds; leave blank for non-segmented |
+| `coordinates.shared_cache` | Optional shared geocode seed cache override |
+| `viralqc.expected_virus` | Expected virus alias key or literal label (ViralQC rejects mismatches) |
+| `viralqc.expected_segment` | Expected segment alias key or literal label for single-segment builds |
+| `viralqc.aliases_file` | Optional override for virus/segment alias registry |
 | `viralqc.*` | ViralQC paths (or set `VIRALQC_DATASETS_DIR`) |
 | `traits.columns` | Columns for ancestral trait reconstruction |
 | `traits.max_states` | Per-trait state cap for TreeTime ancestral-state inference |
@@ -390,10 +411,13 @@ Key fields to update:
 | `flexpipe-fetch-ncbi` | Download from NCBI Entrez by taxid |
 | `flexpipe-merge` | Merge remote data with local surveillance sequences |
 | `flexpipe-curate` | ViralQC join, region, `clade_truncated`, source, dedup |
+| `flexpipe-normalize-dates` | Normalize flexible metadata dates before Augur date curation |
 | `flexpipe-coordinates` | Geocode locations via Nominatim with rate-limiting and caching |
 | `flexpipe-update-cache` | Merge newly geocoded coordinates into the workdir cache |
 | `flexpipe-name2hue` | Generate colour hue mapping from subsampled metadata |
 | `flexpipe-colours` | Assign hex colours per metadata value |
+| `flexpipe-collapse-traits` | Cap trait states into a TreeTime metadata sidecar |
+| `flexpipe-reference-mask` | Generate first-draft terminal BED masks from GenBank annotations |
 | `flexpipe-qc-summary` | Build per-run QC report (`qc_report.json` + `qc_summary.tsv`) from ingest outputs |
 
 ---

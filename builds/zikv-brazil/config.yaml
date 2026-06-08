@@ -11,7 +11,7 @@ parameters:
   mask_5prime: 0      # set to 0 until reference-specific values are known (NC_035889.1)
   mask_3prime: 0
   mask_sites: ""
-  mask_sites_file: ""
+  mask_sites_file: "builds/zikv-brazil/masks/reference_terminal.bed"
   ufboot: 0           # first-pass: no UFBoot support (fast)
   model: "JC"         # first-pass: fast fixed model
   root: "least-squares"

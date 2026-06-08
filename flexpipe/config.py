@@ -124,7 +124,9 @@ def resolve_config_paths(raw: dict, config_path: str | Path) -> dict:
     _resolve_section_paths(
         out, "parameters", ["mask_sites_file"], build_dir=build_dir, must_exist=True
     )
-    _resolve_section_paths(out, "coordinates", ["force_file"], build_dir=build_dir, must_exist=True)
+    _resolve_section_paths(
+        out, "coordinates", ["force_file", "shared_cache"], build_dir=build_dir, must_exist=True
+    )
     _resolve_section_paths(
         out,
         "regions",
@@ -132,7 +134,10 @@ def resolve_config_paths(raw: dict, config_path: str | Path) -> dict:
         build_dir=build_dir,
         must_exist=True,
     )
-    _resolve_section_paths(out, "curation", ["host_rules"], build_dir=build_dir, must_exist=True)
+    _resolve_section_paths(
+        out, "curation", ["host_rules", "date_formats"], build_dir=build_dir, must_exist=True
+    )
+    _resolve_section_paths(out, "viralqc", ["aliases_file"], build_dir=build_dir, must_exist=True)
 
     hue_tables = out.get("colours", {}).get("hue_tables")
     if isinstance(hue_tables, dict):
@@ -232,6 +237,7 @@ class CoordinatesConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
     columns: str = "country"
     force_file: str | None = None
+    shared_cache: str | None = None
 
     @field_validator("columns")
     @classmethod
@@ -314,6 +320,7 @@ class CurationConfig(BaseModel):
     clade_levels: int = 1
     clade_separator: str = "."
     host_rules: str | None = None
+    date_formats: str | None = None
     lineage_parser: Literal["none", "dengue", "pango", "generic_dot"] = "none"
     lineage_columns: LineageColumnsConfig = Field(default_factory=LineageColumnsConfig)
 
@@ -355,6 +362,7 @@ class ViralqcConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
     conda_env: str = "viralQC"
     clade_column: str = "clade"
+    aliases_file: str | None = None
     datasets_dir: str = ""
     blast_database: str = ""
     blast_database_metadata: str = ""

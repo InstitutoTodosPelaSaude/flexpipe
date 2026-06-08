@@ -27,9 +27,9 @@
 
 ## New Builds Scaffolded (Batch 3)
 
-- RSV-A and RSV-B Brazil (Pathoplexus): `expected_virus: ""` — ViralQC `results.tsv` `virus` column uses Nextclade dataset naming ("Respiratory syncytial virus A") which differs from blast.tsv `virus_name`; Pathoplexus organism slug already restricts to the correct subtype so the filter is unnecessary.
+- RSV-A and RSV-B Brazil (Pathoplexus): initially used blank `expected_virus` because ViralQC `results.tsv` naming differed from `blast.tsv`; now superseded by alias-backed `rsv_a` / `rsv_b`.
 - OROV-L Brazil (NCBI): `expected_virus: "Oropouche virus"`, `expected_segment: "L"`, reference PP154172.1 (Tefé outbreak, 6814 bp).
-- Flu H1N1/H3N2/B HA Brazil (NCBI): `expected_virus: ""` and `expected_segment: ""` — ViralQC uses string segment names ("HA") not numeric IDs ("4"), and flu B uses names exclusively. Nextclade alignment quality (A/B) filters non-HA segments naturally.
+- Flu H1N1/H3N2/B HA Brazil (NCBI): initially used blank virus/segment filters because ViralQC labels were strain-specific or `HA`/`4` mixed; now superseded by alias-backed flu virus keys and `expected_segment: "ha"`.
 - All new builds use the first-pass profile: `model: JC`, `ufboot: 0`, `date_confidence: false`, `traits_confidence: false`.
 - Integration tests cover dry-run wiring for all new builds; 51 integration tests pass.
 
@@ -39,3 +39,11 @@
 - Added `traits.max_states` and `traits.rare_state_label`; the phylo workflow now writes a collapsed `metadata_traits.tsv` sidecar for `augur traits` without mutating exported metadata.
 - Added optional lineage parsers. DENV parsing keeps raw `clade` and adds prefix-safe `serotype`, `genotype`, `major_lineage`, and `minor_lineage` columns such as `3III_B`, never bare `B`.
 - Updated color seeding to use the configured hierarchy roots and stable cached hues, with child shades derived deterministically inside the parent hue family.
+
+## Follow-Up Hardening From Multi-Build Learnings
+
+- Added `flexpipe/data/viralqc/aliases.yaml` plus `viralqc.aliases_file` overrides. `expected_virus` and `expected_segment` now resolve through alias/regex entries before falling back to exact matching. RSV and flu configs use operational keys (`rsv_a`, `rsv_b`, `flu_a_h1n1`, `flu_a_h3n2`, `flu_b`, `ha`) instead of blank workarounds.
+- Added `flexpipe-reference-mask` and `flexpipe/data/phylo/reference_mask_profiles.yaml`. The tool derives terminal BED masks from explicit UTR annotations, UTR-like qualifiers on other feature types, or CDS/gene boundaries, with a guardrail against excessive masking. New DENV, ZIKV, CHIKV, RSV-A/B, OROV-L, and flu HA builds now point to `masks/reference_terminal.bed`.
+- Added `flexpipe-normalize-dates` and `flexpipe/data/curation/date_formats.yaml`. The ingest workflow now normalizes flexible year/year-month/full-date strings before `augur curate format-dates` and writes `results/ingest/date_normalization.tsv`.
+- Added a bundled shared geocode seed cache at `flexpipe/data/geo/cache_coordinates.tsv` plus `coordinates.shared_cache` override. Workdir caches are seeded from shared entries first and build-specific entries second, so manual build seeds still win.
+- Added `builds/SCAFFOLD_CHECKLIST.md` to turn the learned archetypes into a concise copy-forward checklist.

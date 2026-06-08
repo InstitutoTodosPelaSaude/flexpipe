@@ -20,6 +20,8 @@ from typing import Union
 
 import pandas as pd
 
+from flexpipe.data import load_data_table
+
 logger = logging.getLogger(__name__)
 
 _CACHE_COLS = ["level", "name", "query", "latitude", "longitude"]
@@ -61,6 +63,69 @@ def merge_coordinate_cache(
         len(merged),
         out,
         new_entries,
+    )
+
+
+def validate_coordinate_cache(path: Union[str, Path]) -> pd.DataFrame:
+    """Read and validate a coordinate cache TSV in normalized v2 form."""
+    p = Path(path)
+    with p.open(encoding="utf-8") as fh:
+        header = fh.readline().rstrip("\n").split("\t")
+    missing = [col for col in _CACHE_COLS if col not in header]
+    if missing:
+        raise ValueError(f"Coordinate cache missing columns: {missing}")
+    df = pd.read_csv(p, sep="\t", dtype=str).fillna("")
+    missing = [col for col in _CACHE_COLS if col not in df.columns]
+    if missing:
+        raise ValueError(f"Coordinate cache missing columns: {missing}")
+    bad = df[(df["level"].str.strip() == "") | (df["name"].str.strip() == "")]
+    if len(bad):
+        raise ValueError(f"Coordinate cache has {len(bad)} rows with blank level/name")
+    return df
+
+
+def _read_shared_cache(override: Union[str, Path, None]) -> pd.DataFrame:
+    if override:
+        return validate_coordinate_cache(override)
+    return load_data_table(
+        "flexpipe.data.geo",
+        "cache_coordinates.tsv",
+        comment="#",
+    ).fillna(
+        ""
+    )[_CACHE_COLS]
+
+
+def seed_coordinate_cache(
+    *,
+    shared_cache: Union[str, Path, None],
+    build_cache: Union[str, Path, None],
+    output_path: Union[str, Path],
+) -> None:
+    """Seed the workdir coordinate cache from shared and build-specific sources.
+
+    Shared entries are loaded first; build-specific entries are loaded second and
+    win on duplicate ``(level, query)`` keys. Runtime geocoding still writes only
+    to the workdir cache.
+    """
+    shared_df = _read_shared_cache(shared_cache)
+    build_df = (
+        _read_cache(build_cache)
+        if build_cache and Path(build_cache).exists()
+        else pd.DataFrame(columns=_CACHE_COLS)
+    )
+    merged = pd.concat([shared_df, build_df], ignore_index=True)
+    if len(merged):
+        merged = merged.drop_duplicates(subset=["level", "query"], keep="last")
+
+    out = Path(output_path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    merged.to_csv(out, sep="\t", index=False)
+    logger.info(
+        "Seeded coordinate cache with %d shared + %d build entries → %s",
+        len(shared_df),
+        len(build_df),
+        out,
     )
 
 

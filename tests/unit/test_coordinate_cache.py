@@ -8,7 +8,12 @@ manually edited entries.
 
 import pandas as pd
 
-from flexpipe.geo.cache import _read_cache, merge_coordinate_cache
+from flexpipe.geo.cache import (
+    _read_cache,
+    merge_coordinate_cache,
+    seed_coordinate_cache,
+    validate_coordinate_cache,
+)
 
 
 def _write_cache(path, rows):
@@ -247,3 +252,47 @@ class TestMergeCoordinateCache:
 
         result = pd.read_csv(cache, sep="\t")
         assert len(result) == 2
+
+
+class TestSeedCoordinateCache:
+    """Tests for bundled/shared cache seeding before runtime geocoding."""
+
+    def test_build_seed_wins_over_shared_seed_on_duplicate_query(self, tmp_path):
+        shared = tmp_path / "shared.tsv"
+        build = tmp_path / "build.tsv"
+        output = tmp_path / "cache.tsv"
+        _write_cache(
+            shared,
+            [("country", "Brazil", "Brazil", "-14.2", "-51.9")],
+        )
+        _write_cache(
+            build,
+            [("country", "Brasil manual", "Brazil", "-10.0", "-50.0")],
+        )
+
+        seed_coordinate_cache(shared_cache=shared, build_cache=build, output_path=output)
+
+        result = pd.read_csv(output, sep="\t", dtype=str)
+        assert len(result) == 1
+        assert result.loc[0, "name"] == "Brasil manual"
+        assert result.loc[0, "latitude"] == "-10.0"
+
+    def test_bundled_shared_seed_loads_when_no_override(self, tmp_path):
+        build = tmp_path / "empty_build.tsv"
+        output = tmp_path / "cache.tsv"
+        build.write_text("level\tname\tquery\tlatitude\tlongitude\n")
+
+        seed_coordinate_cache(shared_cache=None, build_cache=build, output_path=output)
+
+        result = pd.read_csv(output, sep="\t", dtype=str)
+        assert {"level", "name", "query", "latitude", "longitude"} == set(result.columns)
+        assert "Brazil" in set(result["name"])
+
+    def test_validate_coordinate_cache_rejects_missing_schema(self, tmp_path):
+        bad = tmp_path / "bad.tsv"
+        bad.write_text("level\tname\tlatitude\tlongitude\ncountry\tBrazil\t-14\t-51\n")
+
+        import pytest
+
+        with pytest.raises(ValueError, match="missing columns"):
+            validate_coordinate_cache(bad)

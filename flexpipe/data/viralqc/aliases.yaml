@@ -1,0 +1,155 @@
+# ViralQC result-label aliases.
+#
+# Keys are operational QC targets, not necessarily ICTV species. ICTV species
+# names are retained as metadata so aliases can evolve without hardcoding in
+# Python.
+
+viruses:
+  dengue_1:
+    ictv_species: Orthoflavivirus denguei
+    aliases:
+      - dengue_1
+      - DENV-1
+      - DENV1
+      - Dengue virus 1
+      - Dengue virus type 1
+    patterns:
+      - '^dengue virus(?: type)? 1$'
+      - '^denv[- ]?1$'
+  dengue_2:
+    ictv_species: Orthoflavivirus denguei
+    aliases:
+      - dengue_2
+      - DENV-2
+      - DENV2
+      - Dengue virus 2
+      - Dengue virus type 2
+    patterns:
+      - '^dengue virus(?: type)? 2$'
+      - '^denv[- ]?2$'
+  dengue_3:
+    ictv_species: Orthoflavivirus denguei
+    aliases:
+      - dengue_3
+      - DENV-3
+      - DENV3
+      - Dengue virus 3
+      - Dengue virus type 3
+    patterns:
+      - '^dengue virus(?: type)? 3$'
+      - '^denv[- ]?3$'
+  dengue_4:
+    ictv_species: Orthoflavivirus denguei
+    aliases:
+      - dengue_4
+      - DENV-4
+      - DENV4
+      - Dengue virus 4
+      - Dengue virus type 4
+    patterns:
+      - '^dengue virus(?: type)? 4$'
+      - '^denv[- ]?4$'
+  zika:
+    ictv_species: Orthoflavivirus zikaense
+    aliases:
+      - zika
+      - Zika virus
+      - ZIKV
+    patterns:
+      - '^zika virus$'
+      - '^zikv$'
+  chikv:
+    ictv_species: Chikungunya virus
+    aliases:
+      - chikv
+      - CHIKV
+      - Chikungunya virus
+    patterns:
+      - '^chikungunya virus$'
+      - '^chikv$'
+  orov:
+    ictv_species: Oropouche orthobunyavirus
+    aliases:
+      - orov
+      - OROV
+      - Oropouche virus
+    patterns:
+      - '^oropouche virus$'
+      - '^orov$'
+  rsv_a:
+    ictv_species: Human orthopneumovirus
+    aliases:
+      - rsv_a
+      - RSV-A
+      - RSV A
+      - Respiratory syncytial virus A
+      - Human respiratory syncytial virus A
+      - human respiratory syncytial virus A
+    patterns:
+      - '^(human )?respiratory syncytial virus a$'
+      - '^rsv[- ]?a$'
+  rsv_b:
+    ictv_species: Human orthopneumovirus
+    aliases:
+      - rsv_b
+      - RSV-B
+      - RSV B
+      - Respiratory syncytial virus B
+      - Human respiratory syncytial virus B
+      - human respiratory syncytial virus B
+    patterns:
+      - '^(human )?respiratory syncytial virus b$'
+      - '^rsv[- ]?b$'
+  flu_a_h1n1:
+    ictv_species: Influenza A virus
+    aliases:
+      - flu_a_h1n1
+      - Influenza A virus H1N1
+      - Influenza A virus (H1N1)
+      - Influenza A virus A/California/07/2009(H1N1)
+    patterns:
+      - '^influenza a virus.*h1n1.*$'
+  flu_a_h3n2:
+    ictv_species: Influenza A virus
+    aliases:
+      - flu_a_h3n2
+      - Influenza A virus H3N2
+      - Influenza A virus (H3N2)
+      - Influenza A virus (A/Wisconsin/67/2005(H3N2))
+    patterns:
+      - '^influenza a virus.*h3n2.*$'
+  flu_b:
+    ictv_species: Influenza B virus
+    aliases:
+      - flu_b
+      - Influenza B virus
+      - Influenza B virus (B/Lee/1940)
+      - Influenza B virus (B/Brisbane/60/2008)
+    patterns:
+      - '^influenza b virus.*$'
+
+segments:
+  ha:
+    aliases:
+      - ha
+      - HA
+      - H
+      - '4'
+      - segment 4
+      - hemagglutinin
+      - haemagglutinin
+    patterns:
+      - '^ha$'
+      - '^4$'
+      - '^segment 4$'
+      - '^h[ae]magglutinin$'
+  l:
+    aliases:
+      - l
+      - L
+      - segment L
+      - large
+    patterns:
+      - '^l$'
+      - '^segment l$'
+      - '^large$'

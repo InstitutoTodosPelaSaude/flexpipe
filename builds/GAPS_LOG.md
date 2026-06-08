@@ -12,9 +12,9 @@
 
 - Symptom: `region_source: division` maps Brazilian states to macro-regions but leaves non-Brazil context without continent-style `region` values.
 - Evidence: DENV subsampling intentionally keeps `country != 'Brazil'` context while the display remains YFV-style `division location`.
-- Suggested fix: Add an explicit hybrid geography mode or a post-curation fallback that maps `country` to continent when Brazilian division mapping is empty.
+- Suggested fix: Add an explicit `continent` column derived from `country`, while leaving `region` as the Brazilian macro-region for `region_source: division`.
 - Priority: P2.
-- Status: Documented; no code change yet.
+- Status: Superseded by implemented `continent` curation and continent-aware traits/colors.
 
 ## Context exact monthly sampling cannot also be capped
 
@@ -84,33 +84,33 @@
 
 - Symptom: `expected_virus` filtering for flu builds requires an exact match against the `virus` column in ViralQC output, which originates from the BLAST database `virus_name` field. For flu, each RefSeq reference entry has a strain-specific name (e.g. "Influenza A virus (A/California/07/2009(H1N1))"), so no single string covers all H1N1 pdm09 sequences — different strains produce different BLAST hits.
 - Evidence: The blast.tsv entries for flu A H1N1 pdm09 are all attributed to A/California/07/2009; other strains (H3N2, H7N9) each have distinct per-strain names. A global `expected_virus: "Influenza A virus"` would never match since names include strain designations.
-- Suggested fix: Leave `expected_virus: ""` for flu builds; rely on `expected_segment: "4"` (HA = segment 4 in NCBI RefSeq flu) to filter non-HA segments. A future improvement could use partial-match (prefix or regex) in viralqc_join.py.
+- Suggested fix: Use an external ViralQC alias registry with operational keys such as `flu_a_h1n1`, `flu_a_h3n2`, and `flu_b` instead of exact one-off strings.
 - Priority: P3 (documentation-only; not blocking first analyses).
-- Status: Documented; flu builds use `expected_segment: "4"` and empty `expected_virus`.
+- Status: Superseded. `flexpipe/data/viralqc/aliases.yaml` now provides alias/regex matching, and flu configs use alias-backed `expected_virus` keys.
 
 ## Flu ViralQC segment naming is "HA"/"NA" not numeric "4"/"6"
 
 - Symptom: Flu B ingest dropped all 80,028 sequences as `genome_quality=D` (wrong_segment). H1N1 only retained the 3,502 sequences with segment label "4", dropping 21,620 labeled "HA".
 - Evidence: ViralQC `results.tsv` segment column uses string names ("HA", "NA", "NP") for flu B (and most flu A sequences), while config had `expected_segment: "4"`. The exact-match comparison fails for named segments.
-- Suggested fix: Set `expected_segment: ""` for all flu builds; rely on Nextclade alignment quality (A/B) to exclude non-HA segments (NA, NP sequences aligned to an HA reference get poor coverage → genome_quality C/D).
+- Suggested fix: Use an external segment alias entry where `ha` accepts both `HA` and `4`.
 - Priority: P1 (blocked flu live runs).
-- Status: Fixed; `expected_segment: ""` in all three flu configs.
+- Status: Superseded. `expected_segment: "ha"` is now alias-backed in all three flu configs.
 
 ## Non-ISO dates in NCBI flu records break `augur curate format-dates`
 
 - Symptom: H3N2 ingest failed with `Unable to format date string '11/06/2004'`; 183 records had MM/DD/YYYY format dates.
 - Evidence: Some NCBI GenBank flu records use US-style slash-delimited dates not in the expected-date-formats list (`'%Y-%m-%d' '%Y-%m' '%Y' '%d-%b-%Y' '%b-%Y'`).
-- Suggested fix: Add `'%m/%d/%Y'` to expected-date-formats and `--failure-reporting warn` to `augur curate format-dates` in `ingest/Snakefile` so unexpected formats produce a warning rather than a hard failure.
+- Suggested fix: Normalize flexible dates before Augur using an external date policy, then keep `augur curate format-dates --failure-reporting warn` as a guardrail.
 - Priority: P1 (blocked H3N2 live run).
-- Status: Fixed in Snakefile; MM/DD/YYYY dates in cached H3N2 metadata patched to ISO format.
+- Status: Superseded by `flexpipe-normalize-dates` and `flexpipe/data/curation/date_formats.yaml`; Augur warning mode remains as a downstream guardrail.
 
 ## INSDC `"unknown"` date sentinel not covered by _normalize_insdc()
 
 - Symptom: Flu HA ingests failed with `Unable to format date string 'unknown'` in `augur curate format-dates`.
 - Evidence: NCBI flu GenBank records use `"unknown"` as a collection_date qualifier value; this was not in the initial `_INSDC_MISSING_PREFIXES` tuple. `"none"` and `"null"` also encountered in large NCBI datasets.
-- Suggested fix: Add `"unknown"`, `"none"`, `"null"` to `_INSDC_MISSING_PREFIXES` in `flexpipe/ingest/ncbi.py`.
+- Suggested fix: Normalize these both at NCBI ingest and in the generic pre-Augur date normalizer.
 - Priority: P1 (blocked all three flu live runs).
-- Status: Fixed; covered by new test cases in `TestNormalizeInsdc`.
+- Status: Fixed and generalized. `_normalize_insdc()` still handles NCBI-specific qualifiers; `flexpipe-normalize-dates` handles table-level sentinels before Augur.
 
 ## New build subsample.yaml files used wrong `subsamples:` key instead of `samples:`
 
@@ -124,9 +124,9 @@
 
 - Symptom: RSV-A ingest dropped all 40,657 sequences as `genome_quality=D` (wrong_virus) despite correct Pathoplexus fetch.
 - Evidence: `expected_virus: "human respiratory syncytial virus"` was derived from `viralQC/datasets/blast.tsv virus_name` for NC_038235.1. However, ViralQC's `results.tsv` `virus` column uses Nextclade dataset naming (`"Respiratory syncytial virus A"`, `"Human respiratory syncytial virus A"`), not the BLAST db virus_name. The exact-match comparison in `viralqc_join.py` flagged every RSV-A sequence as wrong_virus.
-- Suggested fix: For Pathoplexus builds the organism slug already restricts the fetch; leave `expected_virus: ""` for RSV-A and RSV-B. A broader fix would make `viralqc_join.py` use case-insensitive substring matching so blast.tsv-derived names work across both name formats.
+- Suggested fix: Use an external ViralQC alias registry where `rsv_a` and `rsv_b` accept both Nextclade dataset names and BLAST-style names.
 - Priority: P1 (blocked RSV live runs).
-- Status: Fixed by setting `expected_virus: ""` in rsv-a-brazil and rsv-b-brazil configs.
+- Status: Superseded. RSV configs now use alias-backed `expected_virus` keys instead of blank workarounds.
 
 ## Geocoding dominates live ingest for location-rich builds
 
@@ -134,4 +134,12 @@
 - Evidence: DENV-1 coordinate generation took roughly 15 minutes from an empty cache; DENV2 still needed many new localities even when seeded from DENV1's runtime cache.
 - Suggested fix: Promote a curated shared Brazil/location seed cache, normalize raw Brazilian city spellings, and consider build-time warnings for high uncached geocode counts.
 - Priority: P2.
-- Status: Runtime caches were manually seeded between DENV live runs; no source cache update yet.
+- Status: Partially implemented. A bundled shared seed cache now seeds workdirs before build-specific caches; warning/reporting for high uncached counts is still deferred.
+
+## Reference-derived terminal masks were missing for new first-pass builds
+
+- Symptom: New builds had `mask_5prime: 0`, `mask_3prime: 0`, and no BED masks, so first-pass exports were intentionally unmasked.
+- Evidence: `BUILD_ROSTER.md` listed terminal masks as uncalibrated for DENV, ZIKV, CHIKV, RSV-A/B, OROV-L, and flu HA builds.
+- Suggested fix: Derive first-draft terminal BED masks from GenBank annotations with a flexible profile that recognizes explicit UTR features and UTR-like annotations on other feature types, with CDS/gene boundary fallback and guardrails.
+- Priority: P1.
+- Status: Implemented via `flexpipe-reference-mask`, `flexpipe/data/phylo/reference_mask_profiles.yaml`, and per-build `masks/reference_terminal.bed` files. These are production aids and still need biological review before surveillance use.

@@ -521,6 +521,10 @@ class TestViralqcExpectedSegment:
         cfg = ViralqcConfig(expected_segment="L")
         assert cfg.expected_segment == "L"
 
+    def test_aliases_file_is_accepted(self):
+        cfg = ViralqcConfig(aliases_file="/tmp/aliases.yaml")
+        assert cfg.aliases_file == "/tmp/aliases.yaml"
+
     def test_full_config_with_expected_segment_validates(self):
         """A FlexpipeConfig with viralqc.expected_segment must not raise extra="forbid"."""
         cfg = FlexpipeConfig(
@@ -560,6 +564,20 @@ class TestParametersMaskSitesFile:
             parameters={"mask_sites_file": "/some/mask.bed"},
         )
         assert cfg.parameters.mask_sites_file == "/some/mask.bed"
+
+
+class TestExternalizedFollowupConfig:
+    """Configuration hooks for flexible follow-up registries and shared caches."""
+
+    def test_date_formats_and_shared_cache_are_accepted(self):
+        cfg = FlexpipeConfig(
+            data_source="pathoplexus",
+            pathoplexus={"organism": "yellow-fever"},
+            curation={"date_formats": "/tmp/date_formats.yaml"},
+            coordinates={"shared_cache": "/tmp/cache_coordinates.tsv"},
+        )
+        assert cfg.curation.date_formats == "/tmp/date_formats.yaml"
+        assert cfg.coordinates.shared_cache == "/tmp/cache_coordinates.tsv"
 
 
 # ---------------------------------------------------------------------------

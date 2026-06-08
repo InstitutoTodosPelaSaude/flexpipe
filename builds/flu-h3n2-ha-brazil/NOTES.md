@@ -7,8 +7,8 @@
 
 ## Data
 - Source: NCBI (taxid 119210, H3N2 subtype); requires NCBI_EMAIL env var
-- expected_segment: "" — ViralQC uses "HA" not "4"; Nextclade QC filters non-HA by alignment quality
-- expected_virus: "" — flu strain names in blast.tsv are strain-specific
+- expected_segment: "ha" — alias registry accepts `HA`, `4`, and segment-name variants
+- expected_virus: "flu_a_h3n2" — alias registry accepts strain-specific H3N2 ViralQC labels
 
 ## Status
 - [x] Ingest dry-run (integration test)
@@ -16,13 +16,13 @@
 - [x] Live phylo / end-to-end
 
 ## Open Questions
-- Terminal mask values not calibrated (set to 0).
+- Terminal BED: `masks/reference_terminal.bed` generated from CY163680.1 CDS boundaries; review/calibrate before production use.
 - Clade definitions — header-only placeholder; Nextclade provides clade from ViralQC.
 
 ## Run Log
 ### 2026-06-07 — First live run
 - **Ingest**: 61,601 fetched, 59,356 QC-passed (genome_quality A/B), 252 subsampled
-- **Fixes applied**: expected_segment="" (ViralQC uses "HA" not "4"); 183 MM/DD/YYYY dates converted to ISO; `--failure-reporting warn` added to format-dates
+- **Fixes applied**: alias-backed virus/HA segment matching; flexible date normalizer handles MM/DD/YYYY before Augur date formatting
 - **Phylo**: IQ-TREE3 JC model; auspice/results.json 1.5M on 2026-06-07
-- **Config**: `model: JC`, `ufboot: 0`, `date_confidence: false`, `traits_confidence: false`, `mask_5prime: 0`, `mask_3prime: 0`
+- **Config**: `model: JC`, `ufboot: 0`, `date_confidence: false`, `traits_confidence: false`, `mask_sites_file: masks/reference_terminal.bed`
 - **Exit code**: 0 (ingest + phylo)

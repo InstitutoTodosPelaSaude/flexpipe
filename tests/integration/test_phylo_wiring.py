@@ -100,6 +100,22 @@ def _mask_command(output: str) -> str:
     return ""
 
 
+def _assert_configured_mask_behavior(output: str, build_config: Path) -> None:
+    """Assert the phylo dry-run follows the build's configured BED/no-BED mask path."""
+    cfg = yaml.safe_load(build_config.read_text())
+    mask_file = str(cfg.get("parameters", {}).get("mask_sites_file", "") or "").strip()
+    if mask_file:
+        resolved = (REPO_ROOT / mask_file).resolve()
+        assert resolved.exists(), f"Configured mask file does not exist: {resolved}"
+        if resolved.read_text().strip():
+            mask_cmd = _mask_command(output)
+            assert "augur mask" in mask_cmd
+            assert str(resolved) in mask_cmd
+            return
+    assert "augur mask" not in output
+    assert "cp " in output
+
+
 @pytest.mark.integration
 class TestPhyloWiring:
     def test_yfv_dry_run_from_outside_repo_renders_mask_sites(self, tmp_path, monkeypatch):
@@ -158,8 +174,7 @@ class TestPhyloWiring:
             "--columns          continent country division location serotype genotype major_lineage minor_lineage clade"
             in output
         )
-        assert "augur mask" not in output
-        assert "cp " in output
+        _assert_configured_mask_behavior(output, build_config)
         assert "-m     JC" in output
         assert "-B " not in output
         assert "--date-confidence" not in output
@@ -178,8 +193,7 @@ class TestPhyloWiring:
         assert "flexpipe-collapse-traits" in output
         assert "metadata_traits.tsv" in output
         assert "--columns          continent country division location clade" in output
-        assert "augur mask" not in output
-        assert "cp " in output
+        _assert_configured_mask_behavior(output, build_config)
         assert "-m     JC" in output
         assert "-B " not in output
         assert "--date-confidence" not in output
@@ -198,8 +212,7 @@ class TestPhyloWiring:
         assert "flexpipe-collapse-traits" in output
         assert "metadata_traits.tsv" in output
         assert "--columns          continent country region division" in output
-        assert "augur mask" not in output
-        assert "cp " in output
+        _assert_configured_mask_behavior(output, build_config)
         assert "-m     JC" in output
         assert "-B " not in output
         assert "--date-confidence" not in output
@@ -220,8 +233,7 @@ class TestPhyloWiring:
         assert "flexpipe-collapse-traits" in output
         assert "metadata_traits.tsv" in output
         assert "--columns          continent country region division" in output
-        assert "augur mask" not in output
-        assert "cp " in output
+        _assert_configured_mask_behavior(output, build_config)
         assert "-m     JC" in output
         assert "-B " not in output
         assert "--date-confidence" not in output

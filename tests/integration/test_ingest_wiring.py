@@ -250,6 +250,8 @@ class TestIngestWiring:
         """Snakemake can plan the full ingest DAG without errors."""
         output, rc = _dry_run(tmp_path, resolved_config)
         assert rc == 0, f"snakemake dry-run exited with code {rc}.\n" f"Output:\n{output}"
+        assert "flexpipe-normalize-dates" in output
+        assert "date_normalization.tsv" in output
 
     def test_flexpipe_curate_uses_build_config_not_resolved_config(self, tmp_path, resolved_config):
         """flexpipe-curate must receive the build config path, not the workdir resolved config."""

@@ -13,7 +13,7 @@ parameters:
   mask_5prime: 0
   mask_3prime: 0
   mask_sites: ""
-  mask_sites_file: ""
+  mask_sites_file: "builds/flu-h3n2-ha-brazil/masks/reference_terminal.bed"
   ufboot: 0
   model: "JC"
   root: "least-squares"
@@ -78,6 +78,6 @@ ncbi:
   api_key: ""      # set via NCBI_API_KEY env var (optional)
 
 viralqc:
-  expected_virus: ""   # Flu strain names in BLAST db are strain-specific; leave unset
-  expected_segment: ""  # ViralQC uses "HA" not "4"; Nextclade QC filters non-HA by alignment quality
+  expected_virus: "flu_a_h3n2"
+  expected_segment: "ha"
   datasets_dir: ""

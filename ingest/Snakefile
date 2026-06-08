@@ -65,6 +65,7 @@ _local   = _resolve_section_paths(config.get("local_sequences", {}), ["metadata"
 _vqc     = config.get("viralqc", {})
 _sub     = config.get("subsampling", {})
 _coords  = _resolve_section_paths(config.get("coordinates", {}), ["force_file"])
+_curation = _resolve_section_paths(config.get("curation", {}), ["date_formats"])
 _colours = config.get("colours", {})
 _qc      = config.get("qc", {})
 _coordinate_columns = _coords.get("columns", "country division location").split()
@@ -80,6 +81,7 @@ _req_col_filter  = [f"{col}=" for col in _req_cols]
 
 # Optional force-coordinates file
 _force_file_arg  = ["--force-file", _coords["force_file"]] if _coords.get("force_file") else []
+_date_policy_arg = ["--policy", _curation["date_formats"]] if _curation.get("date_formats") else []
 
 # "pathoplexus" (default) or "ncbi" — never both simultaneously
 _source = config.get("data_source", "pathoplexus")
@@ -219,6 +221,7 @@ rule curate_qc:
         viralqc   = rules.viralqc.output.tsv
     output:
         renamed    = temp(f"{_wd}/results/ingest/renamed_metadata.tsv"),
+        normalized = temp(f"{_wd}/results/ingest/date_normalized_metadata.tsv"),
         dated      = temp(f"{_wd}/results/ingest/dated_metadata.tsv"),
         # curated is NOT temp: the qc_summary rule reads it to count per-grade stats
         # before augur filter drops the low-quality rows.
@@ -230,7 +233,9 @@ rule curate_qc:
         min_coverage    = _qc.get("min_coverage", 0.70),
         quality_filter  = _quality_filter,
         req_col_filter  = _req_col_filter,
-        cfg             = _config
+        cfg             = _config,
+        date_policy_arg = _date_policy_arg,
+        date_log        = f"{_wd}/results/ingest/date_normalization.tsv"
     shell:
         """
         augur curate rename \
@@ -245,8 +250,15 @@ rule curate_qc:
                           lineage=clade \
             --output-metadata {output.renamed:q}
 
+        flexpipe-normalize-dates \
+            --metadata   {output.renamed:q} \
+            --date-field date \
+            --output     {output.normalized:q} \
+            --log        {params.date_log:q} \
+            {params.date_policy_arg:q}
+
         augur curate format-dates \
-            --metadata              {output.renamed:q} \
+            --metadata              {output.normalized:q} \
             --date-fields           date \
             --expected-date-formats '%Y-%m-%d' '%Y-%m' '%Y' '%d-%b-%Y' '%b-%Y' '%m/%d/%Y' \
             --failure-reporting     warn \

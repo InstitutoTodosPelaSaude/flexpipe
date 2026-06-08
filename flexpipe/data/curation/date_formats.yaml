@@ -1,0 +1,29 @@
+missing_values:
+  - ""
+  - missing
+  - not applicable
+  - not collected
+  - not provided
+  - restricted access
+  - n/a
+  - na
+  - unknown
+  - none
+  - null
+slash_order: MDY
+formats:
+  year:
+    - "%Y"
+  year_month:
+    - "%Y-%m"
+    - "%Y/%m"
+    - "%b-%Y"
+    - "%B-%Y"
+    - "%Y-%b"
+    - "%Y-%B"
+  full_date:
+    - "%Y-%m-%d"
+    - "%Y/%m/%d"
+    - "%d-%b-%Y"
+    - "%d-%B-%Y"
+    - "%m/%d/%Y"

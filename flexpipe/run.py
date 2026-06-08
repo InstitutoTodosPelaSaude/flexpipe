@@ -76,16 +76,25 @@ def _record_row_counts(manifest: Manifest, paths: WorkdirPaths) -> None:
 
 def _seed_coordinate_cache(seed_cache: str | Path, paths: WorkdirPaths) -> None:
     """Copy the configured read-only seed cache to the workdir on first run."""
-    if not seed_cache or str(seed_cache).strip() == "":
-        logger.debug("No coordinate seed cache configured; starting with an empty workdir cache")
-        return
-    seed = Path(seed_cache)
-    target = paths.cache_coordinates
-    if not target.exists() and seed.exists():
-        import shutil
+    _seed_coordinate_cache_with_shared(None, seed_cache, paths)
 
-        shutil.copy2(seed, target)
-        logger.info("Seeded coordinate cache from %s → %s", seed, target)
+
+def _seed_coordinate_cache_with_shared(
+    shared_cache: str | Path | None,
+    seed_cache: str | Path | None,
+    paths: WorkdirPaths,
+) -> None:
+    """Seed the workdir cache from bundled/shared and build-specific coordinate caches."""
+    target = paths.cache_coordinates
+    if target.exists():
+        return
+    from flexpipe.geo.cache import seed_coordinate_cache
+
+    seed_coordinate_cache(
+        shared_cache=shared_cache,
+        build_cache=seed_cache,
+        output_path=target,
+    )
 
 
 def _run_snakemake(
@@ -219,7 +228,7 @@ def _run_pipeline_locked(
     )
 
     # Seed coordinate cache (read-only source → writable workdir)
-    _seed_coordinate_cache(cfg.files.cache, paths)
+    _seed_coordinate_cache_with_shared(cfg.coordinates.shared_cache, cfg.files.cache, paths)
 
     # Set up per-build log files
     configure_logging(

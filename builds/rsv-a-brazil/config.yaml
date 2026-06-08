@@ -13,7 +13,7 @@ parameters:
   mask_5prime: 0
   mask_3prime: 0
   mask_sites: ""
-  mask_sites_file: ""
+  mask_sites_file: "builds/rsv-a-brazil/masks/reference_terminal.bed"
   ufboot: 0
   model: "JC"
   root: "least-squares"
@@ -83,9 +83,6 @@ ncbi:
   genome_size: 0
 
 viralqc:
-  # ViralQC results.tsv uses "Respiratory syncytial virus A" / "Human respiratory
-  # syncytial virus A" (Nextclade dataset naming), not blast.tsv virus_name.
-  # Leave unset — Pathoplexus organism=rsv-a already restricts to RSV-A sequences.
-  expected_virus: ""
+  expected_virus: "rsv_a"
   expected_segment: ""
   datasets_dir: ""

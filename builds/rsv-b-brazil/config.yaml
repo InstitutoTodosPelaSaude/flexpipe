@@ -13,7 +13,7 @@ parameters:
   mask_5prime: 0
   mask_3prime: 0
   mask_sites: ""
-  mask_sites_file: ""
+  mask_sites_file: "builds/rsv-b-brazil/masks/reference_terminal.bed"
   ufboot: 0
   model: "JC"
   root: "least-squares"
@@ -85,6 +85,6 @@ ncbi:
 viralqc:
   # ViralQC results.tsv uses "Respiratory syncytial virus B" (Nextclade naming),
   # not blast.tsv virus_name. Leave unset — Pathoplexus organism=rsv-b restricts.
-  expected_virus: ""
+  expected_virus: "rsv_b"
   expected_segment: ""
   datasets_dir: ""

@@ -11,7 +11,7 @@ parameters:
   mask_5prime: 0
   mask_3prime: 0
   mask_sites: ""
-  mask_sites_file: ""
+  mask_sites_file: "builds/denv4-brazil/masks/reference_terminal.bed"
   ufboot: 0
   model: "JC"
   root: "least-squares"
