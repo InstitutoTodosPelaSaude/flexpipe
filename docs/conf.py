@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 # flexpipe uses dynamic versioning via hatch-vcs, so read from importlib.metadata
 try:
     from importlib.metadata import version as _v
+
     release = _v("flexpipe")
 except Exception:
     release = "0.0.0"
