@@ -121,6 +121,17 @@ def resolve_config_paths(raw: dict, config_path: str | Path) -> dict:
     )
     _resolve_section_paths(out, "files", ["cache"], build_dir=build_dir)
     _resolve_section_paths(out, "local_sequences", ["metadata", "sequences"], build_dir=build_dir)
+    _resolve_section_paths(out, "local", ["metadata", "sequences"], build_dir=build_dir)
+    if out.get("data_source") == "local":
+        local_data = out.get("local", {})
+        if isinstance(local_data, dict):
+            for key in ["metadata", "sequences"]:
+                path = local_data.get(key, "")
+                if _is_empty_path(path) or not Path(path).exists():
+                    raise ValueError(
+                        f"data_source='local' but local.{key} was not found: {path!r}\n"
+                        "Provide the path to the file in your build config.yaml."
+                    )
     _resolve_section_paths(
         out, "parameters", ["mask_sites_file"], build_dir=build_dir, must_exist=True
     )
@@ -413,6 +424,22 @@ class LocalSequencesConfig(BaseModel):
     sequences: str = "data/new_sequences.fasta"
 
 
+class LocalConfig(BaseModel):
+    """Paths to user-supplied metadata and sequences for ``data_source='local'``.
+
+    The metadata TSV must present PPX-convention column names
+    (``accessionVersion``, ``sampleCollectionDate``, ``geoLocCountry``, etc.)
+    so that the ``augur curate rename`` step in ``curate_qc`` works unchanged.
+    Alternatively, if canonical names (``strain``, ``date``, ``country``, …) are
+    already present, the rename step silently skips the missing source fields.
+    See the post-merge metadata contract in ``docs/plan_pipeline_flexibility.md``.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+    metadata: str = ""
+    sequences: str = ""
+
+
 class PathsConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
     workdir: str = "workdir"
@@ -443,9 +470,10 @@ class FlexpipeConfig(BaseModel):
     curation: CurationConfig = Field(default_factory=CurationConfig)
     regions: RegionsConfig = Field(default_factory=RegionsConfig)
     region_source: Literal["country", "division"] = "country"
-    data_source: Literal["pathoplexus", "ncbi"] = "pathoplexus"
+    data_source: Literal["pathoplexus", "ncbi", "local"] = "pathoplexus"
     pathoplexus: PathoplexusConfig = Field(default_factory=PathoplexusConfig)
     ncbi: NcbiConfig = Field(default_factory=NcbiConfig)
+    local: LocalConfig = Field(default_factory=LocalConfig)
     viralqc: ViralqcConfig = Field(default_factory=ViralqcConfig)
     qc: QcConfig = Field(default_factory=QcConfig)
     local_sequences: LocalSequencesConfig = Field(default_factory=LocalSequencesConfig)
@@ -472,6 +500,22 @@ class FlexpipeConfig(BaseModel):
                 "ncbi.email or NCBI_EMAIL is required when data_source='ncbi'.\n"
                 "NCBI Entrez requires a real contact email for automated clients."
             )
+        return self
+
+    @model_validator(mode="after")
+    def check_local_config(self) -> FlexpipeConfig:
+        """Require non-empty local.metadata / local.sequences when data_source='local'."""
+        if self.data_source == "local":
+            if not self.local.metadata:
+                raise ValueError(
+                    "local.metadata is required when data_source='local'.\n"
+                    "Provide the path to a metadata TSV with PPX-convention column names."
+                )
+            if not self.local.sequences:
+                raise ValueError(
+                    "local.sequences is required when data_source='local'.\n"
+                    "Provide the path to a FASTA sequences file."
+                )
         return self
 
     @model_validator(mode="after")

@@ -62,6 +62,7 @@ _run_date = config.get("run_date", "")
 _run_date_arg = ["--run-date", _run_date] if _run_date else []
 
 _local   = _resolve_section_paths(config.get("local_sequences", {}), ["metadata", "sequences"])
+_local_src = _resolve_section_paths(config.get("local", {}), ["metadata", "sequences"])
 _vqc     = config.get("viralqc", {})
 _sub     = config.get("subsampling", {})
 _coords  = _resolve_section_paths(config.get("coordinates", {}), ["force_file"])
@@ -151,11 +152,28 @@ rule fetch_ncbi:
         """
 
 
+# data_source=local: copy user-supplied files verbatim — no network fetch needed.
+if _source == "local":
+    rule fetch_local:
+        input:
+            metadata  = _local_src.get("metadata",  ""),
+            sequences = _local_src.get("sequences", ""),
+        output:
+            metadata  = f"{_wd}/results/ingest/local_metadata.tsv",
+            sequences = f"{_wd}/results/ingest/local_sequences.fasta",
+        shell:
+            """
+            cp {input.metadata:q}  {output.metadata:q}
+            cp {input.sequences:q} {output.sequences:q}
+            """
+
+
 rule merge_local_sequences:
     input:
         ppx_metadata  = _RAW_METADATA,
         ppx_sequences = _RAW_SEQUENCES
     params:
+        source          = _source,
         local_metadata  = _local.get("metadata",  ""),
         local_sequences = _local.get("sequences", ""),
         enabled         = _local.get("enabled",   False)
@@ -164,14 +182,20 @@ rule merge_local_sequences:
         sequences = f"{_wd}/results/ingest/merged_sequences.fasta"
     shell:
         """
-        flexpipe-merge \
-            --pathoplexus-metadata  {input.ppx_metadata:q} \
-            --pathoplexus-sequences {input.ppx_sequences:q} \
-            --local-metadata        {params.local_metadata:q} \
-            --local-sequences       {params.local_sequences:q} \
-            --enabled               {params.enabled:q} \
-            --metadata-output       {output.metadata:q} \
-            --sequences-output      {output.sequences:q}
+        if [ "{params.source}" = "local" ]; then
+            # data_source=local: fetch_local already copied the files; pass them straight through.
+            cp {input.ppx_metadata:q}  {output.metadata:q}
+            cp {input.ppx_sequences:q} {output.sequences:q}
+        else
+            flexpipe-merge \
+                --pathoplexus-metadata  {input.ppx_metadata:q} \
+                --pathoplexus-sequences {input.ppx_sequences:q} \
+                --local-metadata        {params.local_metadata:q} \
+                --local-sequences       {params.local_sequences:q} \
+                --enabled               {params.enabled:q} \
+                --metadata-output       {output.metadata:q} \
+                --sequences-output      {output.sequences:q}
+        fi
         """
 
 

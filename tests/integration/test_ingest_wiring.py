@@ -33,6 +33,7 @@ REPO_ROOT = Path(__file__).parent.parent.parent
 INGEST_SNAKEFILE = REPO_ROOT / "ingest" / "Snakefile"
 BUILD_CONFIG = REPO_ROOT / "builds" / "yfv-brazil" / "config.yaml"
 RSV_BUILD_CONFIG = REPO_ROOT / "builds" / "rsv-global" / "config.yaml"
+LOCAL_BUILD_CONFIG = REPO_ROOT / "builds" / "local-example" / "config.yaml"
 DENV_BUILD_CONFIGS = [
     REPO_ROOT / "builds" / "denv1-brazil" / "config.yaml",
     REPO_ROOT / "builds" / "denv2-brazil" / "config.yaml",
@@ -56,6 +57,7 @@ SEGMENT_BRAZIL_BUILD_CONFIGS = [
 BUILD_CONFIGS = [
     BUILD_CONFIG,
     RSV_BUILD_CONFIG,
+    LOCAL_BUILD_CONFIG,
     *DENV_BUILD_CONFIGS,
     *NCBI_BRAZIL_BUILD_CONFIGS,
     *PPX_BRAZIL_BUILD_CONFIGS,
@@ -208,6 +210,10 @@ def _resolved_config_for_build(tmp_path, build_config: Path):
         if not ncbi.get("email"):
             ncbi["email"] = "ops@example.org"
         cfg_kwargs["ncbi"] = ncbi
+    elif data_source == "local":
+        # local.metadata / local.sequences are raw (relative) paths here;
+        # write_snakemake_config_overrides → resolve_config_paths turns them absolute.
+        cfg_kwargs["local"] = raw.get("local", {})
 
     cfg = FlexpipeConfig(**cfg_kwargs)
     p = tmp_path / f"snakemake_resolved_{build_config.parent.name}.yaml"
@@ -422,3 +428,65 @@ class TestRsvIngestWiring:
         )
         assert rc == 0, f"RSV dry-run from outside repo failed:\n{output}"
         assert str(RSV_BUILD_CONFIG) in output
+
+
+# ---------------------------------------------------------------------------
+# Local data-source build — data_source: local (no remote fetch)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.integration
+class TestLocalIngestWiring:
+    """Verify the ``data_source: local`` ingest DAG using the local-example build scaffold.
+
+    These tests confirm that when a user provides pre-collected metadata and sequences,
+    the DAG plans a ``fetch_local`` copy step (no network), a passthrough merge, and
+    the full QC → subsample → colours/coordinates chain — without ever scheduling
+    ``fetch_pathoplexus`` or ``fetch_ncbi``.
+    """
+
+    def test_dry_run_succeeds(self, tmp_path):
+        """Snakemake can plan the full local-example ingest DAG without errors."""
+        resolved_config = _resolved_config_for_build(tmp_path, LOCAL_BUILD_CONFIG)
+        output, rc = _dry_run(tmp_path, resolved_config, build_config=LOCAL_BUILD_CONFIG)
+        assert rc == 0, (
+            f"local-example snakemake dry-run exited with code {rc}.\n" f"Output:\n{output}"
+        )
+
+    def test_fetch_local_is_scheduled_not_pathoplexus_or_ncbi(self, tmp_path):
+        """fetch_local must appear in the DAG; remote fetch rules must not."""
+        resolved_config = _resolved_config_for_build(tmp_path, LOCAL_BUILD_CONFIG)
+        output, rc = _dry_run(tmp_path, resolved_config, build_config=LOCAL_BUILD_CONFIG)
+        assert rc == 0, f"local dry-run failed:\n{output}"
+
+        assert "fetch_local" in output, (
+            "fetch_local rule was not found in the dry-run output.\n" f"Output:\n{output}"
+        )
+        assert "fetch_pathoplexus" not in output, (
+            "fetch_pathoplexus appeared in the local dry-run — should be fetch_local only.\n"
+            f"Output:\n{output}"
+        )
+        assert "fetch_ncbi" not in output, (
+            "fetch_ncbi appeared in the local dry-run — should be fetch_local only.\n"
+            f"Output:\n{output}"
+        )
+
+    def test_flexpipe_curate_uses_local_build_config(self, tmp_path):
+        """flexpipe-curate must receive the local-example build config path."""
+        resolved_config = _resolved_config_for_build(tmp_path, LOCAL_BUILD_CONFIG)
+        output, rc = _dry_run(tmp_path, resolved_config, build_config=LOCAL_BUILD_CONFIG)
+        assert rc == 0, f"local dry-run failed:\n{output}"
+
+        curate_lines = [ln for ln in output.splitlines() if "flexpipe-curate" in ln]
+        assert curate_lines, "flexpipe-curate command not found in dry-run output"
+
+        for line in curate_lines:
+            assert str(LOCAL_BUILD_CONFIG) in line, (
+                f"flexpipe-curate was not given the local build config path.\n"
+                f"Line: {line!r}\n"
+                f"Expected: {LOCAL_BUILD_CONFIG}"
+            )
+            assert "snakemake_resolved" not in line, (
+                f"flexpipe-curate received the resolved config instead of the build config.\n"
+                f"Line: {line!r}"
+            )

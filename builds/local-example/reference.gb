@@ -1,0 +1,17 @@
+LOCUS       LOCAL_EXAMPLE      1000 bp    RNA     linear   VRL
+DEFINITION  Local example build -- PLACEHOLDER reference genome.
+            Replace this file with a real GenBank reference for your pathogen.
+            This PLACEHOLDER marker causes phylo dry-runs to skip this build.
+ACCESSION   LOCAL_EXAMPLE
+VERSION     LOCAL_EXAMPLE.1
+KEYWORDS    .
+SOURCE      placeholder
+  ORGANISM  placeholder
+FEATURES             Location/Qualifiers
+     CDS             1..1000
+                     /product="placeholder polyprotein"
+ORIGIN
+        1 atgcatgcat gcatgcatgc atgcatgcat gcatgcatgc atgcatgcat gcatgcatgc
+       61 atgcatgcat gcatgcatgc atgcatgcat gcatgcatgc atgcatgcat gcatgcatgc
+      121 atgcatgcat gcatgcatgc atgcatgcat gcatgcatgc atgcatgcat gcatgcatgc
+//

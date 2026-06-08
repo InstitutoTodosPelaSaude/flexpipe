@@ -1,0 +1,72 @@
+{
+  "title": "Local Example Build",
+
+  "build_url": "https://github.com/InstitutoTodosPelaSaude/flexpipe",
+
+  "maintainers": [
+    {
+      "name": "Instituto Todos pela Saúde",
+      "url": "https://www.itps.org.br/"
+    }
+  ],
+
+  "colorings": [
+    {
+      "key": "clade",
+      "title": "Clade",
+      "type": "categorical"
+    },
+    {
+      "key": "continent",
+      "title": "Continent",
+      "type": "categorical"
+    },
+    {
+      "key": "country",
+      "title": "Country",
+      "type": "categorical"
+    },
+    {
+      "key": "division",
+      "title": "Division",
+      "type": "categorical"
+    },
+    {
+      "key": "source",
+      "title": "Source",
+      "type": "categorical"
+    },
+    {
+      "key": "data_use",
+      "title": "Data Use Term",
+      "type": "categorical"
+    }
+  ],
+
+  "geo_resolutions": [
+    "country",
+    "division"
+  ],
+
+  "display_defaults": {
+    "color_by": "country",
+    "distance_measure": "num_date",
+    "geo_resolution": "country",
+    "map_triplicate": true
+  },
+
+  "filters": [
+    "continent",
+    "country",
+    "division",
+    "clade",
+    "source",
+    "data_use"
+  ],
+
+  "panels": [
+    "tree",
+    "map",
+    "entropy"
+  ]
+}

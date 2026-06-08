@@ -1,0 +1,81 @@
+files:
+  keep:             "builds/local-example/keep.txt"
+  ignore:           "builds/local-example/ignore.txt"
+  reference:        "builds/local-example/reference.gb"
+  clades:           "builds/local-example/clades.tsv"
+  auspice_config:   "builds/local-example/auspice_config.json"
+  subsample_config: "builds/local-example/subsample.yaml"
+
+parameters:
+  mask_5prime: 0         # PLACEHOLDER reference — no terminal masking
+  mask_3prime: 0
+  mask_sites: ""
+  mask_sites_file: ""
+  ufboot: 0              # first-pass profile: no bootstrap
+  model: "JC"
+  root: "least-squares"
+  coalescent: "opt"
+  date_inference: "marginal"
+  divergence_units: "mutations"
+  clock_filter_iqd: 4
+  ancestral_inference: "joint"
+
+options:
+  threads: 4
+
+coordinates:
+  columns: "country division location"
+
+colours:
+  clade:    "clade_truncated clade"
+  geo:      "continent country division location"
+  source:   "source"
+  data_use: "data_use"
+
+traits:
+  columns: "continent country"
+  max_states: 100
+  rare_state_label: "other"
+
+subsampling:
+  random_seed: 42
+
+curation:
+  clade_levels: 1
+  clade_separator: "."
+  lineage_parser: "none"
+
+# ── Region source ────────────────────────────────────────────────────────────
+region_source: "country"
+
+# ── Data source ──────────────────────────────────────────────────────────────
+# data_source: local — skip remote fetch entirely.
+# Supply your own metadata TSV (PPX-convention columns) and FASTA sequences.
+# See docs/plan_pipeline_flexibility.md for the required column contract.
+data_source: "local"
+
+local:
+  metadata:  "builds/local-example/local_data/metadata.tsv"
+  sequences: "builds/local-example/local_data/sequences.fasta"
+
+viralqc:
+  conda_env: "viralQC"
+  clade_column: "clade"
+  datasets_dir: ""
+  blast_database: ""
+  blast_database_metadata: ""
+  expected_virus: "yellow_fever"   # example — override for your pathogen
+
+qc:
+  genome_quality:
+    - "A"
+    - "B"
+  min_coverage: 0.70
+  required_columns:
+    - "strain"
+    - "date"
+
+local_sequences:
+  enabled: false
+  metadata: "data/metadata.xlsx"
+  sequences: "data/new_sequences.fasta"

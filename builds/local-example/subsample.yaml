@@ -1,0 +1,14 @@
+# Subsampling for the local-example build.
+#
+# Simple strategy: take all sequences, grouped by country and year.
+# Adjust sequences_per_group for your dataset size.
+
+defaults:
+  exclude: builds/local-example/ignore.txt
+
+samples:
+  all:
+    group_by:
+      - country
+      - year
+    sequences_per_group: 100
