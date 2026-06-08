@@ -88,6 +88,30 @@
 - Priority: P3 (documentation-only; not blocking first analyses).
 - Status: Documented; flu builds use `expected_segment: "4"` and empty `expected_virus`.
 
+## Flu ViralQC segment naming is "HA"/"NA" not numeric "4"/"6"
+
+- Symptom: Flu B ingest dropped all 80,028 sequences as `genome_quality=D` (wrong_segment). H1N1 only retained the 3,502 sequences with segment label "4", dropping 21,620 labeled "HA".
+- Evidence: ViralQC `results.tsv` segment column uses string names ("HA", "NA", "NP") for flu B (and most flu A sequences), while config had `expected_segment: "4"`. The exact-match comparison fails for named segments.
+- Suggested fix: Set `expected_segment: ""` for all flu builds; rely on Nextclade alignment quality (A/B) to exclude non-HA segments (NA, NP sequences aligned to an HA reference get poor coverage → genome_quality C/D).
+- Priority: P1 (blocked flu live runs).
+- Status: Fixed; `expected_segment: ""` in all three flu configs.
+
+## Non-ISO dates in NCBI flu records break `augur curate format-dates`
+
+- Symptom: H3N2 ingest failed with `Unable to format date string '11/06/2004'`; 183 records had MM/DD/YYYY format dates.
+- Evidence: Some NCBI GenBank flu records use US-style slash-delimited dates not in the expected-date-formats list (`'%Y-%m-%d' '%Y-%m' '%Y' '%d-%b-%Y' '%b-%Y'`).
+- Suggested fix: Add `'%m/%d/%Y'` to expected-date-formats and `--failure-reporting warn` to `augur curate format-dates` in `ingest/Snakefile` so unexpected formats produce a warning rather than a hard failure.
+- Priority: P1 (blocked H3N2 live run).
+- Status: Fixed in Snakefile; MM/DD/YYYY dates in cached H3N2 metadata patched to ISO format.
+
+## INSDC `"unknown"` date sentinel not covered by _normalize_insdc()
+
+- Symptom: Flu HA ingests failed with `Unable to format date string 'unknown'` in `augur curate format-dates`.
+- Evidence: NCBI flu GenBank records use `"unknown"` as a collection_date qualifier value; this was not in the initial `_INSDC_MISSING_PREFIXES` tuple. `"none"` and `"null"` also encountered in large NCBI datasets.
+- Suggested fix: Add `"unknown"`, `"none"`, `"null"` to `_INSDC_MISSING_PREFIXES` in `flexpipe/ingest/ncbi.py`.
+- Priority: P1 (blocked all three flu live runs).
+- Status: Fixed; covered by new test cases in `TestNormalizeInsdc`.
+
 ## New build subsample.yaml files used wrong `subsamples:` key instead of `samples:`
 
 - Symptom: RSV-A ingest (second attempt) failed with `Unexpected property 'subsamples'` / `Missing required property 'samples'` from augur subsample schema validation.

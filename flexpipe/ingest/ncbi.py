@@ -49,6 +49,9 @@ _INSDC_MISSING_PREFIXES = (
     "restricted access",
     "n/a",
     "na",
+    "unknown",
+    "none",
+    "null",
 )
 
 

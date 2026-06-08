@@ -20,6 +20,12 @@ class TestNormalizeInsdc:
     def test_not_provided_normalized(self):
         assert _normalize_insdc("not provided") == ""
 
+    def test_unknown_none_null_normalized(self):
+        assert _normalize_insdc("unknown") == ""
+        assert _normalize_insdc("Unknown") == ""
+        assert _normalize_insdc("none") == ""
+        assert _normalize_insdc("null") == ""
+
     def test_real_value_passes_through(self):
         assert _normalize_insdc("2022-03-15") == "2022-03-15"
         assert _normalize_insdc("Brazil") == "Brazil"

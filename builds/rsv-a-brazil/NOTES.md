@@ -11,7 +11,7 @@
 ## Status
 - [x] Ingest dry-run (integration test)
 - [x] Live ingest
-- [ ] Live phylo / end-to-end (running as of 2026-06-07)
+- [x] Live phylo / end-to-end
 
 ## Open Questions
 - Terminal mask values (mask_5prime, mask_3prime) for NC_038235.1 — not yet calibrated, set to 0.
@@ -21,5 +21,5 @@
 ### 2026-06-07 — First live run
 - **Ingest**: 40,722 fetched (OPEN), 13,783 QC-passed (genome_quality A/B, coverage ≥0.7), 977 subsampled
 - **Fixes applied**: expected_virus set to "" (ViralQC results.tsv uses Nextclade naming, not blast.tsv); subsample.yaml converted from `subsamples:` to `samples:` schema
-- **Phylo**: IQ-TREE3 JC model running as of 2026-06-07
+- **Phylo**: IQ-TREE3 JC model; auspice/results.json 1.2M on 2026-06-07
 - **Config**: `model: JC`, `ufboot: 0`, `date_confidence: false`, `traits_confidence: false`, `mask_5prime: 0`, `mask_3prime: 0`

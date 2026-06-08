@@ -80,5 +80,5 @@ ncbi:
 viralqc:
   expected_virus: ""   # Flu B BLAST strain name is "Influenza B virus (B/Lee/1940)";
                        # all flu B sequences should match, but leave unset to avoid fragility
-  expected_segment: "4"  # HA = segment 4 in NCBI RefSeq flu
+  expected_segment: ""  # ViralQC uses "HA" not "4"; Nextclade QC filters non-HA by alignment quality
   datasets_dir: ""

@@ -248,7 +248,8 @@ rule curate_qc:
         augur curate format-dates \
             --metadata              {output.renamed:q} \
             --date-fields           date \
-            --expected-date-formats '%Y-%m-%d' '%Y-%m' '%Y' '%d-%b-%Y' '%b-%Y' \
+            --expected-date-formats '%Y-%m-%d' '%Y-%m' '%Y' '%d-%b-%Y' '%b-%Y' '%m/%d/%Y' \
+            --failure-reporting     warn \
             --output-metadata       {output.dated:q}
 
         flexpipe-curate \
