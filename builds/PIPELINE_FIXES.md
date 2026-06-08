@@ -40,6 +40,17 @@
 - Added optional lineage parsers. DENV parsing keeps raw `clade` and adds prefix-safe `serotype`, `genotype`, `major_lineage`, and `minor_lineage` columns such as `3III_B`, never bare `B`.
 - Updated color seeding to use the configured hierarchy roots and stable cached hues, with child shades derived deterministically inside the parent hue family.
 
+## Pipeline Flexibility Audit and Architecture (Batch 4 planning)
+
+- Completed Phase-0 audit classifying every pathogen/geography-specific behavior as externalized,
+  code-coupled, or remote-fetch-coupled. Conclusion: ~80% of "add a pathogen" is already config-only.
+- Two genuine code-coupling smells identified: lineage-parser `if/elif` + closed `Literal` enum
+  (`lineage_parser.py:85-93`, `config.py:324`) and Brazil division parser branch (`pipeline.py:109-123`).
+- Full design for registry-based parser externalization, `data_source: local` ingest path, optional
+  ViralQC (`mode: run|precomputed|skip`), and `flexpipe-validate-build` documented in
+  `docs/plan_pipeline_flexibility.md`.
+- Stage-by-stage metadata contract now documented centrally in `docs/plan_pipeline_flexibility.md §6`.
+
 ## Follow-Up Hardening From Multi-Build Learnings
 
 - Added `flexpipe/data/viralqc/aliases.yaml` plus `viralqc.aliases_file` overrides. `expected_virus` and `expected_segment` now resolve through alias/regex entries before falling back to exact matching. RSV and flu configs use operational keys (`rsv_a`, `rsv_b`, `flu_a_h1n1`, `flu_a_h3n2`, `flu_b`, `ha`) instead of blank workarounds.
