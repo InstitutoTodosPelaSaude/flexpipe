@@ -27,6 +27,7 @@ import pytest
 import yaml
 
 from flexpipe.config import FlexpipeConfig, ViralqcConfig, write_snakemake_config_overrides
+from tests.integration.conftest import all_build_configs
 
 # Repository root is three levels up from this file: tests/integration/ → tests/ → repo
 REPO_ROOT = Path(__file__).parent.parent.parent
@@ -34,6 +35,7 @@ INGEST_SNAKEFILE = REPO_ROOT / "ingest" / "Snakefile"
 BUILD_CONFIG = REPO_ROOT / "builds" / "yfv-brazil" / "config.yaml"
 RSV_BUILD_CONFIG = REPO_ROOT / "builds" / "rsv-global" / "config.yaml"
 LOCAL_BUILD_CONFIG = REPO_ROOT / "builds" / "local-example" / "config.yaml"
+# Archetype-specific lists for targeted assertion tests (kept for correctness checks).
 DENV_BUILD_CONFIGS = [
     REPO_ROOT / "builds" / "denv1-brazil" / "config.yaml",
     REPO_ROOT / "builds" / "denv2-brazil" / "config.yaml",
@@ -54,15 +56,8 @@ SEGMENT_BRAZIL_BUILD_CONFIGS = [
     REPO_ROOT / "builds" / "flu-h3n2-ha-brazil" / "config.yaml",
     REPO_ROOT / "builds" / "flu-b-ha-brazil" / "config.yaml",
 ]
-BUILD_CONFIGS = [
-    BUILD_CONFIG,
-    RSV_BUILD_CONFIG,
-    LOCAL_BUILD_CONFIG,
-    *DENV_BUILD_CONFIGS,
-    *NCBI_BRAZIL_BUILD_CONFIGS,
-    *PPX_BRAZIL_BUILD_CONFIGS,
-    *SEGMENT_BRAZIL_BUILD_CONFIGS,
-]
+# AUTO-DISCOVERED: all builds/*/config.yaml. New builds are covered automatically.
+BUILD_CONFIGS = all_build_configs()
 
 # Sentinel paths used in the fake ViralQC config; chosen to be distinctive and
 # absolute so they appear verbatim in the rendered shell commands.

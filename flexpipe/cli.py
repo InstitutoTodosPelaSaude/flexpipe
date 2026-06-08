@@ -119,6 +119,13 @@ def reference_mask() -> None:
     main()
 
 
+def validate_build() -> None:
+    """flexpipe-validate-build — validate a build config.yaml before running."""
+    from flexpipe.validate import main
+
+    main()
+
+
 # ── Orchestrator ─────────────────────────────────────────────────────────────
 
 

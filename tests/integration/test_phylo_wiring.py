@@ -8,11 +8,15 @@ import pytest
 import yaml
 
 from flexpipe.config import load_config, write_snakemake_config_overrides
+from tests.integration.conftest import real_reference_builds
 
 REPO_ROOT = Path(__file__).parent.parent.parent
 PHYLO_SNAKEFILE = REPO_ROOT / "phylogenetic" / "Snakefile"
 YFV_BUILD_CONFIG = REPO_ROOT / "builds" / "yfv-brazil" / "config.yaml"
 RSV_BUILD_CONFIG = REPO_ROOT / "builds" / "rsv-global" / "config.yaml"
+# AUTO-DISCOVERED: builds with a non-placeholder reference.gb. New builds are
+# covered automatically once reference.gb is replaced with a real reference.
+REAL_REFERENCE_BUILD_CONFIGS = real_reference_builds()
 DENV_BUILD_CONFIGS = [
     REPO_ROOT / "builds" / "denv1-brazil" / "config.yaml",
     REPO_ROOT / "builds" / "denv2-brazil" / "config.yaml",
@@ -291,3 +295,15 @@ class TestPhyloWiring:
             "augur mask" not in output
         ), "augur mask was rendered even though mask_sites_file is empty"
         assert "cp " in output
+
+    @pytest.mark.parametrize(
+        "build_config", REAL_REFERENCE_BUILD_CONFIGS, ids=lambda p: p.parent.name
+    )
+    def test_all_scaffold_phylo_dry_run(self, tmp_path, monkeypatch, build_config):
+        """Every build with a real reference.gb can plan the phylo DAG without errors.
+
+        Builds whose reference.gb contains PLACEHOLDER are excluded (those builds
+        are ingest-only until a real reference is provided).
+        """
+        output, rc = _dry_run(tmp_path, build_config, monkeypatch)
+        assert rc == 0, f"{build_config.parent.name} phylo dry-run failed:\n{output}"
