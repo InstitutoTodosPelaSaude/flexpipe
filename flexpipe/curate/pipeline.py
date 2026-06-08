@@ -22,8 +22,11 @@ from flexpipe.config import load_config
 from flexpipe.curate.clades import truncate_clade
 from flexpipe.curate.columns import apply_harmonization, drop_columns
 from flexpipe.curate.hosts import build_rules, normalize_host
+from flexpipe.curate.lineage_parser import apply_lineage_parser
 from flexpipe.curate.regions import (
-    _parse_brazil_division,
+    _DIVISION_PARSERS,
+    available_division_parsers,
+    build_brazil_canonical_map,
     build_brazil_maps,
     build_region_map,
     lookup_brazil_region,
@@ -69,6 +72,8 @@ def run_curate(
 
     clade_levels = cfg.curation.clade_levels
     clade_sep = cfg.curation.clade_separator
+    lineage_parser = cfg.curation.lineage_parser
+    lineage_columns = cfg.curation.lineage_columns.model_dump()
     region_source = cfg.region_source
     division_parser = cfg.regions.division_parser
 
@@ -78,6 +83,7 @@ def run_curate(
         division_map_override=cfg.regions.division_map,
         abbrev_override=cfg.regions.division_abbreviations,
     )
+    brazil_canonical = build_brazil_canonical_map(brazil_region_map)
     host_rules = build_rules(override=cfg.curation.host_rules)
 
     os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
@@ -101,15 +107,26 @@ def run_curate(
     df = drop_columns(df)
 
     # ── normalise compound division strings (conditional on division_parser) ──
-    if region_source == "division" and "division" in df.columns and division_parser == "brazil":
-        parsed = df["division"].apply(lambda d: _parse_brazil_division(d, abbrev=brazil_abbrev))
-        df["division"] = parsed.apply(lambda x: x[0])
-        # Enrich location from the city part of compound division strings
-        if "location" in df.columns:
-            city_from_div = parsed.apply(lambda x: x[1])
-            empty_loc = df["location"].str.strip() == ""
-            has_city = city_from_div.str.strip() != ""
-            df.loc[empty_loc & has_city, "location"] = city_from_div[empty_loc & has_city]
+    if region_source == "division" and "division" in df.columns:
+        _division_parser_fn = _DIVISION_PARSERS.get(division_parser)
+        if _division_parser_fn is None:
+            logger.warning(
+                "division_parser %r is not registered; skipping division parsing. "
+                "Available parsers: %s",
+                division_parser,
+                available_division_parsers(),
+            )
+        elif division_parser != "none":
+            parsed = df["division"].apply(
+                lambda d: _division_parser_fn(d, abbrev=brazil_abbrev, canonical=brazil_canonical)
+            )
+            df["division"] = parsed.apply(lambda x: x[0])
+            # Enrich location from the city part of compound division strings
+            if "location" in df.columns:
+                city_from_div = parsed.apply(lambda x: x[1])
+                empty_loc = df["location"].str.strip() == ""
+                has_city = city_from_div.str.strip() != ""
+                df.loc[empty_loc & has_city, "location"] = city_from_div[empty_loc & has_city]
 
     # ── region ────────────────────────────────────────────────────────────────
     if region_source == "division" and "division" in df.columns:
@@ -118,7 +135,7 @@ def run_curate(
         )
         missing = df[df["region"] == ""]["division"].unique()
         if len(missing):
-            logger.warning("No Brazil region mapping for divisions: %s", list(missing))
+            logger.warning("No region mapping for divisions: %s", list(missing))
     elif "country" in df.columns:
         df["region"] = df["country"].apply(
             lambda c: lookup_region_country(c, region_map=region_map)
@@ -127,10 +144,35 @@ def run_curate(
         if len(missing):
             logger.warning("No region mapping for countries: %s", list(missing))
 
+    # ── continent ─────────────────────────────────────────────────────────────
+    # ``region`` may mean Brazilian macro-region for region_source=division.
+    # Keep a separate continent column so global geography can still be inferred.
+    if "country" in df.columns:
+        continent_values = df["country"].apply(
+            lambda c: lookup_region_country(c, region_map=region_map)
+        )
+        if "continent" in df.columns:
+            existing = df["continent"].fillna("").astype(str)
+            df["continent"] = existing.where(existing.str.strip() != "", continent_values)
+        else:
+            df["continent"] = continent_values
+        missing = df[df["continent"] == ""]["country"].unique()
+        if len(missing):
+            logger.warning("No continent mapping for countries: %s", list(missing))
+
     # ── clade_truncated ───────────────────────────────────────────────────────
     if "clade" in df.columns:
         df["clade_truncated"] = df["clade"].apply(
             lambda x: truncate_clade(x, clade_levels, clade_sep) if str(x).strip() else ""
+        )
+
+    # ── derived lineage columns ───────────────────────────────────────────────
+    if "clade" in df.columns:
+        df = apply_lineage_parser(
+            df,
+            parser=lineage_parser,
+            columns=lineage_columns,
+            clade_column="clade",
         )
 
     # ── source ────────────────────────────────────────────────────────────────

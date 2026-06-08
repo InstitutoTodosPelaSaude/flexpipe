@@ -35,11 +35,45 @@ def build_url(base_url: str, organism: str, endpoint: str) -> str:
     return f"{base_url.rstrip('/')}/{organism}/sample/{endpoint}"
 
 
-def base_params(min_date, min_completeness) -> dict:
+def _clean_query_params(query_params: dict | None) -> dict:
+    """Return non-empty LAPIS query params from build config."""
+    if not query_params:
+        return {}
+    cleaned = {}
+    for key, value in query_params.items():
+        if value is None:
+            continue
+        if isinstance(value, str) and value.strip() == "":
+            continue
+        cleaned[key] = value
+    return cleaned
+
+
+def normalize_fasta_entry_id(entry: str, *, strip_pipe_suffix: bool = False) -> str:
+    """Normalize a FASTA entry header when LAPIS adds non-metadata suffixes."""
+    if not strip_pipe_suffix:
+        return entry
+    lines = entry.splitlines()
+    if not lines:
+        return entry
+    header = lines[0].strip()
+    if "|" in header:
+        header = header.split("|", 1)[0]
+    lines[0] = header
+    trailing_newline = "\n" if entry.endswith("\n") else ""
+    return "\n".join(lines) + trailing_newline
+
+
+def base_params(
+    min_date, min_completeness, max_date=None, query_params: dict | None = None
+) -> dict:
     """Build the common LAPIS query parameters."""
-    p = {"versionStatus": "LATEST_VERSION"}
+    p = _clean_query_params(query_params)
+    p["versionStatus"] = "LATEST_VERSION"
     if min_date:
         p["sampleCollectionDateRangeLowerFrom"] = min_date
+    if max_date:
+        p["sampleCollectionDateRangeUpperTo"] = max_date
     if min_completeness is not None:
         p["completenessFrom"] = min_completeness
     return p
@@ -84,7 +118,9 @@ def fetch_metadata(
     url: str,
     auth_token=None,
     min_date=None,
+    max_date=None,
     min_completeness=None,
+    query_params: dict | None = None,
     chunk_size: int = 10000,
 ):
     """Paginate through the LAPIS metadata endpoint and return (header, rows).
@@ -93,6 +129,7 @@ def fetch_metadata(
         url: LAPIS ``/sample/details`` URL.
         auth_token: Optional Bearer token for restricted data.
         min_date: Minimum collection date filter (ISO ``YYYY-MM-DD``).
+        max_date: Maximum collection date filter (ISO ``YYYY-MM-DD``).
         min_completeness: Minimum genome completeness fraction.
         chunk_size: Records per paginated request.
 
@@ -104,7 +141,12 @@ def fetch_metadata(
     if auth_token:
         headers["Authorization"] = f"Bearer {auth_token}"
 
-    params = base_params(min_date, min_completeness)
+    params = base_params(
+        min_date,
+        min_completeness,
+        max_date=max_date,
+        query_params=query_params,
+    )
     params.update(
         {
             "downloadAsFile": "false",
@@ -150,7 +192,9 @@ def fetch_sequences(
     url: str,
     auth_token=None,
     min_date=None,
+    max_date=None,
     min_completeness=None,
+    query_params: dict | None = None,
     chunk_size: int = 10000,
 ) -> list:
     """Paginate through the LAPIS sequences endpoint and return FASTA entry strings.
@@ -159,6 +203,7 @@ def fetch_sequences(
         url: LAPIS ``/sample/unalignedNucleotideSequences`` URL.
         auth_token: Optional Bearer token.
         min_date: Minimum collection date filter.
+        max_date: Maximum collection date filter.
         min_completeness: Minimum genome completeness fraction.
         chunk_size: Records per paginated request.
 
@@ -169,7 +214,12 @@ def fetch_sequences(
     if auth_token:
         headers["Authorization"] = f"Bearer {auth_token}"
 
-    params = base_params(min_date, min_completeness)
+    params = base_params(
+        min_date,
+        min_completeness,
+        max_date=max_date,
+        query_params=query_params,
+    )
     params.update({"limit": chunk_size, "offset": 0})
 
     all_fasta = []
@@ -203,6 +253,7 @@ def main() -> None:
     parser.add_argument("--config", required=True)
     parser.add_argument("--metadata-output", required=True)
     parser.add_argument("--sequences-output", required=True)
+    parser.add_argument("--run-date", required=False, default="", help="Upper collection date")
     args = parser.parse_args()
 
     from flexpipe.logging_setup import configure_logging
@@ -222,6 +273,10 @@ def main() -> None:
     seq_ep = ppx.get("sequences_endpoint", "unalignedNucleotideSequences")
     auth_token = ppx.get("auth_token", "") or os.environ.get("PPX_AUTH_TOKEN") or None
     min_completeness = ppx.get("min_completeness", None)
+    query_params = ppx.get("query_params") or {}
+    if not isinstance(query_params, dict):
+        sys.exit("ERROR: pathoplexus.query_params must be a mapping of LAPIS query keys")
+    strip_fasta_id_suffix = bool(ppx.get("strip_fasta_id_suffix", False))
 
     # min_date: prefer explicit pathoplexus.min_date, fall back to subsampling.min_year
     min_date = ppx.get("min_date") or None
@@ -237,10 +292,20 @@ def main() -> None:
     os.makedirs(os.path.dirname(args.sequences_output), exist_ok=True)
 
     logger.info("Filters: min_date=%s, min_completeness=%s", min_date, min_completeness)
+    max_date = args.run_date or None
+    if max_date:
+        logger.info("Upper collection-date bound: %s", max_date)
 
     # Metadata
     logger.info("Downloading metadata from: %s", meta_url)
-    header, rows = fetch_metadata(meta_url, auth_token, min_date, min_completeness)
+    header, rows = fetch_metadata(
+        meta_url,
+        auth_token,
+        min_date,
+        max_date=max_date,
+        min_completeness=min_completeness,
+        query_params=query_params,
+    )
 
     if header is None:
         logger.error("No metadata returned from Pathoplexus.")
@@ -255,10 +320,21 @@ def main() -> None:
 
     # Sequences
     logger.info("Downloading sequences from: %s", seq_url)
-    fasta_entries = fetch_sequences(seq_url, auth_token, min_date, min_completeness)
+    fasta_entries = fetch_sequences(
+        seq_url,
+        auth_token,
+        min_date,
+        max_date=max_date,
+        min_completeness=min_completeness,
+        query_params=query_params,
+    )
 
     with open(args.sequences_output, "w") as fh:
         for entry in fasta_entries:
+            entry = normalize_fasta_entry_id(
+                entry,
+                strip_pipe_suffix=strip_fasta_id_suffix,
+            )
             fh.write(">" + entry)
             if not entry.endswith("\n"):
                 fh.write("\n")

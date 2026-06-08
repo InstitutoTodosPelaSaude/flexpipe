@@ -41,6 +41,32 @@ DELAY_SEC = 0.4  # ≤ 3 req/s without API key, ≤ 10 with API key
 # ── Parsing helpers ───────────────────────────────────────────────────────────
 
 
+_INSDC_MISSING_PREFIXES = (
+    "missing",
+    "not applicable",
+    "not collected",
+    "not provided",
+    "restricted access",
+    "n/a",
+    "na",
+    "unknown",
+    "none",
+    "null",
+)
+
+
+def _normalize_insdc(value: str) -> str:
+    """Return empty string for INSDC 'missing:*' / 'not applicable' sentinels.
+
+    NCBI encodes absent metadata as 'missing: reason', 'not collected', etc.
+    These are not real field values and must not be passed to augur curation.
+    """
+    v = (value or "").strip()
+    if v.lower().split(":")[0].strip() in _INSDC_MISSING_PREFIXES:
+        return ""
+    return v
+
+
 def parse_country_field(raw: str):
     """Parse NCBI country field ``'Country: Division, Location'`` → ``(country, div, loc)``."""
     country = division = location = ""
@@ -76,7 +102,7 @@ def parse_gb_record(rec) -> dict:
                 feature.qualifiers.get("geo_loc_name") or feature.qualifiers.get("country") or [""]
             )[0]
             cdate_q = feature.qualifiers.get("collection_date") or [""]
-            collection_date = cdate_q[0] if cdate_q else ""
+            collection_date = _normalize_insdc(cdate_q[0] if cdate_q else "")
             break
 
     for ref in rec.annotations.get("references", []):
@@ -84,7 +110,7 @@ def parse_gb_record(rec) -> dict:
             first = ref.authors.split(",")[0].strip()
             authors = f"{first} et al"
 
-    country, division, location = parse_country_field(raw_country)
+    country, division, location = parse_country_field(_normalize_insdc(raw_country))
 
     return {
         "accessionVersion": rec.id,
@@ -103,12 +129,24 @@ def parse_gb_record(rec) -> dict:
 # ── NCBI search + fetch ───────────────────────────────────────────────────────
 
 
-def search_ncbi(taxid, min_length: int, max_length: int, min_date=None, extra_term=None):
+def _ncbi_date(value: str) -> str:
+    return str(value).replace("-", "/")
+
+
+def search_ncbi(
+    taxid,
+    min_length: int,
+    max_length: int,
+    min_date=None,
+    max_date=None,
+    extra_term=None,
+):
     """Search NCBI Entrez and return ``(count, webenv, query_key)``."""
     query = f"txid{taxid}[Organism] {min_length}:{max_length}[SLEN]"
-    if min_date:
-        ncbi_date = str(min_date).replace("-", "/")
-        query += f" {ncbi_date}:3000/12/31[PDAT]"
+    if min_date or max_date:
+        lower = _ncbi_date(min_date) if min_date else "1900/01/01"
+        upper = _ncbi_date(max_date) if max_date else "3000/12/31"
+        query += f" {lower}:{upper}[PDAT]"
     if extra_term:
         query += f" {extra_term}"
     logger.info("NCBI query: %s", query)
@@ -181,6 +219,7 @@ def main() -> None:
     parser.add_argument("--config", required=True, help="Path to config/config.yaml")
     parser.add_argument("--metadata-output", required=True, help="Output TSV (PPX format)")
     parser.add_argument("--sequences-output", required=True, help="Output FASTA path")
+    parser.add_argument("--run-date", required=False, default="", help="Upper publication date")
     args = parser.parse_args()
 
     from flexpipe.logging_setup import configure_logging
@@ -193,7 +232,7 @@ def main() -> None:
 
     taxid = ncbi.get("taxid")
     genome_size = ncbi.get("genome_size")
-    email = ncbi.get("email", "") or os.environ.get("NCBI_EMAIL") or "pipeline@example.com"
+    email = ncbi.get("email", "") or os.environ.get("NCBI_EMAIL") or ""
     api_key = ncbi.get("api_key", "") or os.environ.get("NCBI_API_KEY") or None
     min_frac = float(ncbi.get("min_length", 0.7))
     max_frac = float(ncbi.get("max_length", 1.1))
@@ -202,6 +241,11 @@ def main() -> None:
         sys.exit("ERROR: ncbi.taxid is required in config.yaml")
     if not genome_size:
         sys.exit("ERROR: ncbi.genome_size is required in config.yaml")
+    if not email:
+        sys.exit(
+            "ERROR: ncbi.email or NCBI_EMAIL is required for NCBI Entrez requests. "
+            "Use a real contact email."
+        )
 
     min_length = int(genome_size * min_frac)
     max_length = int(genome_size * max_frac)
@@ -213,6 +257,7 @@ def main() -> None:
             min_date = str(min_year)
 
     extra_term = ncbi.get("extra_search_term") or None
+    max_date = args.run_date or None
 
     Entrez.email = email  # type: ignore[assignment]
     if api_key:
@@ -227,10 +272,19 @@ def main() -> None:
         max_length,
         min_date or "none",
     )
+    if max_date:
+        logger.info("Upper publication-date bound: %s", max_date)
     if extra_term:
         logger.info("Extra search term: %s", extra_term)
 
-    count, webenv, query_key = search_ncbi(taxid, min_length, max_length, min_date, extra_term)
+    count, webenv, query_key = search_ncbi(
+        taxid,
+        min_length,
+        max_length,
+        min_date=min_date,
+        max_date=max_date,
+        extra_term=extra_term,
+    )
 
     # Write empty outputs so Snakemake never fails on a 0-result query
     if count == 0:

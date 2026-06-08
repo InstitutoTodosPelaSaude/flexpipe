@@ -70,7 +70,7 @@ ncbi:
 viralqc:
   conda_env: "viralQC"
   clade_column: "clade"
-  expected_virus: "RSV-A"       # vqc rejects sequences that do not match this virus
+  expected_virus: "rsv_a"       # alias-backed RSV-A matching
   expected_segment: ""          # RSV is non-segmented — leave blank
   datasets_dir: ""              # set VIRALQC_DATASETS_DIR env var or override here
   blast_database: ""            # derived from datasets_dir by default

@@ -24,6 +24,16 @@
       "type": "categorical"
     },
     {
+      "key": "continent",
+      "title": "Continent",
+      "type": "categorical"
+    },
+    {
+      "key": "country",
+      "title": "Country",
+      "type": "categorical"
+    },
+    {
       "key": "region",
       "title": "Macro-região",
       "type": "categorical"
@@ -51,6 +61,7 @@
   ],
 
   "geo_resolutions": [
+    "country",
     "division",
     "location"
   ],
@@ -64,6 +75,8 @@
   },
 
   "filters": [
+    "continent",
+    "country",
     "region",
     "division",
     "location",

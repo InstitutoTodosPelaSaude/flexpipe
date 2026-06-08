@@ -1,9 +1,13 @@
 """Unit tests for flexpipe.curate.regions."""
 
 from flexpipe.curate.regions import (
+    _DIVISION_PARSERS,
     _lookup_brazil_region,
     _parse_brazil_division,
+    available_division_parsers,
+    build_brazil_canonical_map,
     lookup_region_country,
+    register_division_parser,
 )
 
 
@@ -83,6 +87,17 @@ class TestParseBrazilDivision:
             s, _ = _parse_brazil_division(abbr)
             assert s == expected_state, f"Abbreviation {abbr!r} did not map to {expected_state!r}"
 
+    def test_custom_canonical_map_used_for_override_states(self):
+        region_map = {"Estado Teste": "Norte"}
+        canonical = build_brazil_canonical_map(region_map)
+        state, city = _parse_brazil_division(
+            "Cidade Teste, Estado Teste",
+            abbrev={},
+            canonical=canonical,
+        )
+        assert state == "Estado Teste"
+        assert city == "Cidade Teste"
+
 
 class TestLookupBrazilRegion:
     """Tests for ``_lookup_brazil_region``."""
@@ -138,3 +153,52 @@ class TestLookupRegionCountry:
 
     def test_strip_whitespace(self):
         assert lookup_region_country("  Brazil  ") == "South America"
+
+
+# ── Division parser registry ──────────────────────────────────────────────────
+
+
+class TestDivisionParserRegistry:
+    """Tests for the division-parser registry."""
+
+    def test_available_parsers_contains_built_ins(self):
+        known = available_division_parsers()
+        assert "brazil" in known
+        assert "none" in known
+
+    def test_none_parser_is_identity(self):
+        parser_fn = _DIVISION_PARSERS["none"]
+        assert parser_fn("São Paulo") == ("São Paulo", "")
+        assert parser_fn("") == ("", "")
+        assert parser_fn("Anything") == ("Anything", "")
+
+    def test_brazil_parser_resolves_known_state(self):
+        parser_fn = _DIVISION_PARSERS["brazil"]
+        state, city = parser_fn("Espírito Santo, Domingos Martins")
+        assert state == "Espírito Santo"
+        assert city == "Domingos Martins"
+
+    def test_brazil_parser_is_same_as_direct_function(self):
+        """Registry 'brazil' entry must be the exact same function."""
+        assert _DIVISION_PARSERS["brazil"] is _parse_brazil_division
+
+    def test_register_custom_division_parser(self):
+        """A custom registered parser is accessible via _DIVISION_PARSERS."""
+
+        @register_division_parser("test_custom_country_xyz")
+        def _parse_test(division: str, **kwargs) -> tuple[str, str]:
+            return division.upper(), "TestCity"
+
+        assert "test_custom_country_xyz" in available_division_parsers()
+        result = _DIVISION_PARSERS["test_custom_country_xyz"]("foo")
+        assert result == ("FOO", "TestCity")
+
+        # Cleanup
+        _DIVISION_PARSERS.pop("test_custom_country_xyz", None)
+
+    def test_none_parser_ignores_kwargs(self):
+        """The 'none' parser must not crash if extra kwargs are passed."""
+        parser_fn = _DIVISION_PARSERS["none"]
+        state, city = parser_fn("TestDivision", abbrev={"SP": "São Paulo"}, canonical={})
+        assert state == "TestDivision"
+        assert city == ""

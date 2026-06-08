@@ -1,0 +1,25 @@
+# Subsampling for OROV-L Brazil build
+#
+# Brazil-focal with global context:
+# - up to 2 sequences per Brazilian state-year (data sparse; no month grouping)
+# - up to 1 sequence per non-Brazil country-year
+
+defaults:
+  exclude: builds/orov-l-brazil/ignore.txt
+  exclude_ambiguous_dates_by: year
+
+samples:
+  brazil:
+    query: "country == 'Brazil'"
+    include: builds/orov-l-brazil/keep.txt
+    group_by:
+      - division
+      - year
+    sequences_per_group: 2
+
+  context:
+    query: "country != 'Brazil'"
+    group_by:
+      - country
+      - year
+    sequences_per_group: 1

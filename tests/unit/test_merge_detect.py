@@ -10,6 +10,9 @@ from flexpipe.ingest.merge import (
     read_itps_tsv_metadata,
     read_local_metadata,
 )
+from flexpipe.ingest.merge import (
+    main as merge_main,
+)
 
 # ── FASTA helpers ──────────────────────────────────────────────────────────────
 
@@ -177,3 +180,36 @@ class TestReadLocalMetadata:
         df.to_csv(path, sep="\t", index=False)
         result = read_local_metadata(str(path))
         assert result["dataUseTerms"].iloc[0] == "OPEN"
+
+
+class TestMergeMainFailFast:
+    def test_enabled_local_metadata_missing_exits(self, tmp_path, monkeypatch):
+        remote_meta = tmp_path / "remote.tsv"
+        remote_meta.write_text("accessionVersion\tdate\nSEQ001\t2026-01-01\n")
+        remote_fasta = tmp_path / "remote.fasta"
+        remote_fasta.write_text(">SEQ001\nACGT\n")
+        output_meta = tmp_path / "merged.tsv"
+        output_fasta = tmp_path / "merged.fasta"
+
+        monkeypatch.setattr(
+            "sys.argv",
+            [
+                "flexpipe-merge",
+                "--pathoplexus-metadata",
+                str(remote_meta),
+                "--pathoplexus-sequences",
+                str(remote_fasta),
+                "--local-metadata",
+                str(tmp_path / "missing.tsv"),
+                "--local-sequences",
+                str(tmp_path / "missing.fasta"),
+                "--enabled",
+                "true",
+                "--metadata-output",
+                str(output_meta),
+                "--sequences-output",
+                str(output_fasta),
+            ],
+        )
+        with pytest.raises(SystemExit, match="local metadata"):
+            merge_main()

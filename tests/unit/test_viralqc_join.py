@@ -113,6 +113,37 @@ class TestJoinViralqcQuality:
         result = join_viralqc(df, path, {})
         assert result.loc[0, "qc_overall_status"] == "good"
 
+    def test_pipe_suffix_seqname_matches_accession_strain(self, tmp_path):
+        df = _make_metadata("PP_001")
+        path = _write_viralqc(
+            tmp_path,
+            [
+                {
+                    "seqName": "PP_001|DENV-1",
+                    "clade": "I.A",
+                    "genomeQuality": "A",
+                    "virus": "Dengue virus type 1",
+                }
+            ],
+        )
+        cfg = {"clade_column": "clade", "expected_virus": "Dengue virus type 1"}
+        result = join_viralqc(df, path, cfg)
+        assert result.loc[0, "clade"] == "I.A"
+        assert result.loc[0, "genome_quality"] == "A"
+        assert result.loc[0, "qc_exclusion_reason"] == ""
+
+    def test_exact_seqname_match_takes_priority_over_normalized_match(self, tmp_path):
+        df = _make_metadata("PP_001|DENV-1")
+        path = _write_viralqc(
+            tmp_path,
+            [
+                {"seqName": "PP_001|DENV-1", "genomeQuality": "A"},
+                {"seqName": "PP_001|DENV-2", "genomeQuality": "D"},
+            ],
+        )
+        result = join_viralqc(df, path, {})
+        assert result.loc[0, "genome_quality"] == "A"
+
 
 class TestJoinViralqcContamination:
     """Virus / segment cross-contamination filtering."""
@@ -130,6 +161,9 @@ class TestJoinViralqcContamination:
         result = join_viralqc(df, path, cfg)
         assert result.loc[result["strain"] == "SEQ001", "genome_quality"].iloc[0] == "A"
         assert result.loc[result["strain"] == "SEQ002", "genome_quality"].iloc[0] == "D"
+        assert (
+            result.loc[result["strain"] == "SEQ002", "qc_exclusion_reason"].iloc[0] == "wrong_virus"
+        )
 
     def test_unclassified_virus_flagged_D(self, tmp_path):
         df = _make_metadata("SEQ001")
@@ -142,6 +176,7 @@ class TestJoinViralqcContamination:
         cfg = {"expected_virus": "YFV"}
         result = join_viralqc(df, path, cfg)
         assert result.loc[0, "genome_quality"] == "D"
+        assert result.loc[0, "qc_exclusion_reason"] == "wrong_virus"
 
     def test_correct_virus_not_flagged(self, tmp_path):
         df = _make_metadata("SEQ001")
@@ -166,6 +201,7 @@ class TestJoinViralqcContamination:
         cfg = {"expected_segment": "L"}
         result = join_viralqc(df, path, cfg)
         assert result.loc[0, "genome_quality"] == "D"
+        assert result.loc[0, "qc_exclusion_reason"] == "wrong_segment"
 
     def test_empty_virus_not_excluded(self, tmp_path):
         """Sequences not analyzed by ViralQC (empty virus) must not be flagged."""
@@ -180,9 +216,45 @@ class TestJoinViralqcContamination:
         result = join_viralqc(df, path, cfg)
         assert result.loc[0, "genome_quality"] == "A"
 
-    def test_no_seqname_column_skips_join(self, tmp_path):
-        """ViralQC file without 'seqName' is silently ignored."""
+    def test_missing_viralqc_row_not_flagged_wrong_virus(self, tmp_path):
+        df = _make_metadata("SEQ001")
+        path = _write_viralqc(
+            tmp_path,
+            [
+                {"seqName": "SEQ002", "virus": "YFV", "genomeQuality": "A"},
+            ],
+        )
+        cfg = {"expected_virus": "YFV"}
+        result = join_viralqc(df, path, cfg)
+        assert result.loc[0, "genome_quality"] == ""
+        assert result.loc[0, "qc_exclusion_reason"] == "missing_viralqc"
+
+    def test_no_seqname_column_fails_fast(self, tmp_path):
+        """ViralQC file without 'seqName' is malformed and must fail fast."""
         df = _make_metadata("SEQ001")
         path = _write_viralqc(tmp_path, [{"name": "SEQ001", "genomeQuality": "A"}])
-        result = join_viralqc(df, path, {})
-        assert result.loc[0, "genome_quality"] == ""
+        import pytest
+
+        with pytest.raises(SystemExit, match="seqName"):
+            join_viralqc(df, path, {})
+
+    def test_wrong_virus_reason_is_not_overwritten_by_wrong_segment(self, tmp_path):
+        """When both virus and segment are wrong, wrong_virus wins (first-found priority)."""
+        df = _make_metadata("SEQ001")
+        path = _write_viralqc(
+            tmp_path,
+            [
+                {
+                    "seqName": "SEQ001",
+                    "virus": "DENV",
+                    "segment": "N",
+                    "genomeQuality": "A",
+                }
+            ],
+        )
+        cfg = {"expected_virus": "YFV", "expected_segment": "L"}
+        result = join_viralqc(df, path, cfg)
+        # Both checks fire; wrong_virus must survive because it is set first
+        # and wrong_segment must not overwrite a non-blank reason.
+        assert result.loc[0, "genome_quality"] == "D"
+        assert result.loc[0, "qc_exclusion_reason"] == "wrong_virus"

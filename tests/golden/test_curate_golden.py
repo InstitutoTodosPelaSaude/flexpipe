@@ -44,6 +44,9 @@ class TestCurateOutputSchema:
     def test_region_column_present(self, curated_div):
         assert "region" in curated_div.columns
 
+    def test_continent_column_present(self, curated_div):
+        assert "continent" in curated_div.columns
+
     def test_clade_truncated_column_present(self, curated_div):
         assert "clade_truncated" in curated_div.columns
 
@@ -66,6 +69,11 @@ class TestCurateOutputSchema:
         """Pathoplexus-raw columns should have been dropped/harmonized."""
         assert "hostNameCommon" not in curated_div.columns
         assert "completeness" not in curated_div.columns
+
+    def test_lineage_parser_disabled_by_default(self, curated_div):
+        assert "genotype" not in curated_div.columns
+        assert "major_lineage" not in curated_div.columns
+        assert "minor_lineage" not in curated_div.columns
 
 
 class TestCurateBrazilDivisionParsing:
@@ -110,6 +118,10 @@ class TestCurateRegionAssignment:
     def test_sao_paulo_is_sudeste(self, curated_div):
         row = curated_div[curated_div["strain"] == "SEQ005"].iloc[0]
         assert row["region"] == "Sudeste"
+
+    def test_brazil_continent_is_south_america(self, curated_div):
+        row = curated_div[curated_div["strain"] == "SEQ001"].iloc[0]
+        assert row["continent"] == "South America"
 
 
 class TestCurateCladeLevel:
@@ -198,10 +210,12 @@ class TestCurateCountryRegionAssignment:
     def test_brazil_is_south_america(self, curated_country):
         row = curated_country[curated_country["strain"] == "SEQ001"].iloc[0]
         assert row["region"] == "South America"
+        assert row["continent"] == "South America"
 
     def test_colombia_is_south_america(self, curated_country):
         row = curated_country[curated_country["strain"] == "SEQ004"].iloc[0]
         assert row["region"] == "South America"
+        assert row["continent"] == "South America"
 
     def test_no_division_parsing_for_country_build(self, curated_country):
         """Division strings should NOT be parsed (Brazil parser only runs for division builds)."""
@@ -223,3 +237,36 @@ class TestCurateNoViralqc:
         """Region assignment should work even without ViralQC."""
         row = curated_no_vqc[curated_no_vqc["strain"] == "SEQ001"].iloc[0]
         assert row["region"] == "Sudeste"
+
+
+def test_dengue_lineage_parser_in_curate_preserves_clade_and_adds_columns(tmp_path):
+    config = tmp_path / "config.yaml"
+    config.write_text(
+        "data_source: pathoplexus\n"
+        "region_source: division\n"
+        "pathoplexus:\n"
+        "  organism: dengue\n"
+        "viralqc:\n"
+        "  clade_column: clade\n"
+        "curation:\n"
+        "  clade_levels: 99\n"
+        "  clade_separator: .\n"
+        "  lineage_parser: dengue\n"
+    )
+    metadata = tmp_path / "metadata.tsv"
+    metadata.write_text(
+        "strain\tdate\tcountry\tdivision\tlocation\tclade\tserotype\thost\tdata_use\tcompleteness\n"
+        "SEQ_DENV3\t2024-01-01\tBrazil\tSão Paulo\tSao Paulo\t3III_B.3.2\tDENV-3\thuman\tOPEN\t0.95\n"
+    )
+    out = tmp_path / "curated.tsv"
+
+    run_curate(str(config), str(metadata), None, str(out))
+    df = pd.read_csv(out, sep="\t", dtype=str).fillna("")
+    row = df.iloc[0]
+
+    assert row["clade"] == "3III_B.3.2"
+    assert row["serotype"] == "3"
+    assert row["genotype"] == "3III"
+    assert row["major_lineage"] == "3III_B"
+    assert row["minor_lineage"] == "3III_B.3.2"
+    assert row["continent"] == "South America"

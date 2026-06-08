@@ -135,19 +135,29 @@ class TestBuildQcReport:
         report = build_qc_report(curated, nonexistent_log, final)
         assert report["exclusion_by_filter"] == {}
 
-    def test_cross_contamination_count(self, tmp_path):
-        """cross_contamination_count reflects D-grade sequences."""
+    def test_cross_contamination_count_uses_explicit_reasons(self, tmp_path):
+        """cross_contamination_count only reflects wrong-virus/wrong-segment reasons."""
         curated_rows = [
             {"strain": "s1", "genome_quality": "A", "coverage": "0.95"},
-            {"strain": "s2", "genome_quality": "D", "coverage": "0.50"},
-            {"strain": "s3", "genome_quality": "D", "coverage": "0.45"},
+            {
+                "strain": "s2",
+                "genome_quality": "D",
+                "coverage": "0.50",
+                "qc_exclusion_reason": "wrong_virus",
+            },
+            {
+                "strain": "s3",
+                "genome_quality": "D",
+                "coverage": "0.45",
+                "qc_exclusion_reason": "viralqc_quality",
+            },
         ]
         curated = _write_curated(tmp_path, curated_rows)
         filter_log = _write_filter_log(tmp_path, [])
         final = _write_final(tmp_path, [{"strain": "s1"}])
 
         report = build_qc_report(curated, filter_log, final)
-        assert report["cross_contamination_count"] == 2
+        assert report["cross_contamination_count"] == 1
 
 
 class TestWriteQcArtifacts:

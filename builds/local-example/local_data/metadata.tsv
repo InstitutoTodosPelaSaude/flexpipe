@@ -1,0 +1,4 @@
+accessionVersion	sampleCollectionDate	geoLocCountry	geoLocAdmin1	geoLocAdmin2	dataUseTerms	lineage	completeness
+LOCAL001	2025-01-15	Brazil	São Paulo	São Paulo	OPEN	I	0.95
+LOCAL002	2025-02-20	Brazil	Rio de Janeiro	Rio de Janeiro	OPEN	II	0.98
+LOCAL003	2025-03-10	Brazil	Amazonas	Manaus	OPEN	I	0.92

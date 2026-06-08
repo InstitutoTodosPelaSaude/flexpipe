@@ -53,6 +53,13 @@ def coordinates() -> None:
     main()
 
 
+def disambiguate_geo() -> None:
+    """flexpipe-disambiguate-geo — make ambiguous geographic display names unique."""
+    from flexpipe.geo.coordinates import main_disambiguate
+
+    main_disambiguate()
+
+
 def update_cache() -> None:
     """flexpipe-update-cache — merge new coordinates into the workdir cache.
 
@@ -87,6 +94,34 @@ def name2hue() -> None:
 def colours() -> None:
     """flexpipe-colours — assign hex colours per metadata value."""
     from flexpipe.colors.scheme import main
+
+    main()
+
+
+def collapse_traits() -> None:
+    """flexpipe-collapse-traits — cap trait states before TreeTime inference."""
+    from flexpipe.phylo.traits import main
+
+    main()
+
+
+def normalize_dates() -> None:
+    """flexpipe-normalize-dates — normalize flexible metadata date strings."""
+    from flexpipe.curate.dates import main
+
+    main()
+
+
+def reference_mask() -> None:
+    """flexpipe-reference-mask — generate BED masks from reference annotations."""
+    from flexpipe.phylo.reference_mask import main
+
+    main()
+
+
+def validate_build() -> None:
+    """flexpipe-validate-build — validate a build config.yaml before running."""
+    from flexpipe.validate import main
 
     main()
 

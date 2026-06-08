@@ -1,0 +1,30 @@
+default:
+  explicit_feature_types:
+    - "5'UTR"
+    - "3'UTR"
+    - UTR
+    - leader
+    - trailer
+  qualifier_feature_types:
+    - gene
+    - misc_feature
+    - regulatory
+    - stem_loop
+  qualifier_keys:
+    - gene
+    - note
+    - product
+    - label
+    - standard_name
+  utr_patterns:
+    - "\\butr\\b"
+    - untranslated
+    - non[- ]?coding
+    - leader
+    - trailer
+  boundary_feature_priority:
+    - CDS
+    - gene
+    - mat_peptide
+  include_internal_gaps: false
+  max_mask_fraction: 0.25

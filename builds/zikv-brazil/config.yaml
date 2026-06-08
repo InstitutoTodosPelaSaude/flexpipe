@@ -1,0 +1,89 @@
+files:
+  keep:             "builds/zikv-brazil/keep.txt"
+  ignore:           "builds/zikv-brazil/ignore.txt"
+  cache:            "builds/zikv-brazil/cache_coordinates.tsv"
+  reference:        "builds/zikv-brazil/reference.gb"
+  clades:           "builds/zikv-brazil/clades.tsv"
+  auspice_config:   "builds/zikv-brazil/auspice_config.json"
+  subsample_config: "builds/zikv-brazil/subsample.yaml"
+
+parameters:
+  mask_5prime: 0      # set to 0 until reference-specific values are known (NC_035889.1)
+  mask_3prime: 0
+  mask_sites: ""
+  mask_sites_file: "builds/zikv-brazil/masks/reference_terminal.bed"
+  ufboot: 0           # first-pass: no UFBoot support (fast)
+  model: "JC"         # first-pass: fast fixed model
+  root: "least-squares"
+  coalescent: "skyline"
+  date_inference: "marginal"
+  divergence_units: "mutations"
+  clock_filter_iqd: 4
+  date_confidence: false    # first-pass: skip date confidence
+  traits_confidence: false  # first-pass: skip trait confidence
+  ancestral_inference: "joint"
+
+options:
+  threads: 4
+
+coordinates:
+  columns: "country division location"
+
+colours:
+  clade:    "clade_truncated clade"
+  geo:      "continent country division location"
+  source:   "source"
+  data_use: "data_use"
+
+traits:
+  columns: "continent country division location clade"
+  max_states: 200
+  rare_state_label: "other"
+
+subsampling:
+  random_seed: 42
+
+curation:
+  clade_levels: 1        # ZIKV main lineages: African, Asian, etc.
+  clade_separator: "."
+  lineage_parser: "none"
+
+region_source: "division"   # Brazil-focal: Brazilian state → macro-region
+data_source: "ncbi"
+
+pathoplexus:
+  organism: ""   # unused; kept for schema completeness
+
+ncbi:
+  taxid: 64320           # Zika virus
+  genome_size: 10808     # bp (NC_035889.1 is 10,808 bp)
+  min_length: 0.7
+  max_length: 1.1
+  email: ""              # set via NCBI_EMAIL env var
+  api_key: ""            # optional; set via NCBI_API_KEY env var
+
+viralqc:
+  conda_env: "viralQC"
+  clade_column: "clade"
+  expected_virus: "Zika virus"
+  expected_segment: ""
+  datasets_dir: ""
+  blast_database: ""
+  blast_database_metadata: ""
+
+qc:
+  genome_quality:
+    - "A"
+    - "B"
+  min_coverage: 0.70
+  min_sequences: 10
+  required_columns:
+    - "strain"
+    - "date"
+    - "country"
+    - "clade"
+
+local_sequences:
+  enabled: false
+  metadata: "data/metadata.xlsx"
+  sequences: "data/new_sequences.fasta"

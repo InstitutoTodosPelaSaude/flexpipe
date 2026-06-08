@@ -11,7 +11,10 @@ from flexpipe.colors.hues import (
     VALID_HUES,
     _natural_key,
     collect,
+    load_hue_cache,
     spread_hues,
+    stable_hash_hue,
+    write_hue_cache,
 )
 
 
@@ -114,6 +117,30 @@ class TestCollect:
         r2, _ = collect(df, "clade_truncated", CLADE_HUES, "clade", use_hash_for_unknown=True)
         assert r1 == r2
 
+    def test_hash_hue_stable_when_clade_set_grows(self):
+        df1 = pd.DataFrame({"clade_truncated": ["clade_A"]})
+        df2 = pd.DataFrame({"clade_truncated": ["clade_A", "clade_B"]})
+        r1, _ = collect(df1, "clade_truncated", CLADE_HUES, "clade", use_hash_for_unknown=True)
+        r2, _ = collect(df2, "clade_truncated", CLADE_HUES, "clade", use_hash_for_unknown=True)
+        assert r1["clade_A"] == r2["clade_A"]
+
+    def test_cached_hue_preserved_for_unknown(self):
+        df = pd.DataFrame({"clade_truncated": ["clade_A", "clade_B"]})
+        result, _ = collect(
+            df,
+            "clade_truncated",
+            CLADE_HUES,
+            "clade",
+            use_hash_for_unknown=True,
+            cached_hues={"clade_A": 230},
+        )
+        assert result["clade_A"] == 230
+
+    def test_fixed_hue_overrides_cache(self):
+        df = pd.DataFrame({"region": ["Norte"]})
+        result, _ = collect(df, "region", REGION_HUES, "region", cached_hues={"Norte": 10})
+        assert result["Norte"] == REGION_HUES["Norte"]
+
     def test_empty_values_excluded(self):
         df = pd.DataFrame({"region": ["Norte", "", "NA", "nan"]})
         result, _ = collect(df, "region", REGION_HUES, "region")
@@ -160,3 +187,14 @@ class TestHueTables:
     def test_clade_hues_intentionally_empty(self):
         """CLADE_HUES is intentionally empty — hash fallback handles clades."""
         assert CLADE_HUES == {}
+
+
+class TestHueCache:
+    def test_stable_hash_bucket_is_valid_and_deterministic(self):
+        assert stable_hash_hue("clade_A") == stable_hash_hue("clade_A")
+        assert stable_hash_hue("clade_A") in VALID_HUES
+
+    def test_load_and_write_hue_cache(self, tmp_path):
+        cache = tmp_path / "name2hue.tsv"
+        write_hue_cache(cache, {"clade_A": 120, "clade_B": 240})
+        assert load_hue_cache(cache) == {"clade_A": 120, "clade_B": 240}

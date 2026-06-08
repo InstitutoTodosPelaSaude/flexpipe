@@ -50,6 +50,10 @@ class TestWorkdirPathsProperties:
         assert paths.cache_coordinates.name == "cache_coordinates.tsv"
         assert str(paths.cache_coordinates).startswith(str(paths.root))
 
+    def test_cache_name2hue_path(self, paths):
+        assert paths.cache_name2hue.name == "name2hue.tsv"
+        assert str(paths.cache_name2hue).startswith(str(paths.cache_dir))
+
     def test_latlongs_under_generated_config(self, paths):
         assert str(paths.latlongs).startswith(str(paths.generated_config_dir))
 

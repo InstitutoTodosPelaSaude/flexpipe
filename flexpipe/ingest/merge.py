@@ -210,9 +210,15 @@ def main() -> None:
     # Optionally merge local sequences
     if local_enabled and args.local_metadata and args.local_sequences:
         if not os.path.isfile(args.local_metadata):
-            logger.warning("Local metadata not found: %s", args.local_metadata)
+            sys.exit(
+                "ERROR: local_sequences.enabled=true but local metadata was not found: "
+                f"{args.local_metadata}"
+            )
         elif not os.path.isfile(args.local_sequences):
-            logger.warning("Local sequences not found: %s", args.local_sequences)
+            sys.exit(
+                "ERROR: local_sequences.enabled=true but local FASTA was not found: "
+                f"{args.local_sequences}"
+            )
         else:
             logger.info("Loading local sequences: %s", args.local_sequences)
             fasta_ids = read_fasta_ids(args.local_sequences)
@@ -247,7 +253,10 @@ def main() -> None:
             merged_seqs.update(new_local_seqs)
     else:
         if local_enabled:
-            logger.info("local_sequences.enabled=true but paths not provided; skipping local merge")
+            sys.exit(
+                "ERROR: local_sequences.enabled=true but local metadata/sequence paths were "
+                "not provided."
+            )
         else:
             logger.info("local_sequences.enabled=false; using only remote data")
 

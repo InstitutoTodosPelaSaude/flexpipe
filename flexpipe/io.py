@@ -59,9 +59,9 @@ def load_tsv(
 ) -> pd.DataFrame:
     """Convenience wrapper for loading a TSV file.
 
-    Equivalent to ``load_table(path, dtype, fillna, **kwargs)`` but asserts the
-    extension is ``.tsv`` (or ``.txt``) and is more self-documenting at call sites
-    that exclusively deal with TSV outputs.
+    Always reads *path* as tab-separated text regardless of extension. This is
+    intentionally smaller than :func:`load_table` for call sites that already
+    know their input is TSV-like.
     """
     p = Path(path)
     return pd.read_csv(p, encoding="utf-8", sep="\t", dtype=dtype, **kwargs).fillna(fillna)

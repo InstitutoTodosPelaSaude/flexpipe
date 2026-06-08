@@ -1,0 +1,98 @@
+files:
+  keep:             "builds/denv3-brazil/keep.txt"
+  ignore:           "builds/denv3-brazil/ignore.txt"
+  cache:            "builds/denv3-brazil/cache_coordinates.tsv"
+  reference:        "builds/denv3-brazil/reference.gb"
+  clades:           "builds/denv3-brazil/clades.tsv"
+  auspice_config:   "builds/denv3-brazil/auspice_config.json"
+  subsample_config: "builds/denv3-brazil/subsample.yaml"
+
+parameters:
+  mask_5prime: 0
+  mask_3prime: 0
+  mask_sites: ""
+  mask_sites_file: "builds/denv3-brazil/masks/reference_terminal.bed"
+  ufboot: 0
+  model: "JC"
+  root: "least-squares"
+  coalescent: "skyline"
+  date_inference: "marginal"
+  divergence_units: "mutations"
+  clock_filter_iqd: 4
+  date_confidence: false
+  traits_confidence: false
+  ancestral_inference: "joint"
+
+options:
+  threads: 4
+
+coordinates:
+  columns: "country division location"
+
+colours:
+  clade:    "serotype genotype major_lineage minor_lineage clade"
+  geo:      "continent country division location"
+  source:   "source"
+  data_use: "data_use"
+
+traits:
+  columns: "continent country division location serotype genotype major_lineage minor_lineage clade"
+  max_states: 200
+  rare_state_label: "other"
+
+subsampling:
+  random_seed: 42
+
+curation:
+  clade_levels: 99
+  clade_separator: "."
+  lineage_parser: "dengue"
+
+region_source: "division"
+data_source: "pathoplexus"
+
+pathoplexus:
+  organism: "dengue"
+  base_url: "https://lapis.pathoplexus.org"
+  metadata_endpoint: "details"
+  sequences_endpoint: "unalignedNucleotideSequences"
+  min_completeness: 0.70
+  min_date: "2010-01-01"
+  strip_fasta_id_suffix: true
+  query_params:
+    serotype: "DENV-3"
+    dataUseTerms: "OPEN"
+
+ncbi:
+  taxid: 11069
+  genome_size: 10707
+  min_length: 0.7
+  max_length: 1.1
+  email: ""
+  api_key: ""
+
+viralqc:
+  conda_env: "viralQC"
+  clade_column: "clade"
+  expected_virus: "Dengue virus type 3"
+  expected_segment: ""
+  datasets_dir: ""
+  blast_database: ""
+  blast_database_metadata: ""
+
+qc:
+  genome_quality:
+    - "A"
+    - "B"
+  min_coverage: 0.70
+  min_sequences: 10
+  required_columns:
+    - "strain"
+    - "date"
+    - "country"
+    - "clade"
+
+local_sequences:
+  enabled: false
+  metadata: "data/metadata.xlsx"
+  sequences: "data/new_sequences.fasta"

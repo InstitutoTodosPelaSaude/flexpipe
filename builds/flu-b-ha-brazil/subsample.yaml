@@ -1,0 +1,26 @@
+# Subsampling for Flu B HA Brazil build
+#
+# Brazil-focal with global context:
+# - up to 2 sequences per Brazilian state-year
+# - up to 1 sequence per non-Brazil country-year
+
+defaults:
+  min_date: 2010
+  exclude: builds/flu-b-ha-brazil/ignore.txt
+  exclude_ambiguous_dates_by: year
+
+samples:
+  brazil:
+    query: "country == 'Brazil'"
+    include: builds/flu-b-ha-brazil/keep.txt
+    group_by:
+      - division
+      - year
+    sequences_per_group: 2
+
+  context:
+    query: "country != 'Brazil'"
+    group_by:
+      - country
+      - year
+    sequences_per_group: 1

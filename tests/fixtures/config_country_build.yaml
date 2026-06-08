@@ -5,6 +5,7 @@ region_source: country
 ncbi:
   taxid: 11089
   genome_size: 10862
+  email: ops@example.org
   min_length: 0.7
   max_length: 1.1
 

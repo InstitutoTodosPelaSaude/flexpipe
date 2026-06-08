@@ -1,0 +1,82 @@
+files:
+  keep:             "builds/orov-l-brazil/keep.txt"
+  ignore:           "builds/orov-l-brazil/ignore.txt"
+  cache:            "builds/orov-l-brazil/cache_coordinates.tsv"
+  reference:        "builds/orov-l-brazil/reference.gb"
+  clades:           "builds/orov-l-brazil/clades.tsv"
+  auspice_config:   "builds/orov-l-brazil/auspice_config.json"
+  subsample_config: "builds/orov-l-brazil/subsample.yaml"
+
+parameters:
+  # Terminal masking — values are REFERENCE-SPECIFIC for PP154172.1 (OROV Tefé L segment).
+  # Current values (0) disable terminal masking; calibrate before a production run.
+  mask_5prime: 0
+  mask_3prime: 0
+  mask_sites: ""
+  mask_sites_file: "builds/orov-l-brazil/masks/reference_terminal.bed"
+  ufboot: 0
+  model: "JC"
+  root: "least-squares"
+  coalescent: "skyline"
+  date_inference: "marginal"
+  date_confidence: false
+  divergence_units: "mutations"
+  clock_filter_iqd: 4
+  ancestral_inference: "joint"
+  traits_confidence: false
+
+options:
+  threads: 4
+
+coordinates:
+  columns: "country division location"
+
+colours:
+  geo:      "continent country region division location"
+  source:   "source"
+  data_use: "data_use"
+  clade:    "clade_truncated clade"
+
+traits:
+  columns: "continent country region division"
+  max_states: 50
+  rare_state_label: "other"
+
+subsampling:
+  random_seed: 42
+
+curation:
+  clade_levels: 2
+  clade_separator: "."
+  lineage_parser: "none"
+
+qc:
+  genome_quality: ["A", "B"]
+  min_coverage: 0.7
+  min_sequences: 10
+  required_columns: []
+
+# ── Region source ────────────────────────────────────────────────────────────
+# "division" : maps Brazilian state → macro-region (Brazil-focal builds)
+region_source: "division"
+
+# ── Data source ──────────────────────────────────────────────────────────────
+data_source: "ncbi"
+
+pathoplexus:
+  organism: ""
+  metadata_fields: []
+  query_params: {}
+  strip_fasta_id_suffix: false
+  genome_size: 0
+
+ncbi:
+  taxid: 118655   # Oropouche virus
+  genome_size: 6814  # PP154172.1 (Tefé L segment, 6814 bp)
+  email: ""        # set via NCBI_EMAIL env var
+  api_key: ""      # set via NCBI_API_KEY env var (optional)
+
+viralqc:
+  expected_virus: "Oropouche virus"
+  expected_segment: "L"
+  datasets_dir: ""

@@ -132,6 +132,10 @@ flexpipe/
     regions/{country_to_continent.tsv, brazil_state_to_region.tsv, brazil_abbreviations.tsv}
     hosts/host_rules.yaml
     colors/{region_hues.tsv, host_hues.tsv, source_hues.tsv, data_use_hues.tsv}
+    curation/date_formats.yaml
+    geo/cache_coordinates.tsv
+    phylo/reference_mask_profiles.yaml
+    viralqc/aliases.yaml
 builds/
   yfv-brazil/
     config.yaml          # all parameters for this build
@@ -219,11 +223,16 @@ path, not the workdir-local resolved snapshot. The Snakefile reads
 - Runs `vqc` in the `viralQC` conda environment; vendored as a git submodule at `viralQC/`
 - Outputs genome quality grades (A–D) and Nextclade clade assignments
 - ViralQC datasets resolution order: `viralqc.datasets_dir` config key → `$VIRALQC_DATASETS_DIR` → `viralQC/datasets/` (auto-discovered from submodule)
+- `viralqc.expected_virus` and `viralqc.expected_segment` are alias-aware. Built-in aliases live
+  in `flexpipe/data/viralqc/aliases.yaml`; use `viralqc.aliases_file` for overrides. Prefer
+  operational keys (`rsv_a`, `flu_a_h1n1`, `ha`) when ViralQC labels vary. ICTV species names are
+  metadata in the registry, not broad match keys unless explicitly listed as aliases.
 - Set up with: `bash scripts/install_viralqc.sh` (creates env, downloads datasets, runs tests)
 
 **Curation** (`flexpipe-curate` / `flexpipe.curate.pipeline`):
 - Renames fields via `augur curate rename` (accessionVersion→strain, geoLocCountry→country, etc.)
-- Formats dates via `augur curate format-dates`
+- Normalizes flexible dates with `flexpipe-normalize-dates` before `augur curate format-dates`;
+  failures and ambiguous slash dates are logged to `<workdir>/results/ingest/date_normalization.tsv`.
 - Joins ViralQC results (genome_quality, coverage, clade)
 - Computes `clade_truncated` by truncating hierarchical clades to `clade_levels` levels (config)
 - Assigns `region` from either country→continent (global) or division→Brazilian macro-region (Brazil-only)
@@ -240,7 +249,9 @@ path, not the workdir-local resolved snapshot. The Snakefile reads
 - `flexpipe-colours`: produces hex colors for all metadata values
 - `flexpipe-coordinates`: geocodes metadata locations via Nominatim with:
   - Rate-limiting (1 req/sec compliance)
-  - Persistent cache (`<workdir>/cache/cache_coordinates.tsv`) with incremental updates seeded from `builds/<name>/cache_coordinates.tsv`
+  - Persistent cache (`<workdir>/cache/cache_coordinates.tsv`) seeded from the bundled shared
+    cache (`flexpipe/data/geo/cache_coordinates.tsv`) first and `builds/<name>/cache_coordinates.tsv`
+    second, so build-specific manual entries win
   - Featuretype hints (division→state, location→city) to reduce ambiguity
   - Fallback to cached or manual entries
 
@@ -272,25 +283,48 @@ All parameters are in `builds/<name>/config.yaml` under `parameters` and `option
 | `flexpipe-fetch-ncbi` | `flexpipe.ingest.ncbi.main` |
 | `flexpipe-merge` | `flexpipe.ingest.merge.main` |
 | `flexpipe-curate` | `flexpipe.curate.pipeline.main` |
+| `flexpipe-normalize-dates` | `flexpipe.curate.dates.main` |
+| `flexpipe-qc-summary` | `flexpipe.curate.qc_summary.main` |
 | `flexpipe-coordinates` | `flexpipe.geo.coordinates.main` |
 | `flexpipe-update-cache` | inline argparse → `flexpipe.geo.cache.merge_coordinate_cache` |
 | `flexpipe-name2hue` | `flexpipe.colors.hues.main` |
 | `flexpipe-colours` | `flexpipe.colors.scheme.main` |
+| `flexpipe-collapse-traits` | `flexpipe.phylo.traits.main` |
+| `flexpipe-reference-mask` | `flexpipe.phylo.reference_mask.main` |
 
 ### Configuration Patterns
 
 **Region source** (controls how `region` column is derived):
 - `"country"`: country → continent mapping (global builds); loaded from `flexpipe/data/regions/country_to_continent.tsv`
 - `"division"`: Brazilian state → macro-region (Norte, Nordeste, Centro-Oeste, Sudeste, Sul); loaded from `flexpipe/data/regions/brazil_state_to_region.tsv`
+- `continent` is always derived separately from `country` when possible. For Brazil builds,
+  `region` remains the Brazilian macro-region while `continent` is the geographic continent.
 
 **Clade truncation**:
 - `clade_levels: N` in config → `clade_truncated` column (e.g., A.B.C.D with `clade_levels: 2` → A.B)
 - YFV uses `clade_levels: 1` (single-level genotypes: I, II, III, etc.)
 
 **Colour hierarchy** (`colours` in config):
-- Top-level categories get manual hues (loaded from `flexpipe/data/colors/*_hues.tsv`)
-- Sub-levels derive colors as gradients
-- Lineage/clade use hash-based deterministic hues (same name → same hue across runs)
+- Configure levels from most-general to most-specific, e.g. `continent country division location`
+  or `serotype genotype major_lineage minor_lineage clade`.
+- Top-level categories get fixed hues when available (`region_hues.tsv` also contains continents)
+  or stable hash hues persisted in the workdir `name2hue.tsv` cache.
+- Sub-levels derive deterministic shades within the top-level hue family.
+- Raw lineage stays in `clade`; optional parsers add prefix-safe lineage columns for filters/colors.
+
+**Trait state cap** (`traits` in config):
+- `traits.columns` drives `augur traits`, but flexpipe first writes
+  `<workdir>/results/subsampled/metadata_traits.tsv`.
+- If a trait has more than `traits.max_states` non-empty states, rare states are collapsed to
+  `traits.rare_state_label` in that sidecar only; primary subsampled metadata is not mutated.
+
+**Reference-derived masks**:
+- `flexpipe-reference-mask` can generate first-draft terminal BED masks from `reference.gb`.
+- The default profile (`flexpipe/data/phylo/reference_mask_profiles.yaml`) checks explicit UTR
+  features, UTR-like qualifiers on features such as `gene`/`misc_feature`, then CDS/gene boundary
+  fallback. It emits terminal masks only by default and refuses excessive mask fractions.
+- Generated BEDs should be reviewed before production surveillance use, then referenced via
+  `parameters.mask_sites_file`.
 
 **PPX column contract**: Pathoplexus-style column names (`accessionVersion`, `geoLocCountry`, `geoLocAdmin1`, `geoLocAdmin2`, `dataUseTerms`, `lineage`) flow through the pipeline without modification until renamed by `augur curate rename` in the `curate_qc` rule. Never change these column names in ingest/merge logic.
 
@@ -309,13 +343,20 @@ Key fields to update in `config.yaml`:
 - `pathoplexus.organism` / `ncbi.taxid`
 - `parameters.mask_5prime/3prime` (terminal masking in bp; 0 for full-genome) — **these values
   are per-reference**: YFV uses 142/548 (X03700.1); you must re-derive them for any new reference
-- `parameters.mask_sites_file` (optional BED file path for problematic-site masking; leave blank
-  if unused)
+- `parameters.mask_sites_file` (optional BED file path for generated terminal masks or
+  problematic-site masking; leave blank if unused)
 - `curation.clade_levels` (hierarchy depth for `clade_truncated`)
+- `curation.lineage_parser` (`none`, `dengue`, `pango`, `generic_dot`) for optional derived lineage
+  columns; DENV outputs are prefix-safe (e.g. `3III_B.3.2`, not bare `B`)
+- `curation.date_formats` (optional override for date-normalization policy)
 - `region_source` (country for global, division for Brazil-only builds)
 - `qc.min_sequences` (minimum subsampled sequences required before phylogenetics; default 10)
+- `coordinates.shared_cache` (optional shared geocode seed cache override)
+- `viralqc.expected_virus` / `viralqc.expected_segment` (alias keys or literal labels)
+- `viralqc.aliases_file` (optional override for ViralQC label aliases)
 - `viralqc.*` (or set `VIRALQC_DATASETS_DIR`)
 - `traits.columns` (which metadata fields to infer ancestral states for)
+- `traits.max_states` / `traits.rare_state_label` (TreeTime-safe categorical cap)
 
 ## Dependencies
 
@@ -366,4 +407,3 @@ conda env remove -n nextstrain-fresh
 pip freeze | grep -E "^(pandas|PyYAML|biopython|geopy|requests|matplotlib|colour|openpyxl|beautifulsoup4|pydantic)==" | sort > requirements.lock.txt
 # Append dev/test deps manually
 ```
-
