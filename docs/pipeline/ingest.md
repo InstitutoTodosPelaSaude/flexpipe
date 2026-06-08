@@ -130,6 +130,46 @@ Applies thresholds to exclude low-quality sequences:
 
 **Output**: `results/ingest/filter_log.tsv` (exclusion reasons), filtered metadata and sequences
 
+## Clade Filter
+
+**Rule**: `clade_filter`
+
+Restricts the analysis to a specific genetic group **before** subsampling. This step always runs; when `clade_filter.column` is empty (the default for builds that don't configure it), all sequences pass through unchanged.
+
+**Config keys**: `clade_filter.*`
+
+| Parameter | Default | Effect |
+|-----------|---------|--------|
+| `clade_filter.column` | `""` (disabled) | Metadata column to filter on (`clade`, `clade_truncated`, `genotype`, etc.) |
+| `clade_filter.include` | `[]` | If non-empty, keep only sequences whose column value matches. Empty = keep all. |
+| `clade_filter.exclude` | `[]` | Drop sequences whose column value matches. Applied after include. |
+| `clade_filter.match` | `"exact"` | `"exact"` (equality) or `"prefix"` (dot-boundary; `B3` matches `B3` and `B3.1` but not `B30`) |
+
+**Outputs**:
+- `results/ingest/clade_filtered_metadata.tsv`
+- `results/ingest/clade_filtered_sequences.fasta`
+- `results/ingest/clade_filter_log.tsv` — per-strain drop log (`strain`, `group_value`, `drop_reason`)
+
+**Examples**:
+
+```yaml
+# Measles genotype B3 only
+clade_filter:
+  column: clade_truncated
+  include: [B3]
+  match: exact
+
+# Chikungunya ECSA-II and all sub-lineages (ECSA-II.1, ECSA-II.2, …)
+clade_filter:
+  column: clade
+  include: [ECSA-II]
+  match: prefix
+```
+
+```{note}
+The filter column must be produced by the curation step. `clade` and `clade_truncated` require a ViralQC clade assignment; `genotype`/`major_lineage`/`minor_lineage` require `curation.lineage_parser != "none"`. If the column is absent at runtime, a warning is emitted and all sequences pass through.
+```
+
 ## Subsampling
 
 **Rule**: `augur subsample`

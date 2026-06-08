@@ -421,6 +421,67 @@ class QcConfig(BaseModel):
     )  # minimum subsampled sequences required before phylogenetics
 
 
+class CladeFilterConfig(BaseModel):
+    """Keep/drop sequences by a metadata-column value, upstream of subsampling.
+
+    Disabled (pass-through) when ``column`` is empty string (the default).
+
+    ``include`` is applied first: when non-empty only rows whose column value
+    matches one of the listed targets are kept; the rest are dropped with
+    reason ``not_in_include``.  An empty ``include`` list keeps all rows.
+
+    ``exclude`` is applied second: any surviving rows whose column value
+    matches one of the listed targets are dropped with reason ``in_exclude``.
+
+    ``match`` controls how values are compared:
+
+    * ``"exact"`` — equality (e.g. ``clade_truncated == "B3"``).
+    * ``"prefix"`` — dot-boundary prefix match: target ``t`` matches value
+      ``v`` when ``v == t`` *or* ``v.startswith(t + ".")``.  This means
+      ``include: ["B3"]`` matches ``B3`` and ``B3.1`` but **not** ``B30``
+      or ``B3x``; ``include: ["ECSA-II"]`` matches ``ECSA-II.1`` but not
+      ``ECSA-IIb``.
+
+    Examples::
+
+        # Measles genotype B3 only
+        clade_filter:
+          column: clade_truncated
+          include: [B3]
+          match: exact
+
+        # Chikungunya ECSA-II clade and sub-clades
+        clade_filter:
+          column: clade
+          include: [ECSA-II]
+          match: prefix
+    """
+
+    model_config = ConfigDict(extra="forbid")
+    column: str = ""
+    include: list[str] = Field(default_factory=list)
+    exclude: list[str] = Field(default_factory=list)
+    match: Literal["exact", "prefix"] = "exact"
+
+    @field_validator("include", "exclude", mode="before")
+    @classmethod
+    def _clean_list(cls, v: list) -> list[str]:
+        """Strip whitespace, drop blanks, de-duplicate (preserve order)."""
+        seen: set[str] = set()
+        out: list[str] = []
+        for item in v:
+            s = str(item).strip()
+            if s and s not in seen:
+                seen.add(s)
+                out.append(s)
+        return out
+
+    @field_validator("column", mode="before")
+    @classmethod
+    def _strip_column(cls, v: str) -> str:
+        return str(v).strip()
+
+
 class LocalSequencesConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
     enabled: bool = False
@@ -480,6 +541,7 @@ class FlexpipeConfig(BaseModel):
     local: LocalConfig = Field(default_factory=LocalConfig)
     viralqc: ViralqcConfig = Field(default_factory=ViralqcConfig)
     qc: QcConfig = Field(default_factory=QcConfig)
+    clade_filter: CladeFilterConfig = Field(default_factory=CladeFilterConfig)
     local_sequences: LocalSequencesConfig = Field(default_factory=LocalSequencesConfig)
     paths: PathsConfig = Field(default_factory=PathsConfig)
 

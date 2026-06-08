@@ -70,7 +70,8 @@ _sub     = config.get("subsampling", {})
 _coords  = _resolve_section_paths(config.get("coordinates", {}), ["force_file"])
 _curation = _resolve_section_paths(config.get("curation", {}), ["date_formats"])
 _colours = config.get("colours", {})
-_qc      = config.get("qc", {})
+_qc           = config.get("qc", {})
+_clade_filter = config.get("clade_filter", {})
 _coordinate_columns = _coords.get("columns", "country division location").split()
 
 # Derive augur-filter exclusion clauses from qc.genome_quality (pass-list → fail-list)
@@ -340,6 +341,37 @@ rule curate_qc:
         """
 
 
+# ─── Clade filter ────────────────────────────────────────────────────────────
+
+rule clade_filter:
+    """Keep/drop sequences by a metadata-column value (upstream of subsampling).
+
+    Reads the ``clade_filter`` section from the build config.yaml.  When that
+    section is absent or ``clade_filter.column`` is empty, all sequences pass
+    through unchanged and a header-only log is written.  This rule always
+    runs (static DAG) so existing builds are unaffected.
+    """
+    input:
+        metadata  = rules.curate_qc.output.metadata,
+        sequences = rules.curate_qc.output.sequences
+    params:
+        cfg = _config
+    output:
+        metadata   = f"{_wd}/results/ingest/clade_filtered_metadata.tsv",
+        sequences  = f"{_wd}/results/ingest/clade_filtered_sequences.fasta",
+        filter_log = f"{_wd}/results/ingest/clade_filter_log.tsv"
+    shell:
+        """
+        flexpipe-filter-clade \
+            --config           {params.cfg:q} \
+            --metadata         {input.metadata:q} \
+            --sequences        {input.sequences:q} \
+            --output-metadata  {output.metadata:q} \
+            --output-sequences {output.sequences:q} \
+            --log              {output.filter_log:q}
+        """
+
+
 # ─── QC summary ──────────────────────────────────────────────────────────────
 
 rule qc_summary:
@@ -403,8 +435,8 @@ rule prepare:
     message:
         "Subsampling: focal (ITpS + Brazil) always kept; context by division/year"
     input:
-        sequences     = rules.curate_qc.output.sequences,
-        metadata      = rules.curate_qc.output.metadata,
+        sequences     = rules.clade_filter.output.sequences,
+        metadata      = rules.clade_filter.output.metadata,
         subsample_cfg = rules.resolve_subsample_config.output.resolved
     params:
         seed = _sub.get("random_seed", 42)

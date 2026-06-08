@@ -70,6 +70,7 @@ flexpipe-collapse-traits   = "flexpipe.cli:collapse_traits"
 flexpipe-normalize-dates   = "flexpipe.cli:normalize_dates"
 flexpipe-reference-mask    = "flexpipe.cli:reference_mask"
 flexpipe-qc-summary        = "flexpipe.cli:qc_summary"
+flexpipe-filter-clade      = "flexpipe.cli:filter_clade"
 flexpipe-validate-build    = "flexpipe.cli:validate_build"
 flexpipe-run               = "flexpipe.cli:run"
 

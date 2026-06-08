@@ -199,6 +199,38 @@ def _check_viralqc_aliases(config_raw: dict, errors: list[str], warnings: list[s
             )
 
 
+def _check_clade_filter(config_raw: dict, errors: list[str], warnings: list[str]) -> None:
+    """Warn about likely-misconfigured clade_filter sections."""
+    cf = config_raw.get("clade_filter", {}) or {}
+    if not cf:
+        return  # Section absent — pass-through by default; nothing to warn.
+
+    column = str(cf.get("column", "") or "").strip()
+    include = [str(v).strip() for v in cf.get("include", []) if str(v).strip()]
+    exclude = [str(v).strip() for v in cf.get("exclude", []) if str(v).strip()]
+
+    if column and not include and not exclude:
+        warnings.append(
+            "clade_filter.column is set but both include and exclude are empty; "
+            "the filter will pass through all sequences (nothing filtered)."
+        )
+        _warn(
+            "clade_filter.column set but include/exclude are both empty "
+            "— filter will keep all sequences"
+        )
+    elif not column and (include or exclude):
+        warnings.append(
+            "clade_filter.include/exclude are set but column is empty; "
+            "the filter is disabled and will pass through all sequences."
+        )
+        _warn("clade_filter.include/exclude set but column is empty — filter is disabled")
+    elif column and (include or exclude):
+        _ok(
+            f"clade_filter: column={column!r}, include={include}, "
+            f"exclude={exclude}, match={cf.get('match', 'exact')!r}"
+        )
+
+
 def _check_data_source_prerequisites(
     config_raw: dict, build_dir: Path, errors: list[str], warnings: list[str]
 ) -> None:
@@ -333,6 +365,7 @@ def validate_build(config_path: str | Path) -> int:
     _check_mask_sites_file(config_raw, build_dir, errors, warnings)
     _check_data_source_prerequisites(config_raw, build_dir, errors, warnings)
     _check_viralqc_aliases(config_raw, errors, warnings)
+    _check_clade_filter(config_raw, errors, warnings)
     _check_cache_coordinates_header(config_raw, build_dir, errors, warnings)
 
     _summary(errors, warnings)

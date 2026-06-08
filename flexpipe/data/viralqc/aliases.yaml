@@ -128,6 +128,20 @@ viruses:
     patterns:
       - '^influenza b virus.*$'
 
+  measles:
+    ictv_species: Morbillivirus hominis
+    aliases:
+      - measles
+      - MeV
+      - mev
+      - Measles virus
+      - Measles morbillivirus
+      - measles morbillivirus
+    patterns:
+      - '^measles(?: morbillivirus)?$'
+      - '^morbillivirus hominis$'
+      - '^mev$'
+
 segments:
   ha:
     aliases:

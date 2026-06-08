@@ -160,6 +160,53 @@ Clade_A	ORF1ab	100	T
 
 ---
 
+## Symptom: Empty or unexpectedly small tree after clade filter
+
+**Symptom**: The final `auspice/results.json` is missing or has far fewer sequences than expected.
+
+**Cause**: `clade_filter` dropped most or all sequences.
+
+**Diagnosis**:
+```bash
+# Check how many sequences the filter kept/dropped
+cat <workdir>/results/ingest/clade_filter_log.tsv | head -20
+wc -l <workdir>/results/ingest/clade_filter_log.tsv
+
+# Check what clade values exist in the curated metadata
+cut -f <clade_col_number> <workdir>/results/ingest/curated_metadata.tsv | sort | uniq -c | sort -rn | head
+```
+
+**Common causes and fixes**:
+
+1. **Wrong column name**: check the actual column names in the curated metadata (`head -1 <workdir>/results/ingest/final_metadata.tsv`). The correct column for top-level genotypes is usually `clade_truncated`, not `clade`.
+2. **Wrong match mode**: `match: exact` won't match sub-genotypes. If genotypes appear as `B3.1` instead of `B3`, either use `match: prefix` with `column: clade`, or keep `clade_levels: 1` in `curation:` (so `clade_truncated` is always the first token).
+3. **No B3 sequences in the date window**: expand `defaults.min_date` in `subsample.yaml`, check `qc.min_sequences` threshold.
+
+---
+
+## Symptom: clade_filter "column not present" warning — filtering not applied
+
+**Warning**: `clade_filter column 'clade_truncated' not present in metadata; passing through N rows`
+
+**Cause**: `clade_truncated` (or whichever column) was not produced during curation.
+
+**Common causes**:
+- ViralQC ran in `skip` or `precomputed` mode and the precomputed file has no `clade` column → `clade_truncated` is never derived.
+- `viralqc.expected_virus` is misconfigured and all sequences are flagged contamination grade D, getting empty clades.
+- `curation.lineage_parser: "none"` (default) — `genotype`/`major_lineage` columns don't exist unless a parser is configured.
+
+**Fix**: Verify the clade column exists in the curated metadata:
+```bash
+head -1 <workdir>/results/ingest/curated_metadata.tsv | tr '\t' '\n' | grep -n clade
+```
+
+If missing, check ViralQC output:
+```bash
+head -3 <workdir>/results/viralqc/outputs/results.tsv
+```
+
+---
+
 ## Symptom: Config validation fails with unknown keys
 
 **Error**: `pydantic.ValidationError: ... extra fields not permitted`
