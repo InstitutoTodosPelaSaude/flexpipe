@@ -64,6 +64,8 @@ _run_date_arg = ["--run-date", _run_date] if _run_date else []
 _local   = _resolve_section_paths(config.get("local_sequences", {}), ["metadata", "sequences"])
 _local_src = _resolve_section_paths(config.get("local", {}), ["metadata", "sequences"])
 _vqc     = config.get("viralqc", {})
+_viralqc_mode        = _vqc.get("mode", "run")
+_viralqc_precomputed = _vqc.get("precomputed", "")
 _sub     = config.get("subsampling", {})
 _coords  = _resolve_section_paths(config.get("coordinates", {}), ["force_file"])
 _curation = _resolve_section_paths(config.get("curation", {}), ["date_formats"])
@@ -200,42 +202,74 @@ rule merge_local_sequences:
 
 
 # ─── QC + curation ───────────────────────────────────────────────────────────
+#
+# viralqc.mode controls how the ViralQC results TSV is produced:
+#   run         (default) — invoke vqc via BLAST + Nextclade (full QC)
+#   precomputed — copy a user-supplied results TSV (viralqc.precomputed path)
+#   skip        — synthesize a TSV from sequence IDs; every sequence → quality A
+#
+# curate_qc is unchanged across all three modes: it always reads the same output file.
 
-# ViralQC runs on all sequences (Pathoplexus + local).
-# Uses BLAST + Nextclade internally → genomeQuality (A/B/C/D) + coverage + clade.
-# Pathoplexus clade is preserved when ViralQC does not assign one.
-rule viralqc:
-    input:
-        sequences = rules.merge_local_sequences.output.sequences
-    threads:
-        config.get("options", {}).get("threads", 4)
-    params:
-        datasets_dir = _vqc.get("datasets_dir", ""),
-        blast_db     = _vqc.get("blast_database", ""),
-        blast_meta   = _vqc.get("blast_database_metadata", ""),
-        command      = _viralqc_command(_vqc),
-        output_dir   = f"{_wd}/results/viralqc"
-    output:
-        tsv = f"{_wd}/results/viralqc/outputs/results.tsv"
-    shell:
-        """
-        mkdir -p {params.output_dir:q}
-        n=$(grep -c '^>' {input.sequences:q})
-        if [ "$n" -eq 0 ]; then
-            echo "ERROR: no sequences available for ViralQC in {input.sequences:q}" >&2
-            exit 1
-        fi
-        echo "Running ViralQC on $n sequences..."
-        {params.command:q} run \
-            --input                   {input.sequences:q} \
-            --output-dir              {params.output_dir:q} \
-            --output-file             results.tsv \
-            --datasets-dir            {params.datasets_dir:q} \
-            --blast-database          {params.blast_db:q} \
-            --blast-database-metadata {params.blast_meta:q} \
-            --cores                   {threads} \
-            -v
-        """
+if _viralqc_mode == "precomputed":
+    rule viralqc:
+        """Use a pre-run ViralQC results TSV without invoking vqc."""
+        input:
+            precomputed = _viralqc_precomputed
+        output:
+            tsv = f"{_wd}/results/viralqc/outputs/results.tsv"
+        shell:
+            """
+            mkdir -p $(dirname {output.tsv:q})
+            cp {input.precomputed:q} {output.tsv:q}
+            """
+
+elif _viralqc_mode == "skip":
+    rule viralqc:
+        """Synthesize a ViralQC results TSV (all grade-A, no vqc) for rapid / local analysis."""
+        input:
+            sequences = rules.merge_local_sequences.output.sequences
+        output:
+            tsv = f"{_wd}/results/viralqc/outputs/results.tsv"
+        run:
+            from flexpipe.ingest.synthesize_viralqc import write_synthetic_viralqc_tsv
+            write_synthetic_viralqc_tsv(str(input.sequences), str(output.tsv))
+
+else:
+    # "run" (default) — invoke ViralQC (BLAST + Nextclade).
+    # genomeQuality (A/B/C/D) + coverage + clade; Pathoplexus clade preserved when vqc
+    # does not assign one.
+    rule viralqc:
+        input:
+            sequences = rules.merge_local_sequences.output.sequences
+        threads:
+            config.get("options", {}).get("threads", 4)
+        params:
+            datasets_dir = _vqc.get("datasets_dir", ""),
+            blast_db     = _vqc.get("blast_database", ""),
+            blast_meta   = _vqc.get("blast_database_metadata", ""),
+            command      = _viralqc_command(_vqc),
+            output_dir   = f"{_wd}/results/viralqc"
+        output:
+            tsv = f"{_wd}/results/viralqc/outputs/results.tsv"
+        shell:
+            """
+            mkdir -p {params.output_dir:q}
+            n=$(grep -c '^>' {input.sequences:q})
+            if [ "$n" -eq 0 ]; then
+                echo "ERROR: no sequences available for ViralQC in {input.sequences:q}" >&2
+                exit 1
+            fi
+            echo "Running ViralQC on $n sequences..."
+            {params.command:q} run \
+                --input                   {input.sequences:q} \
+                --output-dir              {params.output_dir:q} \
+                --output-file             results.tsv \
+                --datasets-dir            {params.datasets_dir:q} \
+                --blast-database          {params.blast_db:q} \
+                --blast-database-metadata {params.blast_meta:q} \
+                --cores                   {threads} \
+                -v
+            """
 
 
 rule curate_qc:

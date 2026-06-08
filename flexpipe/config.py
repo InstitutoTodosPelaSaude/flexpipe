@@ -148,7 +148,9 @@ def resolve_config_paths(raw: dict, config_path: str | Path) -> dict:
     _resolve_section_paths(
         out, "curation", ["host_rules", "date_formats"], build_dir=build_dir, must_exist=True
     )
-    _resolve_section_paths(out, "viralqc", ["aliases_file"], build_dir=build_dir, must_exist=True)
+    _resolve_section_paths(
+        out, "viralqc", ["aliases_file", "precomputed"], build_dir=build_dir, must_exist=True
+    )
 
     hue_tables = out.get("colours", {}).get("hue_tables")
     if isinstance(hue_tables, dict):
@@ -405,6 +407,8 @@ class ViralqcConfig(BaseModel):
     expected_segment: str = ""  # single expected segment (e.g. "L", "S"); flags wrong-segment reads
     runner: Literal["conda", "mamba", "micromamba", "direct"] = "conda"
     executable: str = "vqc"
+    mode: Literal["run", "precomputed", "skip"] = "run"
+    precomputed: str = ""  # path to a pre-run ViralQC results.tsv (mode=precomputed only)
 
 
 class QcConfig(BaseModel):
@@ -516,6 +520,16 @@ class FlexpipeConfig(BaseModel):
                     "local.sequences is required when data_source='local'.\n"
                     "Provide the path to a FASTA sequences file."
                 )
+        return self
+
+    @model_validator(mode="after")
+    def check_viralqc_precomputed(self) -> FlexpipeConfig:
+        """Require non-empty viralqc.precomputed when viralqc.mode='precomputed'."""
+        if self.viralqc.mode == "precomputed" and not self.viralqc.precomputed:
+            raise ValueError(
+                "viralqc.precomputed path is required when viralqc.mode='precomputed'.\n"
+                "Set viralqc.precomputed to the path of a pre-run ViralQC results.tsv."
+            )
         return self
 
     @model_validator(mode="after")

@@ -490,3 +490,55 @@ class TestLocalIngestWiring:
                 f"flexpipe-curate received the resolved config instead of the build config.\n"
                 f"Line: {line!r}"
             )
+
+
+# ---------------------------------------------------------------------------
+# ViralQC mode wiring — skip and precomputed paths
+# ---------------------------------------------------------------------------
+
+VIRALQC_PRECOMPUTED_TSV = (
+    REPO_ROOT / "builds" / "local-example" / "local_data" / "viralqc_precomputed.tsv"
+)
+
+
+def _local_config_with_viralqc_mode(tmp_path, mode: str, precomputed: str = "") -> "Path":
+    """Return a resolved local-example config with a specific viralqc.mode."""
+    resolved = _resolved_config_for_build(tmp_path, LOCAL_BUILD_CONFIG)
+    raw = yaml.safe_load(resolved.read_text())
+    raw.setdefault("viralqc", {})["mode"] = mode
+    if precomputed:
+        raw["viralqc"]["precomputed"] = precomputed
+    with open(resolved, "w", encoding="utf-8") as fh:
+        yaml.safe_dump(raw, fh, default_flow_style=False, sort_keys=False)
+    return resolved
+
+
+@pytest.mark.integration
+class TestViralqcModesWiring:
+    """Verify skip and precomputed ViralQC modes via dry-run DAG planning."""
+
+    def test_skip_mode_dry_run_succeeds(self, tmp_path):
+        """viralqc.mode=skip: DAG plans without scheduling vqc."""
+        resolved = _local_config_with_viralqc_mode(tmp_path, "skip")
+        output, rc = _dry_run(tmp_path, resolved, build_config=LOCAL_BUILD_CONFIG)
+        assert rc == 0, f"skip mode dry-run failed:\n{output}"
+        assert "viralqc" in output
+
+    def test_skip_mode_does_not_invoke_vqc_binary(self, tmp_path):
+        """viralqc.mode=skip: the vqc binary must not appear in the planned commands."""
+        resolved = _local_config_with_viralqc_mode(tmp_path, "skip")
+        output, rc = _dry_run(tmp_path, resolved, build_config=LOCAL_BUILD_CONFIG)
+        assert rc == 0, f"skip mode dry-run failed:\n{output}"
+        assert "vqc run" not in output
+        assert "--datasets-dir" not in output
+
+    def test_precomputed_mode_dry_run_succeeds(self, tmp_path):
+        """viralqc.mode=precomputed: DAG plans with a cp rule, no vqc invocation."""
+        resolved = _local_config_with_viralqc_mode(
+            tmp_path, "precomputed", str(VIRALQC_PRECOMPUTED_TSV)
+        )
+        output, rc = _dry_run(tmp_path, resolved, build_config=LOCAL_BUILD_CONFIG)
+        assert rc == 0, f"precomputed mode dry-run failed:\n{output}"
+        assert "viralqc" in output
+        assert "vqc run" not in output
+        assert "--datasets-dir" not in output

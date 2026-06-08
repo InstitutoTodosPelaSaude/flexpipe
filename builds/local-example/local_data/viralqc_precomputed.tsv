@@ -1,0 +1,4 @@
+seqName	genomeQuality	coverage	qc.overallStatus
+LOCAL001	A	0.95	good
+LOCAL002	A	0.98	good
+LOCAL003	A	0.92	good
