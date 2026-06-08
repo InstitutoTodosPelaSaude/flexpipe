@@ -1,12 +1,16 @@
 """Unit tests for optional lineage decomposition."""
 
 import pandas as pd
+import pytest
 
 from flexpipe.curate.lineage_parser import (
     apply_lineage_parser,
+    available_parsers,
     normalize_serotype,
     parse_dengue_lineage,
     parse_generic_dot_lineage,
+    parse_lineage,
+    register_parser,
 )
 
 
@@ -112,3 +116,47 @@ def test_apply_lineage_parser_parsed_serotype_wins_on_conflict():
     # Parsed clade serotype (3) wins over the pre-existing column value (1)
     assert out["serotype"].tolist() == ["3"]
     assert out["genotype"].tolist() == ["3III"]
+
+
+# ── Registry tests ────────────────────────────────────────────────────────────
+
+
+def test_available_parsers_contains_expected_built_ins():
+    known = available_parsers()
+    assert "none" in known
+    assert "dengue" in known
+    assert "pango" in known
+    assert "generic_dot" in known
+
+
+def test_parse_lineage_unknown_parser_raises_valueerror():
+    with pytest.raises(ValueError, match="not_a_parser"):
+        parse_lineage("BA.5.2.1", "not_a_parser")
+
+
+def test_parse_lineage_unknown_parser_lists_available_in_message():
+    with pytest.raises(ValueError, match="dengue"):
+        parse_lineage("BA.5.2.1", "unknown_xyz")
+
+
+def test_apply_lineage_parser_unknown_parser_raises_valueerror():
+    df = pd.DataFrame({"clade": ["BA.5.2.1"]})
+    with pytest.raises(ValueError, match="not_registered"):
+        apply_lineage_parser(df, parser="not_registered", columns={})
+
+
+def test_register_parser_custom_key():
+    """A custom registered parser is callable via parse_lineage and available_parsers."""
+
+    @register_parser("test_custom_xyz")
+    def _parse_custom(clade):
+        return {"genotype": str(clade).upper()}
+
+    assert "test_custom_xyz" in available_parsers()
+    result = parse_lineage("abc", "test_custom_xyz")
+    assert result == {"genotype": "ABC"}
+
+    # Cleanup — remove the test parser so it does not pollute other tests
+    from flexpipe.curate.lineage_parser import _PARSERS
+
+    _PARSERS.pop("test_custom_xyz", None)

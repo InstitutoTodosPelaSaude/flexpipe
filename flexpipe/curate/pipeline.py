@@ -24,7 +24,8 @@ from flexpipe.curate.columns import apply_harmonization, drop_columns
 from flexpipe.curate.hosts import build_rules, normalize_host
 from flexpipe.curate.lineage_parser import apply_lineage_parser
 from flexpipe.curate.regions import (
-    _parse_brazil_division,
+    _DIVISION_PARSERS,
+    available_division_parsers,
     build_brazil_canonical_map,
     build_brazil_maps,
     build_region_map,
@@ -106,21 +107,26 @@ def run_curate(
     df = drop_columns(df)
 
     # ── normalise compound division strings (conditional on division_parser) ──
-    if region_source == "division" and "division" in df.columns and division_parser == "brazil":
-        parsed = df["division"].apply(
-            lambda d: _parse_brazil_division(
-                d,
-                abbrev=brazil_abbrev,
-                canonical=brazil_canonical,
+    if region_source == "division" and "division" in df.columns:
+        _division_parser_fn = _DIVISION_PARSERS.get(division_parser)
+        if _division_parser_fn is None:
+            logger.warning(
+                "division_parser %r is not registered; skipping division parsing. "
+                "Available parsers: %s",
+                division_parser,
+                available_division_parsers(),
             )
-        )
-        df["division"] = parsed.apply(lambda x: x[0])
-        # Enrich location from the city part of compound division strings
-        if "location" in df.columns:
-            city_from_div = parsed.apply(lambda x: x[1])
-            empty_loc = df["location"].str.strip() == ""
-            has_city = city_from_div.str.strip() != ""
-            df.loc[empty_loc & has_city, "location"] = city_from_div[empty_loc & has_city]
+        elif division_parser != "none":
+            parsed = df["division"].apply(
+                lambda d: _division_parser_fn(d, abbrev=brazil_abbrev, canonical=brazil_canonical)
+            )
+            df["division"] = parsed.apply(lambda x: x[0])
+            # Enrich location from the city part of compound division strings
+            if "location" in df.columns:
+                city_from_div = parsed.apply(lambda x: x[1])
+                empty_loc = df["location"].str.strip() == ""
+                has_city = city_from_div.str.strip() != ""
+                df.loc[empty_loc & has_city, "location"] = city_from_div[empty_loc & has_city]
 
     # ── region ────────────────────────────────────────────────────────────────
     if region_source == "division" and "division" in df.columns:
@@ -129,7 +135,7 @@ def run_curate(
         )
         missing = df[df["region"] == ""]["division"].unique()
         if len(missing):
-            logger.warning("No Brazil region mapping for divisions: %s", list(missing))
+            logger.warning("No region mapping for divisions: %s", list(missing))
     elif "country" in df.columns:
         df["region"] = df["country"].apply(
             lambda c: lookup_region_country(c, region_map=region_map)

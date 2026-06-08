@@ -2,19 +2,56 @@
 
 The raw Nextclade/ViralQC lineage remains in ``clade``.  Parsers add derived,
 prefix-safe columns that can be used for filtering, coloring, and traits.
+
+New parsers can be registered without editing this module::
+
+    from flexpipe.curate.lineage_parser import register_parser
+
+    @register_parser("my_pathogen")
+    def parse_my_lineage(clade: object) -> dict[str, str]:
+        ...
+        return {"serotype": ..., "genotype": ..., ...}
+
+The registered name is then valid as the ``curation.lineage_parser`` config key.
 """
 
 from __future__ import annotations
 
 import logging
 import re
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 
 import pandas as pd
 
 logger = logging.getLogger(__name__)
 
 LINEAGE_KEYS = ("serotype", "genotype", "major_lineage", "minor_lineage")
+
+# ── Parser registry ────────────────────────────────────────────────────────────
+_PARSERS: dict[str, Callable[[object], dict[str, str]]] = {}
+
+
+def register_parser(name: str) -> Callable:
+    """Decorator that registers a lineage parser under *name*.
+
+    The decorated function must accept a clade string (or ``None``/empty) and
+    return a ``dict`` with a subset of :data:`LINEAGE_KEYS`.  Missing keys are
+    treated as empty strings by :func:`apply_lineage_parser`.
+    """
+
+    def deco(fn: Callable) -> Callable:
+        _PARSERS[name] = fn
+        return fn
+
+    return deco
+
+
+def available_parsers() -> list[str]:
+    """Return the sorted list of registered parser names."""
+    return sorted(_PARSERS)
+
+
+# ── DENV regexes ──────────────────────────────────────────────────────────────
 
 _DENV_RE = re.compile(
     r"^(?P<serotype>[1-4])"
@@ -33,6 +70,7 @@ def normalize_serotype(value: object) -> str:
     return match.group("serotype") if match else text
 
 
+@register_parser("dengue")
 def parse_dengue_lineage(clade: object) -> dict[str, str]:
     """Parse DENV lineage strings into prefix-safe hierarchy levels.
 
@@ -62,6 +100,8 @@ def parse_dengue_lineage(clade: object) -> dict[str, str]:
     }
 
 
+@register_parser("pango")
+@register_parser("generic_dot")
 def parse_generic_dot_lineage(clade: object) -> dict[str, str]:
     """Parse dot-separated names into broad, prefix-preserving levels."""
     text = str(clade or "").strip()
@@ -82,15 +122,24 @@ def parse_generic_dot_lineage(clade: object) -> dict[str, str]:
     }
 
 
+@register_parser("none")
+def _parse_none_lineage(clade: object) -> dict[str, str]:  # noqa: ARG001
+    """No-op parser — returns an empty dict (no derived lineage columns)."""
+    return {}
+
+
 def parse_lineage(clade: object, parser: str) -> dict[str, str]:
-    """Parse *clade* using a named parser."""
-    if parser == "none":
-        return {}
-    if parser == "dengue":
-        return parse_dengue_lineage(clade)
-    if parser in {"pango", "generic_dot"}:
-        return parse_generic_dot_lineage(clade)
-    raise ValueError(f"Unsupported lineage parser: {parser}")
+    """Parse *clade* using a named parser.
+
+    Raises:
+        ValueError: If *parser* is not registered.  The message lists
+            all :func:`available_parsers`.
+    """
+    if parser not in _PARSERS:
+        raise ValueError(
+            f"Unsupported lineage parser: {parser!r}. " f"Available parsers: {available_parsers()}"
+        )
+    return _PARSERS[parser](clade)
 
 
 def apply_lineage_parser(
@@ -108,6 +157,10 @@ def apply_lineage_parser(
     """
     if parser == "none":
         return df
+    if parser not in _PARSERS:
+        raise ValueError(
+            f"Unsupported lineage parser: {parser!r}. " f"Available parsers: {available_parsers()}"
+        )
     if clade_column not in df.columns:
         logger.warning(
             "Lineage parser %s requested but '%s' column is missing", parser, clade_column

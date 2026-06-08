@@ -321,8 +321,20 @@ class CurationConfig(BaseModel):
     clade_separator: str = "."
     host_rules: str | None = None
     date_formats: str | None = None
-    lineage_parser: Literal["none", "dengue", "pango", "generic_dot"] = "none"
+    lineage_parser: str = "none"
     lineage_columns: LineageColumnsConfig = Field(default_factory=LineageColumnsConfig)
+
+    @field_validator("lineage_parser")
+    @classmethod
+    def validate_lineage_parser(cls, v: str) -> str:
+        from flexpipe.curate.lineage_parser import available_parsers
+
+        known = available_parsers()
+        if v not in known:
+            raise ValueError(
+                f"lineage_parser {v!r} is not registered. " f"Available parsers: {known}"
+            )
+        return v
 
 
 class RegionsConfig(BaseModel):
@@ -333,6 +345,18 @@ class RegionsConfig(BaseModel):
     division_map: str | None = None
     division_abbreviations: str | None = None
     division_parser: str = "brazil"
+
+    @field_validator("division_parser")
+    @classmethod
+    def validate_division_parser(cls, v: str) -> str:
+        from flexpipe.curate.regions import available_division_parsers
+
+        known = available_division_parsers()
+        if v not in known:
+            raise ValueError(
+                f"division_parser {v!r} is not registered. " f"Available parsers: {known}"
+            )
+        return v
 
 
 class PathoplexusConfig(BaseModel):

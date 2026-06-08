@@ -10,6 +10,17 @@ Phase 3: REGION_MAP, BRAZIL_REGION_MAP, and _BRAZIL_ABBREV are loaded from
 TSV data files under ``flexpipe/data/regions/``.  A new pathogen/geography
 can supply its own mapping via the ``regions.*`` config keys without editing
 Python.
+
+Division parsers can be registered without editing this module::
+
+    from flexpipe.curate.regions import register_division_parser
+
+    @register_division_parser("my_country")
+    def parse_my_country_division(division: str, **kwargs) -> tuple[str, str]:
+        # Return (canonical_division, city) tuple
+        ...
+
+The registered name is then valid as the ``regions.division_parser`` config key.
 """
 
 from __future__ import annotations
@@ -17,11 +28,36 @@ from __future__ import annotations
 import logging
 import re
 import unicodedata
+from collections.abc import Callable
 from pathlib import Path
 
 from flexpipe.data import load_data_table
 
 logger = logging.getLogger(__name__)
+
+# ── Division parser registry ───────────────────────────────────────────────────
+_DIVISION_PARSERS: dict[str, Callable[..., tuple[str, str]]] = {}
+
+
+def register_division_parser(name: str) -> Callable:
+    """Decorator that registers a division parser under *name*.
+
+    The decorated function receives ``(division: str, **kwargs)`` and must
+    return a ``(canonical_division, city)`` tuple.  Extra keyword arguments
+    (e.g. ``abbrev``, ``canonical``) are passed through from the orchestrator
+    and may be ignored by parsers that do not need them.
+    """
+
+    def deco(fn: Callable) -> Callable:
+        _DIVISION_PARSERS[name] = fn
+        return fn
+
+    return deco
+
+
+def available_division_parsers() -> list[str]:
+    """Return the sorted list of registered division parser names."""
+    return sorted(_DIVISION_PARSERS)
 
 
 # ── Public factory functions (accept optional override paths) ─────────────────
@@ -154,10 +190,18 @@ def lookup_brazil_region(
     return nm.get(_normalize(d), "")
 
 
+@register_division_parser("none")
+def _parse_none_division(division: str, **kwargs) -> tuple[str, str]:  # noqa: ARG001
+    """Identity parser — returns the division unchanged with no city extracted."""
+    return division, ""
+
+
+@register_division_parser("brazil")
 def _parse_brazil_division(
     division_str: str,
     abbrev: dict | None = None,
     canonical: dict | None = None,
+    **kwargs,
 ):
     """Parse a compound Pathoplexus division string into (canonical_state, city).
 
