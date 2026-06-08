@@ -1,0 +1,3 @@
+# inspect outputs
+
+(stub)
