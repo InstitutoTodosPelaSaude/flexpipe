@@ -137,6 +137,88 @@ qc:
 
 Sequences with grades C or D are excluded.
 
+## Builds Without a ViralQC/Nextclade Dataset
+
+Some viruses are absent from the ViralQC BLAST reference set or have no
+Nextclade dataset. The canonical example is **Mayaro virus**: the BLAST set
+(`viralQC/datasets/blast.tsv`) covers many sibling alphaviruses (Chikungunya,
+Una, Madariaga, VEEV, Ross River) but not Mayaro, and no Nextclade dataset
+exists for it.
+
+### How to detect a missing dataset
+
+1. Check the BLAST reference set:
+   ```bash
+   grep -i "mayaro" viralQC/datasets/blast.tsv   # empty → absent
+   grep -i "chikungunya" viralQC/datasets/blast.tsv  # present → covered
+   ```
+2. Check the Nextclade datasets directory:
+   ```bash
+   ls viralQC/datasets/ | grep -i mayaro   # empty → no dataset
+   ```
+3. If both checks return empty, use `viralqc.mode: skip`.
+
+### The `skip` recipe for no-dataset viruses
+
+```yaml
+viralqc:
+  mode: "skip"        # synthesize grade-A results; no BLAST/Nextclade
+  expected_virus: ""  # no contamination filter (no reference to compare against)
+  expected_segment: ""
+```
+
+When `genome_size` is set (from `ncbi.genome_size` or `pathoplexus.genome_size`),
+`coverage` is computed as `min(seq_len / genome_size, 1.0)`. This means
+`qc.min_coverage` acts as a real **sequence-length filter** even in skip mode:
+
+```yaml
+ncbi:
+  genome_size: 11411     # bp — enables length-based coverage
+qc:
+  min_coverage: 0.70     # drops sequences shorter than ~8 kb (70% of 11,411)
+```
+
+Without `genome_size`, all sequences get `coverage = 1.0` and no length
+filtering is applied.
+
+### Required config changes for skip mode
+
+Three sections must be adjusted to avoid silent failures when there is no clade
+column. `flexpipe-validate-build` will **error** on the first issue and warn on
+the others:
+
+| Section | What to change | Why |
+|---------|---------------|-----|
+| `qc.required_columns` | **Remove `clade`** | skip mode produces no clade; `augur filter --exclude-where clade=` drops ALL sequences |
+| `traits.columns` | Remove `clade` | skip mode produces no clade; augur traits infers an empty column |
+| `clade_filter` | Don't filter on `clade`/`clade_truncated` | no clade column → filter is always a no-op |
+
+Example clean skip-mode config:
+```yaml
+qc:
+  required_columns:
+    - strain
+    - date
+    - country          # never 'clade' in skip mode
+
+traits:
+  columns: "continent country"   # never 'clade' in skip mode
+```
+
+### Limitations
+
+- **No contamination detection**: skip mode accepts all sequences as grade A;
+  cross-organism contamination is not flagged. NCBI taxid-scoped queries and
+  length filtering are the only guards.
+- **No clade/genotype coloring**: the `clade` and `clade_truncated` metadata
+  columns remain empty. Remove clade from `colours.clade` and `auspice_config`
+  colorings, or they will display empty values.
+- **Production use**: switch to `viralqc.mode: run` once a Nextclade dataset
+  becomes available. Check <https://github.com/nextstrain/nextclade_data> for
+  new pathogen additions.
+
+---
+
 ## Troubleshooting
 
 ### ViralQC Runs but Reports Wrong Virus

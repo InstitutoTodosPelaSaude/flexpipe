@@ -1,0 +1,19 @@
+# Subsampling for Mayaro virus global build
+#
+# MAYV is geographically restricted to tropical South and Central America and
+# is sparsely sampled — even-sampling at country/year is appropriate.
+# Sequences per group is intentionally generous (10) to capture the full
+# available diversity given limited coverage.
+#
+# Adjust min_date and sequences_per_group based on corpus size after live runs.
+
+defaults:
+  exclude: builds/mayv-global/ignore.txt
+  min_date: 1954           # First MAYV isolation; include historical strains
+
+samples:
+  global:
+    group_by:
+      - country
+      - year
+    sequences_per_group: 10

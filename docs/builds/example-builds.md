@@ -21,6 +21,7 @@ flexpipe includes 15 example builds covering a range of viral pathogens and data
 | `flu-h3n2-ha-brazil` | Influenza A H3N2 | NCBI | Brazil | Yes (HA) | Flu A H3N2 (HA only) |
 | `flu-b-ha-brazil` | Influenza B | NCBI | Brazil | Yes (HA) | Flu B (HA only) |
 | `measles-b3-global` | Measles (MeV) | Pathoplexus | Global | No | Genotype B3 only (`clade_filter` reference build) |
+| `mayv-global` | Mayaro Virus | NCBI | Global | No | First no-dataset build (`viralqc.mode: skip`) |
 | `local-example` | (User-defined) | Local | Brazil | No | Bring-your-own-data template |
 
 ## Template Selection Guide

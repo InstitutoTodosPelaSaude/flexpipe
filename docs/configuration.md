@@ -389,6 +389,12 @@ viralqc:
 | `mode` | Literal | "run" | `run`, `precomputed`, `skip` |
 | `precomputed` | string | "" | Path to precomputed results (required if `mode=precomputed`) |
 
+**`skip` mode and length-based coverage**: When `viralqc.mode: skip`, coverage is computed as
+`min(seq_len / genome_size, 1.0)` when `genome_size > 0` (from `ncbi.genome_size` or
+`pathoplexus.genome_size`). This makes `qc.min_coverage` a real length gate. Without
+`genome_size`, all sequences get `coverage = 1.0` (no length filtering).
+See [Builds Without a Dataset](viralqc-integration.md#builds-without-a-viralqcnextclade-dataset).
+
 ## Path Resolution
 
 Configuration keys with file paths are resolved relative to:

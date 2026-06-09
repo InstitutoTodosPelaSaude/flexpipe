@@ -160,6 +160,44 @@ Clade_A	ORF1ab	100	T
 
 ---
 
+## Symptom: Build is empty — all sequences dropped, tree has 0 sequences
+
+**Error**: `augur filter` exits with `ERROR No sequences remain after filtering` or
+subsample fails with fewer than `qc.min_sequences`.
+
+**Most common cause for skip-mode builds**: `clade` is in `qc.required_columns`
+while `viralqc.mode: skip` produces no clade column.  `augur filter
+--exclude-where clade=` silently drops every sequence with an empty clade field
+(which is all of them).
+
+**Diagnosis**:
+```bash
+# Does the validator catch it?
+flexpipe-validate-build builds/<name>/config.yaml
+# → FAIL with: "viralqc.mode='skip' produces no 'clade' column, but 'clade' is
+#   in qc.required_columns — augur filter will drop ALL sequences."
+
+# Confirm clade is empty in curated metadata
+head -1 <workdir>/results/ingest/curated_metadata.tsv | tr '\t' '\n' | grep -n clade
+cut -f<clade_col> <workdir>/results/ingest/curated_metadata.tsv | sort | uniq -c | head
+```
+
+**Fix**: Remove `clade` from `qc.required_columns`:
+```yaml
+# ✗ Wrong for skip mode (drops everything)
+qc:
+  required_columns: [strain, date, country, clade]
+
+# ✓ Correct for skip mode
+qc:
+  required_columns: [strain, date, country]
+```
+
+Also check `traits.columns` (warning) and `clade_filter.column` (warning).
+See [ViralQC Integration — Builds Without a Dataset](viralqc-integration.md).
+
+---
+
 ## Symptom: Empty or unexpectedly small tree after clade filter
 
 **Symptom**: The final `auspice/results.json` is missing or has far fewer sequences than expected.
