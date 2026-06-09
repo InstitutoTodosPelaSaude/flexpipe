@@ -12,6 +12,7 @@ from flexpipe.validate import (
     _check_clades_tsv,
     _check_data_source_prerequisites,
     _check_mask_sites_file,
+    _check_no_clade_source,
     _check_reference_gb,
     _check_subsample_yaml,
     _check_viralqc_aliases,
@@ -333,6 +334,148 @@ class TestCheckViralqcAliases:
         errors, warnings = [], []
         _check_viralqc_aliases(cfg, errors, warnings)
         assert errors == []
+
+
+# ── _check_no_clade_source ────────────────────────────────────────────────────
+
+
+class TestCheckNoCladSource:
+    """_check_no_clade_source only fires when viralqc.mode == 'skip'."""
+
+    def _skip_cfg(self, **overrides) -> dict:
+        cfg: dict = {"viralqc": {"mode": "skip"}}
+        cfg.update(overrides)
+        return cfg
+
+    # ── mode guard ────────────────────────────────────────────────────────────
+
+    def test_run_mode_no_trigger(self):
+        """Default run mode never triggers the check."""
+        cfg = {
+            "viralqc": {"mode": "run"},
+            "qc": {"required_columns": ["strain", "date", "clade"]},
+        }
+        errors, warnings = [], []
+        _check_no_clade_source(cfg, errors, warnings)
+        assert errors == []
+        assert warnings == []
+
+    def test_precomputed_mode_no_trigger(self):
+        """precomputed mode never triggers the check (clade IS populated from file)."""
+        cfg = {
+            "viralqc": {"mode": "precomputed"},
+            "qc": {"required_columns": ["strain", "date", "clade"]},
+        }
+        errors, warnings = [], []
+        _check_no_clade_source(cfg, errors, warnings)
+        assert errors == []
+        assert warnings == []
+
+    def test_missing_viralqc_section_defaults_to_run(self):
+        """Absent viralqc section defaults to run mode → no trigger."""
+        cfg: dict = {}
+        errors, warnings = [], []
+        _check_no_clade_source(cfg, errors, warnings)
+        assert errors == []
+        assert warnings == []
+
+    # ── required_columns: clade → error ──────────────────────────────────────
+
+    def test_clade_in_required_columns_is_error(self):
+        cfg = self._skip_cfg(qc={"required_columns": ["strain", "date", "clade"]})
+        errors, warnings = [], []
+        _check_no_clade_source(cfg, errors, warnings)
+        assert any("required_columns" in e and "clade" in e for e in errors)
+
+    def test_no_clade_in_required_columns_clean(self):
+        cfg = self._skip_cfg(qc={"required_columns": ["strain", "date", "country"]})
+        errors, warnings = [], []
+        _check_no_clade_source(cfg, errors, warnings)
+        assert errors == []
+
+    def test_empty_required_columns_clean(self):
+        cfg = self._skip_cfg(qc={"required_columns": []})
+        errors, warnings = [], []
+        _check_no_clade_source(cfg, errors, warnings)
+        assert errors == []
+
+    def test_absent_qc_section_clean(self):
+        cfg = self._skip_cfg()
+        errors, warnings = [], []
+        _check_no_clade_source(cfg, errors, warnings)
+        assert errors == []
+
+    # ── traits.columns: clade → warning ──────────────────────────────────────
+
+    def test_clade_in_traits_columns_string_is_warning(self):
+        cfg = self._skip_cfg(traits={"columns": "continent country clade"})
+        errors, warnings = [], []
+        _check_no_clade_source(cfg, errors, warnings)
+        assert errors == []
+        assert any("clade" in w and "traits" in w for w in warnings)
+
+    def test_clade_in_traits_columns_list_is_warning(self):
+        cfg = self._skip_cfg(traits={"columns": ["continent", "country", "clade"]})
+        errors, warnings = [], []
+        _check_no_clade_source(cfg, errors, warnings)
+        assert errors == []
+        assert any("clade" in w and "traits" in w for w in warnings)
+
+    def test_no_clade_in_traits_columns_clean(self):
+        cfg = self._skip_cfg(traits={"columns": "continent country"})
+        errors, warnings = [], []
+        _check_no_clade_source(cfg, errors, warnings)
+        assert errors == []
+        assert not any("traits" in w for w in warnings)
+
+    # ── clade_filter on clade/clade_truncated → warning ───────────────────────
+
+    def test_clade_filter_on_clade_with_include_is_warning(self):
+        cfg = self._skip_cfg(clade_filter={"column": "clade", "include": ["B3"], "match": "exact"})
+        errors, warnings = [], []
+        _check_no_clade_source(cfg, errors, warnings)
+        assert errors == []
+        assert any("clade_filter" in w or "no-op" in w for w in warnings)
+
+    def test_clade_filter_on_clade_truncated_with_include_is_warning(self):
+        cfg = self._skip_cfg(
+            clade_filter={"column": "clade_truncated", "include": ["B3"], "match": "exact"}
+        )
+        errors, warnings = [], []
+        _check_no_clade_source(cfg, errors, warnings)
+        assert errors == []
+        assert any("clade_filter" in w or "no-op" in w for w in warnings)
+
+    def test_clade_filter_empty_include_and_exclude_no_warning(self):
+        """column set but no include/exclude → clade_filter is already a no-op; no extra warning."""
+        cfg = self._skip_cfg(clade_filter={"column": "clade", "include": [], "exclude": []})
+        errors, warnings = [], []
+        _check_no_clade_source(cfg, errors, warnings)
+        assert errors == []
+        # no clade_filter-specific warning (would be caught by _check_clade_filter instead)
+
+    def test_clade_filter_non_clade_column_no_warning(self):
+        """clade_filter on a non-clade column (e.g. country) is fine."""
+        cfg = self._skip_cfg(
+            clade_filter={"column": "country", "include": ["Brazil"], "match": "exact"}
+        )
+        errors, warnings = [], []
+        _check_no_clade_source(cfg, errors, warnings)
+        assert errors == []
+        assert not any("clade_filter" in w for w in warnings)
+
+    # ── skip mode, clean config → no errors, no warnings ─────────────────────
+
+    def test_skip_clean_config_no_issues(self):
+        """A properly configured skip build should produce no errors and no clade warnings."""
+        cfg = self._skip_cfg(
+            qc={"required_columns": ["strain", "date", "country"]},
+            traits={"columns": "continent country"},
+        )
+        errors, warnings = [], []
+        _check_no_clade_source(cfg, errors, warnings)
+        assert errors == []
+        assert not any("clade" in w for w in warnings)
 
 
 # ── validate_build (end-to-end) ───────────────────────────────────────────────

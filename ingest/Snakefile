@@ -66,6 +66,12 @@ _local_src = _resolve_section_paths(config.get("local", {}), ["metadata", "seque
 _vqc     = config.get("viralqc", {})
 _viralqc_mode        = _vqc.get("mode", "run")
 _viralqc_precomputed = _vqc.get("precomputed", "")
+# genome_size for length-based skip-mode coverage (0 → all sequences get coverage=1.0)
+_skip_genome_size = int(
+    config.get("ncbi", {}).get("genome_size")
+    or config.get("pathoplexus", {}).get("genome_size")
+    or 0
+)
 _sub     = config.get("subsampling", {})
 _coords  = _resolve_section_paths(config.get("coordinates", {}), ["force_file"])
 _curation = _resolve_section_paths(config.get("curation", {}), ["date_formats"])
@@ -226,14 +232,23 @@ if _viralqc_mode == "precomputed":
 
 elif _viralqc_mode == "skip":
     rule viralqc:
-        """Synthesize a ViralQC results TSV (all grade-A, no vqc) for rapid / local analysis."""
+        """Synthesize a ViralQC results TSV (all grade-A, no vqc) for rapid / local analysis.
+
+        When genome_size > 0 (taken from ncbi.genome_size or pathoplexus.genome_size),
+        coverage is computed as min(seq_len / genome_size, 1.0) so that qc.min_coverage
+        acts as a real sequence-length filter.  genome_size == 0 → coverage = 1.0 (default).
+        """
         input:
             sequences = rules.merge_local_sequences.output.sequences
+        params:
+            genome_size = _skip_genome_size
         output:
             tsv = f"{_wd}/results/viralqc/outputs/results.tsv"
         run:
             from flexpipe.ingest.synthesize_viralqc import write_synthetic_viralqc_tsv
-            write_synthetic_viralqc_tsv(str(input.sequences), str(output.tsv))
+            write_synthetic_viralqc_tsv(
+                str(input.sequences), str(output.tsv), genome_size=params.genome_size
+            )
 
 else:
     # "run" (default) — invoke ViralQC (BLAST + Nextclade).
