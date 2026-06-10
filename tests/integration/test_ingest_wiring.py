@@ -186,6 +186,22 @@ def _dry_run_with_run_date(tmp_path, resolved_config, run_date):
     return combined, result.returncode
 
 
+def _resolved_config_with_backbone(tmp_path: Path, backbone_strains_path: str) -> Path:
+    """Write a resolved config with subsampling.backbone_strains set."""
+    cfg = FlexpipeConfig(
+        data_source="pathoplexus",
+        pathoplexus={"organism": "yellow-fever"},
+        viralqc=ViralqcConfig(
+            datasets_dir=FAKE_DATASETS_DIR,
+            blast_database=FAKE_BLAST_DB,
+            blast_database_metadata=FAKE_BLAST_META,
+        ),
+    )
+    cfg.subsampling.backbone_strains = backbone_strains_path
+    p = tmp_path / "snakemake_resolved_backbone.yaml"
+    return write_snakemake_config_overrides(cfg, p, BUILD_CONFIG)
+
+
 def _resolved_config_for_build(tmp_path, build_config: Path):
     """Write a fake-ViralQC resolved config for any scaffold build."""
     raw = yaml.safe_load(build_config.read_text())
@@ -339,6 +355,23 @@ class TestIngestWiring:
         output, rc = _dry_run(tmp_path, resolved_config, cwd=outside)
         assert rc == 0, f"snakemake dry-run from outside repo failed:\n{output}"
         assert str(BUILD_CONFIG) in output
+
+    def test_backbone_strains_in_resolved_config_does_not_break_dry_run(self, tmp_path):
+        """A resolved config with subsampling.backbone_strains set must plan the DAG cleanly."""
+        # Write a fake backbone include-list path (doesn't need to exist for dry-run)
+        fake_backbone = str(tmp_path / "config" / "backbone_strains.txt")
+        resolved_config = _resolved_config_with_backbone(tmp_path, fake_backbone)
+
+        # Verify the field propagated into the resolved YAML before handing to Snakemake
+        loaded = yaml.safe_load(resolved_config.read_text())
+        assert loaded["subsampling"]["backbone_strains"] == fake_backbone
+
+        output, rc = _dry_run(tmp_path, resolved_config)
+        assert rc == 0, (
+            "Snakemake dry-run failed when backbone_strains is set in resolved config.\n"
+            f"Output:\n{output}"
+        )
+        assert "resolve_subsample_config" in output
 
 
 # ---------------------------------------------------------------------------
