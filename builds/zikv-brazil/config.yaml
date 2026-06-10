@@ -30,6 +30,7 @@ coordinates:
   columns: "country division location"
 
 colours:
+  host:     "source"
   clade:    "clade_truncated clade"
   geo:      "continent country division location"
   source:   "source"

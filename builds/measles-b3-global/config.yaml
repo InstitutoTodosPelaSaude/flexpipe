@@ -34,6 +34,7 @@ coordinates:
   columns: "country"
 
 colours:
+  host:     "source"
   geo:      "continent country region"
   clade:    "clade_truncated clade"
   source:   "source"

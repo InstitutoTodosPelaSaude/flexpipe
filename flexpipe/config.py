@@ -274,6 +274,7 @@ class ColoursConfig(BaseModel):
     geo: str = "region division location"
     source: str = "source"
     data_use: str = "data_use"
+    clade_root_level: str = ""
     hue_tables: ColoursHueTablesConfig = Field(default_factory=ColoursHueTablesConfig)
 
     @field_validator("clade", "geo", "source", "data_use")

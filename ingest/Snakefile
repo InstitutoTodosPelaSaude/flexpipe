@@ -76,6 +76,7 @@ _sub     = config.get("subsampling", {})
 _coords  = _resolve_section_paths(config.get("coordinates", {}), ["force_file"])
 _curation = _resolve_section_paths(config.get("curation", {}), ["date_formats"])
 _colours = config.get("colours", {})
+_clade_root_level = str(_colours.get("clade_root_level", "")).strip()
 _qc           = config.get("qc", {})
 _clade_filter = config.get("clade_filter", {})
 _coordinate_columns = _coords.get("columns", "country division location").split()
@@ -495,12 +496,19 @@ rule disambiguate_geo_metadata:
 
 rule generate_name2hue:
     input:
-        metadata = rules.disambiguate_geo_metadata.output.metadata
+        metadata         = rules.disambiguate_geo_metadata.output.metadata,
+        clade_filtered   = rules.clade_filter.output.metadata,
     output:
         name2hue = f"{_wd}/config/name2hue.tsv"
     params:
-        cfg = _config,
-        cache = _name2hue_cache
+        cfg        = _config,
+        cache      = _name2hue_cache,
+        root_args  = (
+            ["--root-level", _clade_root_level,
+             "--detect-root-from", rules.clade_filter.output.metadata]
+            if _clade_root_level == "auto" else
+            (["--root-level", _clade_root_level] if _clade_root_level else [])
+        )
     shell:
         """
         mkdir -p $(dirname {output.name2hue:q})
@@ -508,7 +516,8 @@ rule generate_name2hue:
             --metadata {input.metadata:q} \
             --config   {params.cfg:q} \
             --cache    {params.cache:q} \
-            --output   {output.name2hue:q}
+            --output   {output.name2hue:q} \
+            {params.root_args:q}
         """
 
 
@@ -544,14 +553,21 @@ rule colours:
     message:
         "Assigning colour scheme"
     input:
-        matrix = rules.disambiguate_geo_metadata.output.metadata,
-        scheme = rules.generate_name2hue.output.name2hue
+        matrix         = rules.disambiguate_geo_metadata.output.metadata,
+        scheme         = rules.generate_name2hue.output.name2hue,
+        clade_filtered = rules.clade_filter.output.metadata,
     params:
-        host     = _colours.get("host",     "host").split(),
-        clade    = _colours.get("clade",    "clade_truncated clade").split(),
-        geo      = _colours.get("geo",      "region country").split(),
-        source   = _colours.get("source",   "source").split(),
-        data_use = _colours.get("data_use", "data_use").split()
+        host          = _colours.get("host",     "host").split(),
+        clade         = _colours.get("clade",    "clade_truncated clade").split(),
+        geo           = _colours.get("geo",      "region country").split(),
+        source        = _colours.get("source",   "source").split(),
+        data_use      = _colours.get("data_use", "data_use").split(),
+        clade_root_args = (
+            ["--root-level", _clade_root_level,
+             "--detect-root-from", rules.clade_filter.output.metadata]
+            if _clade_root_level == "auto" else
+            (["--root-level", _clade_root_level] if _clade_root_level else [])
+        )
     output:
         colours1      = temp(f"{_wd}/config/col_hosts.tsv"),
         colours2      = temp(f"{_wd}/config/col_geo.tsv"),
@@ -579,7 +595,8 @@ rule colours:
             --input   {input.matrix:q} \
             --colours {input.scheme:q} \
             --levels  {params.clade:q} \
-            --output  {output.colours3:q}
+            --output  {output.colours3:q} \
+            {params.clade_root_args:q}
 
         flexpipe-colours \
             --input   {input.matrix:q} \

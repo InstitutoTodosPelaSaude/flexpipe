@@ -12,13 +12,13 @@ parameters:
   mask_3prime: 0
   mask_sites: ""
   mask_sites_file: "builds/denv2-brazil/masks/reference_terminal.bed"
-  ufboot: 0
-  model: "JC"
+  ufboot: 1000
+  model: "GTR+F+I+G4"
   root: "least-squares"
   coalescent: "skyline"
   date_inference: "marginal"
   divergence_units: "mutations"
-  clock_filter_iqd: 4
+  clock_filter_iqd: 3
   date_confidence: false
   traits_confidence: false
   ancestral_inference: "joint"
@@ -30,10 +30,12 @@ coordinates:
   columns: "country division location"
 
 colours:
-  clade:    "serotype genotype major_lineage minor_lineage clade"
-  geo:      "continent country division location"
-  source:   "source"
-  data_use: "data_use"
+  host:             "source"
+  clade:            "serotype genotype major_lineage minor_lineage clade"
+  clade_root_level: "auto"
+  geo:              "continent country division location"
+  source:           "source"
+  data_use:         "data_use"
 
 traits:
   columns: "continent country division location serotype genotype major_lineage minor_lineage clade"

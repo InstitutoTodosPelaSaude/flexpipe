@@ -1,24 +1,24 @@
 files:
-  keep:             "builds/denv3-brazil/keep.txt"
-  ignore:           "builds/denv3-brazil/ignore.txt"
-  cache:            "builds/denv3-brazil/cache_coordinates.tsv"
-  reference:        "builds/denv3-brazil/reference.gb"
-  clades:           "builds/denv3-brazil/clades.tsv"
-  auspice_config:   "builds/denv3-brazil/auspice_config.json"
-  subsample_config: "builds/denv3-brazil/subsample.yaml"
+  keep:             "builds/denv1-V-brazil/keep.txt"
+  ignore:           "builds/denv1-V-brazil/ignore.txt"
+  cache:            "builds/denv1-V-brazil/cache_coordinates.tsv"
+  reference:        "builds/denv1-V-brazil/reference.gb"
+  clades:           "builds/denv1-V-brazil/clades.tsv"
+  auspice_config:   "builds/denv1-V-brazil/auspice_config.json"
+  subsample_config: "builds/denv1-V-brazil/subsample.yaml"
 
 parameters:
   mask_5prime: 0
   mask_3prime: 0
   mask_sites: ""
-  mask_sites_file: "builds/denv3-brazil/masks/reference_terminal.bed"
-  ufboot: 0
-  model: "JC"
+  mask_sites_file: "builds/denv1-V-brazil/masks/reference_terminal.bed"
+  ufboot: 1000
+  model: "GTR+F+I+G4"
   root: "least-squares"
   coalescent: "skyline"
   date_inference: "marginal"
   divergence_units: "mutations"
-  clock_filter_iqd: 4
+  clock_filter_iqd: 3
   date_confidence: false
   traits_confidence: false
   ancestral_inference: "joint"
@@ -30,8 +30,9 @@ coordinates:
   columns: "country division location"
 
 colours:
-  host:     "source"
-  clade:    "serotype genotype major_lineage minor_lineage clade"
+  host:             "source"
+  clade:            "serotype genotype major_lineage minor_lineage clade"
+  clade_root_level: "auto"
   geo:      "continent country division location"
   source:   "source"
   data_use: "data_use"
@@ -49,8 +50,19 @@ curation:
   clade_separator: "."
   lineage_parser: "dengue"
 
+# Keep only genotype V sequences upstream of subsampling.
+# The `genotype` column is produced by curation.lineage_parser: dengue.
+clade_filter:
+  column: genotype
+  include: ["1V"]
+  match: exact
+
 region_source: "division"
-data_source: "pathoplexus"
+data_source: "local"
+
+local:
+  metadata:  "data/metadata.tsv"
+  sequences: "data/sequences.fasta"
 
 pathoplexus:
   organism: "dengue"
@@ -61,12 +73,13 @@ pathoplexus:
   min_date: "2010-01-01"
   strip_fasta_id_suffix: true
   query_params:
-    serotype: "DENV-3"
-    dataUseTerms: "OPEN"
+    serotype: "DENV-1"
+    # No dataUseTerms filter — fetches open + restricted data.
+    # Authentication is expected via the PPX_AUTH_TOKEN environment variable.
 
 ncbi:
-  taxid: 11069
-  genome_size: 10707
+  taxid: 11053
+  genome_size: 10735
   min_length: 0.7
   max_length: 1.1
   email: ""
@@ -75,7 +88,7 @@ ncbi:
 viralqc:
   conda_env: "viralQC"
   clade_column: "clade"
-  expected_virus: "Dengue virus type 3"
+  expected_virus: "Dengue virus type 1"
   expected_segment: ""
   datasets_dir: ""
   blast_database: ""

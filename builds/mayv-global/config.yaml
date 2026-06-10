@@ -33,6 +33,7 @@ coordinates:
   columns: "country"   # global build: geocode at country level only
 
 colours:
+  host:     "source"
   geo:      "continent country region"
   source:   "source"
   data_use: "data_use"
