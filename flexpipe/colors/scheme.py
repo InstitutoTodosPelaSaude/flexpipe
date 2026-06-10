@@ -184,6 +184,65 @@ def build_scheme(
     return results
 
 
+def find_polymorphic_root(levels: list[str], df: pd.DataFrame, min_distinct: int = 2) -> str:
+    """Return the first level in *levels* that has ≥ *min_distinct* distinct non-empty values.
+
+    Falls back to the first level if none qualify (degenerate dataset).
+    """
+    for col in levels:
+        if col not in df.columns:
+            continue
+        distinct = df[col].replace("", pd.NA).dropna().nunique()
+        if distinct >= min_distinct:
+            return col
+    return levels[0]
+
+
+def effective_levels(
+    levels: list[str],
+    root_level: str | None,
+    detect_from: str | None,
+) -> list[str]:
+    """Return the trimmed levels list starting from the effective root.
+
+    Args:
+        levels: Full ordered levels list from config.
+        root_level: Explicit root column name (``"auto"`` triggers detection).
+        detect_from: Path to the full corpus metadata TSV used for auto-detection.
+
+    Returns:
+        Trimmed list; prefix levels before the effective root are dropped.
+    """
+    if not root_level:
+        return levels
+
+    if root_level == "auto":
+        if not detect_from:
+            logger.warning(
+                "clade_root_level=auto but --detect-root-from not provided; using full levels"
+            )
+            return levels
+        detect_df = pd.read_csv(detect_from, sep="\t", dtype=str).fillna("")
+        root = find_polymorphic_root(levels, detect_df)
+    else:
+        if root_level not in levels:
+            logger.warning(
+                "clade_root_level=%r not in levels %s; using full levels", root_level, levels
+            )
+            return levels
+        root = root_level
+
+    idx = levels.index(root)
+    if idx > 0:
+        dropped = levels[:idx]
+        logger.info(
+            "clade_root_level: dropping monomorphic prefix %s; root = %r",
+            dropped,
+            root,
+        )
+    return levels[idx:]
+
+
 def main() -> None:
     """Entry point for ``flexpipe-colours``."""
     parser = argparse.ArgumentParser(
@@ -202,6 +261,19 @@ def main() -> None:
         help="Column names in hierarchical order (most → least specific)",
     )
     parser.add_argument("--output", required=True, help="Output colour scheme TSV")
+    parser.add_argument(
+        "--root-level",
+        default="",
+        help=(
+            "Trim monomorphic prefix levels. "
+            "'auto' detects from --detect-root-from; otherwise a specific column name."
+        ),
+    )
+    parser.add_argument(
+        "--detect-root-from",
+        default="",
+        help="Path to the full corpus metadata TSV for auto root detection (used with --root-level auto).",
+    )
     args = parser.parse_args()
 
     from flexpipe.logging_setup import configure_logging
@@ -209,10 +281,17 @@ def main() -> None:
     configure_logging()
 
     df = pd.read_csv(args.input, sep="\t", dtype=str).fillna("")
-    df = df[~df[args.levels[0]].isin([""])]
+
+    levels = effective_levels(
+        args.levels,
+        root_level=args.root_level or None,
+        detect_from=args.detect_root_from or None,
+    )
+
+    df = df[~df[levels[0]].isin([""])]
 
     colour_wheel = load_hue_table(args.colours)
-    results = build_scheme(df, args.levels, colour_wheel)
+    results = build_scheme(df, levels, colour_wheel)
 
     with open(args.output, "w") as fh:
         fh.write("field\tvalue\thex_color\n")

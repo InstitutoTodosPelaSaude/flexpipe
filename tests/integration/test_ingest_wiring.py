@@ -38,6 +38,7 @@ LOCAL_BUILD_CONFIG = REPO_ROOT / "builds" / "local-example" / "config.yaml"
 # Archetype-specific lists for targeted assertion tests (kept for correctness checks).
 DENV_BUILD_CONFIGS = [
     REPO_ROOT / "builds" / "denv1-brazil" / "config.yaml",
+    # denv1-V-brazil uses data_source=local; covered by all_build_configs() dry-run.
     REPO_ROOT / "builds" / "denv2-brazil" / "config.yaml",
     REPO_ROOT / "builds" / "denv3-brazil" / "config.yaml",
     REPO_ROOT / "builds" / "denv4-brazil" / "config.yaml",

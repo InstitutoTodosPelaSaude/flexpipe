@@ -1,0 +1,119 @@
+files:
+  keep:             "builds/mayv-global/keep.txt"
+  ignore:           "builds/mayv-global/ignore.txt"
+  cache:            "builds/mayv-global/cache_coordinates.tsv"
+  reference:        "builds/mayv-global/reference.gb"
+  clades:           "builds/mayv-global/clades.tsv"
+  auspice_config:   "builds/mayv-global/auspice_config.json"
+  subsample_config: "builds/mayv-global/subsample.yaml"
+
+parameters:
+  # Terminal masks derived from NC_003417.1 annotation via flexpipe-reference-mask.
+  # 5'UTR: 76 bp; 3' past last CDS: 266 bp.
+  # These are reference-specific — review before production use.
+  mask_5prime: 0      # Use mask_sites_file (BED) instead
+  mask_3prime: 0
+  mask_sites: ""
+  mask_sites_file: "builds/mayv-global/masks/reference_terminal.bed"
+  ufboot: 0           # first-pass: no UFBoot support (fast)
+  model: "JC"         # first-pass: fast fixed model
+  root: "least-squares"
+  coalescent: "opt"   # opt recommended for small/sparse datasets
+  date_inference: "marginal"
+  divergence_units: "mutations"
+  clock_filter_iqd: 4
+  date_confidence: false    # first-pass: skip date confidence
+  traits_confidence: false  # first-pass: skip trait confidence
+  ancestral_inference: "joint"
+
+options:
+  threads: 4
+
+coordinates:
+  columns: "country"   # global build: geocode at country level only
+
+colours:
+  host:     "source"
+  geo:      "continent country region"
+  source:   "source"
+  data_use: "data_use"
+  # No clade colours: viralqc.mode=skip produces no clade column.
+  # Clade coloring can be added once a Nextclade dataset is available.
+
+traits:
+  # clade NOT included: viralqc.mode=skip produces no clade column.
+  columns: "continent country"
+  max_states: 100
+  rare_state_label: "other"
+
+subsampling:
+  random_seed: 42
+
+curation:
+  clade_levels: 1
+  clade_separator: "."
+  lineage_parser: "none"
+
+# ── Region source ─────────────────────────────────────────────────────────────
+# "country" maps country → continent (global build)
+region_source: "country"
+
+# ── Data source ───────────────────────────────────────────────────────────────
+data_source: "ncbi"
+
+pathoplexus:
+  organism: ""   # unused; kept for schema completeness
+
+ncbi:
+  taxid: 59301           # Mayaro virus (verified 2026-06-08 via NCBI Taxonomy)
+  genome_size: 11411     # bp (NC_003417.1 complete genome, verified 2026-06-08)
+  min_length: 0.5        # fraction of genome_size (~5706 bp minimum)
+  max_length: 1.1        # fraction of genome_size (~12552 bp maximum)
+  email: ""              # set via NCBI_EMAIL env var
+  api_key: ""            # optional; set via NCBI_API_KEY env var
+
+# ── ViralQC — skip mode ───────────────────────────────────────────────────────
+# Mayaro virus is ABSENT from viralQC/datasets/blast.tsv (the BLAST reference
+# set covers sibling alphaviruses — Chikungunya, Una, Madariaga, VEEV, Ross
+# River — but not Mayaro).  Running viralqc.mode='run' would mislabel every
+# MAYV sequence as its nearest alphavirus relative and, with expected_virus set,
+# flag them all wrong_virus (grade D) → empty build.
+#
+# Strategy: viralqc.mode='skip' synthesises a grade-A results TSV for every
+# sequence.  Because genome_size is set (above), coverage is computed as
+# min(seq_len / genome_size, 1.0), so qc.min_coverage (0.70) filters sequences
+# shorter than ~8 kb.  BLAST-based contamination detection is not available;
+# NCBI fetch-time length filtering is the only QC gate.
+#
+# When a Nextclade dataset for Mayaro virus becomes available, switch to
+# viralqc.mode='run' and set expected_virus to the appropriate alias key.
+viralqc:
+  mode: "skip"           # no ViralQC dataset for Mayaro virus
+  expected_virus: ""     # not used in skip mode
+  expected_segment: ""   # MAYV is non-segmented
+  conda_env: "viralQC"
+  clade_column: "clade"
+  datasets_dir: ""
+  blast_database: ""
+  blast_database_metadata: ""
+
+# ── Quality control ───────────────────────────────────────────────────────────
+# Note: 'clade' is intentionally ABSENT from required_columns.
+# viralqc.mode=skip produces no clade column; adding 'clade' would cause
+# augur filter to drop ALL sequences (flexpipe-validate-build will error if
+# 'clade' appears here while mode=skip).
+qc:
+  genome_quality:
+    - "A"
+    - "B"
+  min_coverage: 0.70     # ~8 kb minimum for an 11.4 kb genome (skip-mode length gate)
+  min_sequences: 5       # MAYV is sparsely sampled globally; lower than default 10
+  required_columns:
+    - "strain"
+    - "date"
+    - "country"
+
+local_sequences:
+  enabled: false
+  metadata: "data/metadata.xlsx"
+  sequences: "data/new_sequences.fasta"

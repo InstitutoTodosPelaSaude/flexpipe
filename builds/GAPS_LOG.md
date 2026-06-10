@@ -143,3 +143,12 @@
 - Suggested fix: Derive first-draft terminal BED masks from GenBank annotations with a flexible profile that recognizes explicit UTR features and UTR-like annotations on other feature types, with CDS/gene boundary fallback and guardrails.
 - Priority: P1.
 - Status: Implemented via `flexpipe-reference-mask`, `flexpipe/data/phylo/reference_mask_profiles.yaml`, and per-build `masks/reference_terminal.bed` files. These are production aids and still need biological review before surveillance use.
+
+## No-dataset virus QC strategy
+
+- Symptom: `viralqc.mode: run` silently drops all sequences for viruses absent from the ViralQC BLAST reference set (e.g. Mayaro virus). BLAST mislabels the sequences as a related virus; with `expected_virus` set, all are flagged `wrong_virus` → grade D → empty build.
+- Evidence: Mayaro virus (MAYV) is absent from `viralQC/datasets/blast.tsv` (which has Chikungunya, Una, Madariaga, VEEV, Ross River, but not Mayaro). Confirmed by `grep -i mayaro viralQC/datasets/blast.tsv` returning empty.
+- A second footgun: `qc.required_columns` defaults to `["strain","date","clade"]`. With no clade source, `augur filter --exclude-where clade=` drops every row.
+- Suggested fix: Use `viralqc.mode: skip` with `genome_size` set for length-based coverage; remove `clade` from `required_columns` and `traits.columns`. Add a validator check that errors when `mode=skip` and `clade` is in `required_columns`.
+- Priority: P1 (blocks entire build for undataset pathogens).
+- Status: Implemented. `synthesize_viralqc.py` computes length-based coverage when `genome_size > 0`. `flexpipe/validate.py::_check_no_clade_source` errors on `clade` in `required_columns` for skip-mode builds, and warns on traits/clade_filter issues. Recipe in `docs/viralqc-integration.md` and `builds/SCAFFOLD_CHECKLIST.md`. Reference build: `builds/mayv-global/` (live run: 105 fetched, 101 QC-passed, 95 subsampled, Auspice output produced 2026-06-08).

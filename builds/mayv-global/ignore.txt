@@ -1,0 +1,2 @@
+# Strains to exclude from subsampling.
+# Add accessions of known problematic or duplicated sequences here.

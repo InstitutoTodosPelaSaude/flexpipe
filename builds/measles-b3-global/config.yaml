@@ -1,0 +1,109 @@
+files:
+  keep:             "builds/measles-b3-global/keep.txt"
+  ignore:           "builds/measles-b3-global/ignore.txt"
+  cache:            "builds/measles-b3-global/cache_coordinates.tsv"
+  reference:        "builds/measles-b3-global/reference.gb"
+  clades:           "builds/measles-b3-global/clades.tsv"
+  auspice_config:   "builds/measles-b3-global/auspice_config.json"
+  subsample_config: "builds/measles-b3-global/subsample.yaml"
+
+parameters:
+  # Terminal masking — values are REFERENCE-SPECIFIC for NC_001498.1.
+  # Set to 0 (disabled) for now; derive proper values with:
+  #   flexpipe-reference-mask --reference builds/measles-b3-global/reference.gb
+  # and update mask_sites_file before a production run.
+  mask_5prime: 0
+  mask_3prime: 0
+  mask_sites: ""
+  mask_sites_file: "builds/measles-b3-global/masks/reference_terminal.bed"
+  ufboot: 1000
+  model: "GTR+G"
+  root: "least-squares"
+  coalescent: "skyline"
+  date_inference: "marginal"
+  date_confidence: false
+  divergence_units: "mutations"
+  clock_filter_iqd: 4
+  ancestral_inference: "joint"
+  traits_confidence: false
+
+options:
+  threads: 4
+
+coordinates:
+  columns: "country"
+
+colours:
+  host:     "source"
+  geo:      "continent country region"
+  clade:    "clade_truncated clade"
+  source:   "source"
+  data_use: "data_use"
+
+traits:
+  columns:         "region country"
+  max_states:      50
+  rare_state_label: "other"
+
+subsampling:
+  random_seed: 42
+
+curation:
+  # clade_levels: 1 means clade_truncated == top-level WHO genotype (e.g. "B3", "D8")
+  clade_levels:    1
+  clade_separator: "."
+  lineage_parser:  "none"
+
+# ── Clade filter ─────────────────────────────────────────────────────────────
+# Restricts the build to measles genotype B3 only.
+# Runs after curation/QC, before subsampling.
+clade_filter:
+  column:  "clade_truncated"
+  include: ["B3"]
+  match:   "exact"
+
+# ── Region source ─────────────────────────────────────────────────────────────
+# "country" maps country → continent (global builds)
+region_source: "country"
+
+# ── Data source ───────────────────────────────────────────────────────────────
+data_source: "pathoplexus"
+
+pathoplexus:
+  organism: "measles"
+  metadata_fields:
+    - accessionVersion
+    - sampleCollectionDate
+    - geoLocCountry
+    - geoLocAdmin1
+    - geoLocAdmin2
+    - dataUseTerms
+    - lineage
+  query_params:
+    dataUseTerms: "OPEN"
+  strip_fasta_id_suffix: false
+  genome_size: 15894
+
+ncbi:
+  taxid: 0
+  genome_size: 0
+
+viralqc:
+  conda_env: "viralQC"
+  clade_column: "clade"
+  # "measles" is a registered alias in flexpipe/data/viralqc/aliases.yaml,
+  # matching ViralQC's "Measles morbillivirus" virus_name.
+  expected_virus:   "measles"
+  expected_segment: ""
+  datasets_dir: ""
+  blast_database: ""
+  blast_database_metadata: ""
+
+qc:
+  genome_quality: ["A", "B"]
+  min_coverage: 0.70
+  # Note: B3 is a well-sampled genotype globally; 10 is a reasonable floor.
+  # Lower to 5 if the filtered set is sparse for a given run window.
+  min_sequences: 10
+  # country required; clade required only when ViralQC assigns it
+  required_columns: ["strain", "date", "country"]

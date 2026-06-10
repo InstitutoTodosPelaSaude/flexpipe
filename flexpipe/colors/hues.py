@@ -237,6 +237,19 @@ def main() -> None:
         default=None,
         help="Persistent category→hue cache to read/update",
     )
+    parser.add_argument(
+        "--root-level",
+        default="",
+        help=(
+            "Override the clade root level. "
+            "'auto' detects from --detect-root-from; otherwise a specific column name."
+        ),
+    )
+    parser.add_argument(
+        "--detect-root-from",
+        default="",
+        help="Path to the full corpus metadata TSV for auto root detection (used with --root-level auto).",
+    )
     args = parser.parse_args()
 
     from flexpipe.logging_setup import configure_logging
@@ -254,6 +267,7 @@ def main() -> None:
 
     geo_root = "region"
     clade_root = "clade_truncated"
+    clade_levels_cfg: list[str] = []
 
     if args.config:
         try:
@@ -261,7 +275,8 @@ def main() -> None:
 
             cfg = load_config(args.config, skip_viralqc=True)
             geo_root = cfg.colours.geo.split()[0]
-            clade_root = cfg.colours.clade.split()[0]
+            clade_levels_cfg = cfg.colours.clade.split()
+            clade_root = clade_levels_cfg[0]
             ht = cfg.colours.hue_tables
             if ht.region:
                 region_hues = load_hue_table("region_hues.tsv", override=ht.region)
@@ -273,6 +288,32 @@ def main() -> None:
                 data_use_hues = load_hue_table("data_use_hues.tsv", override=ht.data_use)
         except Exception as exc:
             logger.warning("Could not load hue-table overrides from config: %s", exc)
+
+    # Apply clade_root_level override (CLI takes precedence over config).
+    root_level_arg = args.root_level.strip()
+    if root_level_arg and clade_levels_cfg:
+        from flexpipe.colors.scheme import find_polymorphic_root
+
+        if root_level_arg == "auto":
+            if args.detect_root_from:
+                detect_df = pd.read_csv(args.detect_root_from, sep="\t", dtype=str).fillna("")
+                clade_root = find_polymorphic_root(clade_levels_cfg, detect_df)
+                logger.info("Auto-detected clade root level: %r", clade_root)
+            else:
+                logger.warning(
+                    "--root-level auto requires --detect-root-from; using default root %r",
+                    clade_root,
+                )
+        elif root_level_arg in clade_levels_cfg:
+            clade_root = root_level_arg
+            logger.info("Clade root level pinned to: %r", clade_root)
+        else:
+            logger.warning(
+                "--root-level %r not in clade levels %s; using default %r",
+                root_level_arg,
+                clade_levels_cfg,
+                clade_root,
+            )
 
     all_warnings = []
     sections = []  # (comment, {cat: hue})

@@ -66,6 +66,26 @@ expansion footguns.
 - Avoid broad substring matching; use exact aliases or explicit regex patterns.
 - Keep `unclassified` as wrong when `expected_virus` is configured.
 
+## No ViralQC Dataset Build
+
+Use when the target virus is absent from `viralQC/datasets/blast.tsv` or has
+no Nextclade dataset. Reference: `builds/mayv-global/`.
+
+- Verify absence: `grep -i "<virus>" viralQC/datasets/blast.tsv` and
+  `ls viralQC/datasets/ | grep -i "<virus>"` — both should return empty.
+- Set `viralqc.mode: "skip"` and `expected_virus: ""`.
+- Set `ncbi.genome_size` (or `pathoplexus.genome_size`) to enable length-based
+  coverage in skip mode; `qc.min_coverage` then acts as a minimum-length gate.
+- **Remove `clade` from `qc.required_columns`** (would silently drop everything).
+- **Remove `clade` from `traits.columns`** (would produce an empty trait).
+- **Do not set `clade_filter.column` to `clade`/`clade_truncated`** (no-op).
+- Remove clade-based colorings from `auspice_config.json` and `colours.clade`.
+- Run `flexpipe-validate-build` — it will error if `clade` appears in
+  `required_columns` while `mode=skip`, and warn on traits/clade_filter issues.
+- Document skip-mode rationale and corpus size in `NOTES.md`.
+- When a Nextclade dataset later becomes available, switch to `mode: run` and
+  set `expected_virus` to the alias key.
+
 ## Geocoding
 
 - Put reusable country/division/city seeds in the shared cache when they apply broadly:

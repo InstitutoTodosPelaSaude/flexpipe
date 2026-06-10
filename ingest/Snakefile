@@ -66,11 +66,19 @@ _local_src = _resolve_section_paths(config.get("local", {}), ["metadata", "seque
 _vqc     = config.get("viralqc", {})
 _viralqc_mode        = _vqc.get("mode", "run")
 _viralqc_precomputed = _vqc.get("precomputed", "")
+# genome_size for length-based skip-mode coverage (0 → all sequences get coverage=1.0)
+_skip_genome_size = int(
+    config.get("ncbi", {}).get("genome_size")
+    or config.get("pathoplexus", {}).get("genome_size")
+    or 0
+)
 _sub     = config.get("subsampling", {})
 _coords  = _resolve_section_paths(config.get("coordinates", {}), ["force_file"])
 _curation = _resolve_section_paths(config.get("curation", {}), ["date_formats"])
 _colours = config.get("colours", {})
-_qc      = config.get("qc", {})
+_clade_root_level = str(_colours.get("clade_root_level", "")).strip()
+_qc           = config.get("qc", {})
+_clade_filter = config.get("clade_filter", {})
 _coordinate_columns = _coords.get("columns", "country division location").split()
 
 # Derive augur-filter exclusion clauses from qc.genome_quality (pass-list → fail-list)
@@ -225,14 +233,23 @@ if _viralqc_mode == "precomputed":
 
 elif _viralqc_mode == "skip":
     rule viralqc:
-        """Synthesize a ViralQC results TSV (all grade-A, no vqc) for rapid / local analysis."""
+        """Synthesize a ViralQC results TSV (all grade-A, no vqc) for rapid / local analysis.
+
+        When genome_size > 0 (taken from ncbi.genome_size or pathoplexus.genome_size),
+        coverage is computed as min(seq_len / genome_size, 1.0) so that qc.min_coverage
+        acts as a real sequence-length filter.  genome_size == 0 → coverage = 1.0 (default).
+        """
         input:
             sequences = rules.merge_local_sequences.output.sequences
+        params:
+            genome_size = _skip_genome_size
         output:
             tsv = f"{_wd}/results/viralqc/outputs/results.tsv"
         run:
             from flexpipe.ingest.synthesize_viralqc import write_synthetic_viralqc_tsv
-            write_synthetic_viralqc_tsv(str(input.sequences), str(output.tsv))
+            write_synthetic_viralqc_tsv(
+                str(input.sequences), str(output.tsv), genome_size=params.genome_size
+            )
 
 else:
     # "run" (default) — invoke ViralQC (BLAST + Nextclade).
@@ -340,6 +357,37 @@ rule curate_qc:
         """
 
 
+# ─── Clade filter ────────────────────────────────────────────────────────────
+
+rule clade_filter:
+    """Keep/drop sequences by a metadata-column value (upstream of subsampling).
+
+    Reads the ``clade_filter`` section from the build config.yaml.  When that
+    section is absent or ``clade_filter.column`` is empty, all sequences pass
+    through unchanged and a header-only log is written.  This rule always
+    runs (static DAG) so existing builds are unaffected.
+    """
+    input:
+        metadata  = rules.curate_qc.output.metadata,
+        sequences = rules.curate_qc.output.sequences
+    params:
+        cfg = _config
+    output:
+        metadata   = f"{_wd}/results/ingest/clade_filtered_metadata.tsv",
+        sequences  = f"{_wd}/results/ingest/clade_filtered_sequences.fasta",
+        filter_log = f"{_wd}/results/ingest/clade_filter_log.tsv"
+    shell:
+        """
+        flexpipe-filter-clade \
+            --config           {params.cfg:q} \
+            --metadata         {input.metadata:q} \
+            --sequences        {input.sequences:q} \
+            --output-metadata  {output.metadata:q} \
+            --output-sequences {output.sequences:q} \
+            --log              {output.filter_log:q}
+        """
+
+
 # ─── QC summary ──────────────────────────────────────────────────────────────
 
 rule qc_summary:
@@ -403,8 +451,8 @@ rule prepare:
     message:
         "Subsampling: focal (ITpS + Brazil) always kept; context by division/year"
     input:
-        sequences     = rules.curate_qc.output.sequences,
-        metadata      = rules.curate_qc.output.metadata,
+        sequences     = rules.clade_filter.output.sequences,
+        metadata      = rules.clade_filter.output.metadata,
         subsample_cfg = rules.resolve_subsample_config.output.resolved
     params:
         seed = _sub.get("random_seed", 42)
@@ -448,12 +496,19 @@ rule disambiguate_geo_metadata:
 
 rule generate_name2hue:
     input:
-        metadata = rules.disambiguate_geo_metadata.output.metadata
+        metadata         = rules.disambiguate_geo_metadata.output.metadata,
+        clade_filtered   = rules.clade_filter.output.metadata,
     output:
         name2hue = f"{_wd}/config/name2hue.tsv"
     params:
-        cfg = _config,
-        cache = _name2hue_cache
+        cfg        = _config,
+        cache      = _name2hue_cache,
+        root_args  = (
+            ["--root-level", _clade_root_level,
+             "--detect-root-from", rules.clade_filter.output.metadata]
+            if _clade_root_level == "auto" else
+            (["--root-level", _clade_root_level] if _clade_root_level else [])
+        )
     shell:
         """
         mkdir -p $(dirname {output.name2hue:q})
@@ -461,7 +516,8 @@ rule generate_name2hue:
             --metadata {input.metadata:q} \
             --config   {params.cfg:q} \
             --cache    {params.cache:q} \
-            --output   {output.name2hue:q}
+            --output   {output.name2hue:q} \
+            {params.root_args:q}
         """
 
 
@@ -497,14 +553,21 @@ rule colours:
     message:
         "Assigning colour scheme"
     input:
-        matrix = rules.disambiguate_geo_metadata.output.metadata,
-        scheme = rules.generate_name2hue.output.name2hue
+        matrix         = rules.disambiguate_geo_metadata.output.metadata,
+        scheme         = rules.generate_name2hue.output.name2hue,
+        clade_filtered = rules.clade_filter.output.metadata,
     params:
-        host     = _colours.get("host",     "host").split(),
-        clade    = _colours.get("clade",    "clade_truncated clade").split(),
-        geo      = _colours.get("geo",      "region country").split(),
-        source   = _colours.get("source",   "source").split(),
-        data_use = _colours.get("data_use", "data_use").split()
+        host          = _colours.get("host",     "host").split(),
+        clade         = _colours.get("clade",    "clade_truncated clade").split(),
+        geo           = _colours.get("geo",      "region country").split(),
+        source        = _colours.get("source",   "source").split(),
+        data_use      = _colours.get("data_use", "data_use").split(),
+        clade_root_args = (
+            ["--root-level", _clade_root_level,
+             "--detect-root-from", rules.clade_filter.output.metadata]
+            if _clade_root_level == "auto" else
+            (["--root-level", _clade_root_level] if _clade_root_level else [])
+        )
     output:
         colours1      = temp(f"{_wd}/config/col_hosts.tsv"),
         colours2      = temp(f"{_wd}/config/col_geo.tsv"),
@@ -532,7 +595,8 @@ rule colours:
             --input   {input.matrix:q} \
             --colours {input.scheme:q} \
             --levels  {params.clade:q} \
-            --output  {output.colours3:q}
+            --output  {output.colours3:q} \
+            {params.clade_root_args:q}
 
         flexpipe-colours \
             --input   {input.matrix:q} \

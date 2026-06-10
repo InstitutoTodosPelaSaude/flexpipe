@@ -199,6 +199,103 @@ def _check_viralqc_aliases(config_raw: dict, errors: list[str], warnings: list[s
             )
 
 
+def _check_clade_filter(config_raw: dict, errors: list[str], warnings: list[str]) -> None:
+    """Warn about likely-misconfigured clade_filter sections."""
+    cf = config_raw.get("clade_filter", {}) or {}
+    if not cf:
+        return  # Section absent — pass-through by default; nothing to warn.
+
+    column = str(cf.get("column", "") or "").strip()
+    include = [str(v).strip() for v in cf.get("include", []) if str(v).strip()]
+    exclude = [str(v).strip() for v in cf.get("exclude", []) if str(v).strip()]
+
+    if column and not include and not exclude:
+        warnings.append(
+            "clade_filter.column is set but both include and exclude are empty; "
+            "the filter will pass through all sequences (nothing filtered)."
+        )
+        _warn(
+            "clade_filter.column set but include/exclude are both empty "
+            "— filter will keep all sequences"
+        )
+    elif not column and (include or exclude):
+        warnings.append(
+            "clade_filter.include/exclude are set but column is empty; "
+            "the filter is disabled and will pass through all sequences."
+        )
+        _warn("clade_filter.include/exclude set but column is empty — filter is disabled")
+    elif column and (include or exclude):
+        _ok(
+            f"clade_filter: column={column!r}, include={include}, "
+            f"exclude={exclude}, match={cf.get('match', 'exact')!r}"
+        )
+
+
+def _check_no_clade_source(config_raw: dict, errors: list[str], warnings: list[str]) -> None:
+    """Error/warn when a skip-mode build uses clade-dependent config sections.
+
+    viralqc.mode='skip' synthesizes no clade column — every sequence gets
+    genome_quality='A' but clade/clade_truncated remain empty.  Any downstream
+    config that depends on a populated clade column will silently fail:
+
+    - qc.required_columns including 'clade' → augur filter drops ALL sequences.
+    - traits.columns including 'clade' → augur traits infers an empty column.
+    - clade_filter with column=clade/clade_truncated + include/exclude → filter is a no-op.
+    """
+    vqc = config_raw.get("viralqc", {}) or {}
+    mode = vqc.get("mode", "run")
+    if mode != "skip":
+        return  # Only relevant for skip mode
+
+    # ── required_columns: clade in skip mode → every row filtered → empty build ──
+    qc = config_raw.get("qc", {}) or {}
+    req_cols = [str(c) for c in (qc.get("required_columns") or [])]
+    if "clade" in req_cols:
+        msg = (
+            "viralqc.mode='skip' produces no 'clade' column, but 'clade' is in "
+            "qc.required_columns — augur filter will drop ALL sequences. "
+            "Remove 'clade' from required_columns."
+        )
+        errors.append(msg)
+        _err(msg)
+    else:
+        _ok("qc.required_columns does not include 'clade' (correct for skip mode)")
+
+    # ── traits.columns: clade in skip mode → empty trait inference (warning) ──
+    traits = config_raw.get("traits", {}) or {}
+    trait_cols_raw = traits.get("columns", "") or ""
+    if isinstance(trait_cols_raw, list):
+        trait_cols = [str(c) for c in trait_cols_raw]
+    else:
+        trait_cols = str(trait_cols_raw).split()
+    if "clade" in trait_cols:
+        msg = (
+            "viralqc.mode='skip' produces no 'clade' column, but 'clade' is in "
+            "traits.columns — augur traits will infer an empty/absent trait column."
+        )
+        warnings.append(msg)
+        _warn(
+            "traits.columns includes 'clade' but skip mode has no clade — remove or leave for inertness"
+        )
+
+    # ── clade_filter: filtering on clade/clade_truncated in skip mode → no-op ──
+    cf = config_raw.get("clade_filter", {}) or {}
+    cf_column = str(cf.get("column", "") or "").strip()
+    cf_include = [str(v).strip() for v in (cf.get("include") or []) if str(v).strip()]
+    cf_exclude = [str(v).strip() for v in (cf.get("exclude") or []) if str(v).strip()]
+    if cf_column in ("clade", "clade_truncated") and (cf_include or cf_exclude):
+        msg = (
+            f"viralqc.mode='skip' produces no '{cf_column}' column, but "
+            f"clade_filter.column='{cf_column}' with include/exclude set — "
+            "the filter will pass through all sequences (nothing filtered)."
+        )
+        warnings.append(msg)
+        _warn(
+            f"clade_filter.column='{cf_column}' but skip mode produces no clade "
+            "— filter is a no-op (pass-through)"
+        )
+
+
 def _check_data_source_prerequisites(
     config_raw: dict, build_dir: Path, errors: list[str], warnings: list[str]
 ) -> None:
@@ -333,6 +430,8 @@ def validate_build(config_path: str | Path) -> int:
     _check_mask_sites_file(config_raw, build_dir, errors, warnings)
     _check_data_source_prerequisites(config_raw, build_dir, errors, warnings)
     _check_viralqc_aliases(config_raw, errors, warnings)
+    _check_clade_filter(config_raw, errors, warnings)
+    _check_no_clade_source(config_raw, errors, warnings)
     _check_cache_coordinates_header(config_raw, build_dir, errors, warnings)
 
     _summary(errors, warnings)

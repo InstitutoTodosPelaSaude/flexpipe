@@ -30,6 +30,7 @@ coordinates:
   columns: "country division location"
 
 colours:
+  host:     "source"
   clade:    "serotype genotype major_lineage minor_lineage clade"
   geo:      "continent country division location"
   source:   "source"

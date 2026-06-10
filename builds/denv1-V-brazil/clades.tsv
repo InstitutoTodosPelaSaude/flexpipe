@@ -1,0 +1,4 @@
+clade	gene	site	alt
+# DENV-1 genotype V clade definitions are intentionally placeholder-only.
+# ViralQC/Nextclade lineages populate the metadata clade column for coloring.
+# Add mutation-based augur clades rows before relying on branch labels.

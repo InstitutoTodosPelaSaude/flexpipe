@@ -1,0 +1,3 @@
+# Terminal mask BED for NC_001498.1 — PLACEHOLDER.
+# Generate with: flexpipe-reference-mask --reference builds/measles-b3-global/reference.gb
+# Review output before production use; terminal mask values are reference-specific.

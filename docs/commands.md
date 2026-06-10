@@ -102,6 +102,35 @@ Logs ambiguous/unparseable dates to a separate file.
 
 Generate QC statistics summary from curation output:
 
+### flexpipe-filter-clade
+
+Keep or drop sequences by a metadata-column value, upstream of subsampling:
+
+```bash
+flexpipe-filter-clade \
+  --config builds/measles-b3-global/config.yaml \
+  --metadata results/ingest/final_metadata.tsv \
+  --sequences results/ingest/final_sequences.fasta \
+  --output-metadata results/ingest/clade_filtered_metadata.tsv \
+  --output-sequences results/ingest/clade_filtered_sequences.fasta \
+  --log results/ingest/clade_filter_log.tsv
+```
+
+| Flag | Purpose |
+|------|---------|
+| `--config` | Build config.yaml (reads `clade_filter` section) |
+| `--metadata` | Input metadata TSV (curated + QC-filtered) |
+| `--sequences` | Input FASTA |
+| `--output-metadata` | Filtered metadata output |
+| `--output-sequences` | Filtered FASTA output |
+| `--log` | Per-strain drop log TSV (`strain`, `group_value`, `drop_reason`; header-only when nothing dropped) |
+
+When `clade_filter.column` is empty or absent from the config, all sequences pass through unchanged.
+
+```{note}
+`flexpipe-filter-clade` is called automatically by the `clade_filter` rule in `ingest/Snakefile` for every build. Direct invocation is useful for debugging filter behavior on a curated metadata file before a full run.
+```
+
 ```bash
 flexpipe-qc-summary \
   --metadata curated_metadata.tsv \

@@ -207,6 +207,64 @@ qc:
 | `required_columns` | list | `["strain","date","clade"]` | Mandatory metadata columns post-curation |
 | `min_sequences` | int | 10 | Minimum output after subsampling (error if below) |
 
+### clade_filter
+
+Restricts the analysis to a specific genetic group **upstream of subsampling**. Disabled by default (empty `column`); existing builds that omit this section are completely unaffected.
+
+```yaml
+clade_filter:
+  column:  "clade_truncated"   # metadata column to filter on
+  include: ["B3"]              # keep only matching rows; empty = keep all
+  exclude: []                  # drop matching rows (applied after include)
+  match:   "exact"             # "exact" or "prefix"
+```
+
+| Key | Type | Default | Purpose |
+|-----|------|---------|---------|
+| `column` | string | `""` (disabled) | Metadata column to filter on |
+| `include` | list | `[]` | Keep only rows whose column value matches |
+| `exclude` | list | `[]` | Drop rows whose column value matches (after include) |
+| `match` | Literal | `"exact"` | `"exact"` (equality) or `"prefix"` (dot-boundary) |
+
+**`match` semantics**:
+- `"exact"`: equality. `include: ["B3"]` keeps rows where `clade_truncated == "B3"`. A row with value `B3.1` is **not** matched.
+- `"prefix"`: dot-boundary prefix. `include: ["B3"]` matches `B3` and `B3.1` (and `B3.2`, etc.) but **not** `B30` (no dot separator). Similarly `include: ["ECSA-II"]` matches `ECSA-II.1` but not `ECSA-IIb`.
+
+**Column availability**:
+The column must exist in the curated metadata output. Column availability depends on the build:
+
+| Column | Requires |
+|--------|----------|
+| `clade`, `clade_truncated` | ViralQC to assign a clade (Nextclade dataset has this pathogen) |
+| `genotype`, `major_lineage`, `minor_lineage`, `serotype` | `curation.lineage_parser != "none"` |
+| Any other column | Must be in the input metadata or generated during curation |
+
+There is **no** column literally named `lineage` — use `clade` (raw from ViralQC), `clade_truncated` (top-N levels), or one of the lineage_parser-derived columns.
+
+If the column is absent at runtime, a warning is emitted and all sequences pass through (no filtering). Inspect `results/ingest/clade_filter_log.tsv` to verify the filter was applied.
+
+**Examples**:
+
+```yaml
+# Measles genotype B3 only (global build)
+clade_filter:
+  column:  clade_truncated
+  include: [B3]
+  match:   exact
+
+# Chikungunya ECSA-II and sub-lineages
+clade_filter:
+  column:  clade
+  include: [ECSA-II]
+  match:   prefix
+
+# Exclude two dengue serotypes from a multi-serotype build
+clade_filter:
+  column:  serotype
+  exclude: ["3", "4"]
+  match:   exact
+```
+
 ### coordinates
 
 Same as [coordinates](#coordinates) above.
@@ -330,6 +388,12 @@ viralqc:
 | `executable` | string | "vqc" | ViralQC executable name |
 | `mode` | Literal | "run" | `run`, `precomputed`, `skip` |
 | `precomputed` | string | "" | Path to precomputed results (required if `mode=precomputed`) |
+
+**`skip` mode and length-based coverage**: When `viralqc.mode: skip`, coverage is computed as
+`min(seq_len / genome_size, 1.0)` when `genome_size > 0` (from `ncbi.genome_size` or
+`pathoplexus.genome_size`). This makes `qc.min_coverage` a real length gate. Without
+`genome_size`, all sequences get `coverage = 1.0` (no length filtering).
+See [Builds Without a Dataset](viralqc-integration.md#builds-without-a-viralqcnextclade-dataset).
 
 ## Path Resolution
 

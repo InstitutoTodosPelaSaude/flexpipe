@@ -1,0 +1,8 @@
+clade	gene	site	alt
+# Measles WHO genotype clade definitions — PLACEHOLDER.
+# Measles genotypes are classified by the N gene 450-nt window (N450).
+# ViralQC / Nextclade (nextstrain/measles/genome/WHO-2012) assigns genotypes
+# directly; augur clades definitions are optional for branch labeling.
+# To add explicit definitions, consult the current WHO genotype nomenclature
+# (https://www.who.int/news-room/questions-and-answers/item/immunization-measles)
+# and map defining nucleotide positions in the N-gene relative to NC_001498.1.

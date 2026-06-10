@@ -19,6 +19,7 @@ RSV_BUILD_CONFIG = REPO_ROOT / "builds" / "rsv-global" / "config.yaml"
 REAL_REFERENCE_BUILD_CONFIGS = real_reference_builds()
 DENV_BUILD_CONFIGS = [
     REPO_ROOT / "builds" / "denv1-brazil" / "config.yaml",
+    REPO_ROOT / "builds" / "denv1-V-brazil" / "config.yaml",
     REPO_ROOT / "builds" / "denv2-brazil" / "config.yaml",
     REPO_ROOT / "builds" / "denv3-brazil" / "config.yaml",
     REPO_ROOT / "builds" / "denv4-brazil" / "config.yaml",
@@ -104,6 +105,46 @@ def _mask_command(output: str) -> str:
     return ""
 
 
+def _assert_phylo_profile(output: str, build_config: Path) -> None:
+    """Assert that IQ-TREE and augur refine flags match what the build config specifies."""
+    raw = yaml.safe_load(build_config.read_text())
+    params = raw.get("parameters", {})
+    model = params.get("model", "JC")
+    ufboot = params.get("ufboot", 0)
+    date_confidence = params.get("date_confidence", False)
+    traits_confidence = params.get("traits_confidence", False)
+
+    assert f"-m     {model}" in output, f"Expected IQ-TREE model '-m {model}' in dry-run output"
+    if ufboot:
+        assert f"-B {ufboot}" in output, f"Expected '-B {ufboot}' for ufboot={ufboot}"
+    else:
+        assert "-B " not in output, "Unexpected bootstrap flag for ufboot=0"
+    if date_confidence:
+        assert "--date-confidence" in output
+    else:
+        assert (
+            "--date-confidence" not in output
+        ), "Unexpected --date-confidence for date_confidence=false"
+    if traits_confidence:
+        assert "--confidence" in output
+    else:
+        assert "--confidence" not in output, "Unexpected --confidence for traits_confidence=false"
+
+
+def _assert_traits_columns(output: str, build_config: Path) -> None:
+    """Assert that augur traits --columns matches traits.columns in the build config."""
+    raw = yaml.safe_load(build_config.read_text())
+    columns = raw.get("traits", {}).get("columns", "")
+    if not columns:
+        return
+    # Normalise: collapse runs of whitespace the same way Snakemake renders params
+    expected = " ".join(columns.split())
+    assert expected in output, (
+        f"Expected traits columns '{expected}' in dry-run output.\n"
+        f"Check traits.columns in {build_config}"
+    )
+
+
 def _assert_configured_mask_behavior(output: str, build_config: Path) -> None:
     """Assert the phylo dry-run follows the build's configured BED/no-BED mask path."""
     cfg = yaml.safe_load(build_config.read_text())
@@ -179,14 +220,12 @@ class TestPhyloWiring:
             in output
         )
         _assert_configured_mask_behavior(output, build_config)
-        assert "-m     JC" in output
-        assert "-B " not in output
-        assert "--date-confidence" not in output
-        assert "--confidence" not in output
+        _assert_phylo_profile(output, build_config)
+        _assert_traits_columns(output, build_config)
 
     @pytest.mark.parametrize("build_config", NCBI_BRAZIL_BUILD_CONFIGS, ids=lambda p: p.parent.name)
-    def test_ncbi_brazil_builds_first_pass_profile(self, tmp_path, monkeypatch, build_config):
-        """ZIKV/CHIKV Brazil phylo dry-runs use the first-pass profile: JC, no support, no confidence."""
+    def test_ncbi_brazil_builds_phylo_dry_run(self, tmp_path, monkeypatch, build_config):
+        """NCBI Brazil builds (ZIKV/CHIKV) can plan the phylo DAG and render correct parameters."""
         reference = build_config.parent / "reference.gb"
         if "PLACEHOLDER" in reference.read_text():
             pytest.skip(f"{build_config.parent.name} reference.gb is still a placeholder")
@@ -196,16 +235,13 @@ class TestPhyloWiring:
         assert str(reference) in output
         assert "flexpipe-collapse-traits" in output
         assert "metadata_traits.tsv" in output
-        assert "--columns          continent country division location clade" in output
         _assert_configured_mask_behavior(output, build_config)
-        assert "-m     JC" in output
-        assert "-B " not in output
-        assert "--date-confidence" not in output
-        assert "--confidence" not in output
+        _assert_phylo_profile(output, build_config)
+        _assert_traits_columns(output, build_config)
 
     @pytest.mark.parametrize("build_config", PPX_BRAZIL_BUILD_CONFIGS, ids=lambda p: p.parent.name)
-    def test_ppx_brazil_builds_first_pass_profile(self, tmp_path, monkeypatch, build_config):
-        """RSV-A/B Brazil phylo dry-runs use the first-pass profile: JC, no support, no confidence."""
+    def test_ppx_brazil_builds_phylo_dry_run(self, tmp_path, monkeypatch, build_config):
+        """Pathoplexus Brazil builds (RSV-A/B) can plan the phylo DAG and render correct parameters."""
         reference = build_config.parent / "reference.gb"
         if "PLACEHOLDER" in reference.read_text():
             pytest.skip(f"{build_config.parent.name} reference.gb is still a placeholder")
@@ -215,18 +251,15 @@ class TestPhyloWiring:
         assert str(reference) in output
         assert "flexpipe-collapse-traits" in output
         assert "metadata_traits.tsv" in output
-        assert "--columns          continent country region division" in output
         _assert_configured_mask_behavior(output, build_config)
-        assert "-m     JC" in output
-        assert "-B " not in output
-        assert "--date-confidence" not in output
-        assert "--confidence" not in output
+        _assert_phylo_profile(output, build_config)
+        _assert_traits_columns(output, build_config)
 
     @pytest.mark.parametrize(
         "build_config", SEGMENT_BRAZIL_BUILD_CONFIGS, ids=lambda p: p.parent.name
     )
-    def test_segment_brazil_builds_first_pass_profile(self, tmp_path, monkeypatch, build_config):
-        """OROV-L Brazil phylo dry-runs use the first-pass profile: JC, no support, no confidence."""
+    def test_segment_brazil_builds_phylo_dry_run(self, tmp_path, monkeypatch, build_config):
+        """Segmented-virus Brazil builds can plan the phylo DAG and render correct parameters."""
         reference = build_config.parent / "reference.gb"
         if "PLACEHOLDER" in reference.read_text():
             pytest.skip(f"{build_config.parent.name} reference.gb is still a placeholder")
@@ -236,12 +269,9 @@ class TestPhyloWiring:
         assert str(reference) in output
         assert "flexpipe-collapse-traits" in output
         assert "metadata_traits.tsv" in output
-        assert "--columns          continent country region division" in output
         _assert_configured_mask_behavior(output, build_config)
-        assert "-m     JC" in output
-        assert "-B " not in output
-        assert "--date-confidence" not in output
-        assert "--confidence" not in output
+        _assert_phylo_profile(output, build_config)
+        _assert_traits_columns(output, build_config)
 
     def test_empty_bed_mask_file_takes_copy_path_not_augur_mask(self, tmp_path, monkeypatch):
         """A mask_sites_file that exists but is empty must not render --mask; copy path is taken."""

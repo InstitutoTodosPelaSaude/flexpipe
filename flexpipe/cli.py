@@ -46,6 +46,13 @@ def qc_summary() -> None:
     main()
 
 
+def filter_clade() -> None:
+    """flexpipe-filter-clade — keep/drop sequences by a metadata-column value."""
+    from flexpipe.curate.clade_filter import main
+
+    main()
+
+
 def coordinates() -> None:
     """flexpipe-coordinates — geocode locations via Nominatim."""
     from flexpipe.geo.coordinates import main

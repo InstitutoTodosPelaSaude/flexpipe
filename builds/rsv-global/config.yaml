@@ -32,6 +32,7 @@ coordinates:
   columns: "country"   # global build: only country-level coordinates
 
 colours:
+  host:     "source"
   clade:    "clade_truncated clade"
   geo:      "region country"
   source:   "source"
