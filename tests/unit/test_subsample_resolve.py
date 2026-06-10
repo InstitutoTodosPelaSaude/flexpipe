@@ -84,3 +84,71 @@ class TestResolveSubsampleConfig:
         original = copy.deepcopy(raw)
         resolve_subsample_config(raw, None)
         assert raw == original
+
+
+class TestResolveSubsampleConfigBackbone:
+    """resolve_subsample_config — backbone_strains injection."""
+
+    def _base_config(self):
+        return {
+            "defaults": {"min_date": 2015},
+            "samples": {
+                "focal": {
+                    "query": "country == 'Brazil'",
+                    "group_by": ["division", "year"],
+                    "sequences_per_group": 10,
+                }
+            },
+        }
+
+    # --- backbone_strains provided -----------------------------------------------
+
+    def test_injects_backbone_sample_set(self):
+        raw = self._base_config()
+        result = resolve_subsample_config(raw, None, backbone_strains="/tmp/cfg/backbone_strains.txt")
+        assert "__backbone__" in result["samples"]
+        assert result["samples"]["__backbone__"] == {"include": "/tmp/cfg/backbone_strains.txt"}
+
+    def test_backbone_does_not_affect_existing_samples(self):
+        raw = self._base_config()
+        result = resolve_subsample_config(raw, None, backbone_strains="/tmp/cfg/backbone_strains.txt")
+        assert "focal" in result["samples"]
+        assert result["samples"]["focal"] == raw["samples"]["focal"]
+
+    def test_backbone_and_run_date_together(self):
+        raw = self._base_config()
+        result = resolve_subsample_config(
+            raw, "2026-06-01", backbone_strains="/tmp/cfg/backbone_strains.txt"
+        )
+        assert result["defaults"]["max_date"] == "2026-06-01"
+        assert "__backbone__" in result["samples"]
+
+    def test_backbone_creates_samples_section_if_absent(self):
+        raw = {"defaults": {"min_date": 2020}}
+        result = resolve_subsample_config(raw, None, backbone_strains="/tmp/strains.txt")
+        assert "__backbone__" in result["samples"]
+
+    def test_backbone_does_not_mutate_input(self):
+        raw = self._base_config()
+        original = copy.deepcopy(raw)
+        resolve_subsample_config(raw, None, backbone_strains="/tmp/strains.txt")
+        assert raw == original
+
+    # --- backbone_strains absent / None / empty ----------------------------------
+
+    def test_no_backbone_when_none(self):
+        raw = self._base_config()
+        result = resolve_subsample_config(raw, None, backbone_strains=None)
+        assert "__backbone__" not in result.get("samples", {})
+
+    def test_no_backbone_when_empty_string(self):
+        raw = self._base_config()
+        result = resolve_subsample_config(raw, None, backbone_strains="")
+        assert "__backbone__" not in result.get("samples", {})
+
+    def test_two_arg_call_unchanged(self):
+        """Existing callers that only pass raw + run_date are unaffected."""
+        raw = self._base_config()
+        result = resolve_subsample_config(raw, "2026-01-01")
+        assert "__backbone__" not in result.get("samples", {})
+        assert result["defaults"]["max_date"] == "2026-01-01"

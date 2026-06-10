@@ -721,34 +721,49 @@ def resolve_subsample_config(
     raw: dict,
     run_date: str | None,
     subsample_config_path: str | Path | None = None,
+    backbone_strains: str | None = None,
 ) -> dict:
-    """Return a copy of the subsample config dict with ``defaults.max_date`` injected.
+    """Return a copy of the subsample config dict with runtime overrides injected.
 
     When *run_date* is provided, it is written into the ``defaults`` section of the
     subsample config as the ``max_date`` upper bound for ``augur subsample``.  This
     ensures a scheduled rerun with ``--run-date 2026-01-01`` is bounded by that date
     rather than anchored to the system clock.
 
-    When *run_date* is empty or ``None`` the dict is returned unchanged — preserving
-    current behaviour for direct ``snakemake`` invocations that do not pass
-    ``--config run_date=``.
+    When *backbone_strains* is provided (an absolute path to a one-strain-per-line
+    include-list from a previous run), a synthetic sample set ``__backbone__`` is
+    injected.  ``augur subsample`` force-keeps every listed strain that is still
+    present in the input regardless of ``group_by`` / ``sequences_per_group`` caps,
+    producing a stable union of (previous selection) + (newly-subsampled sequences).
+
+    Both overrides default to ``None`` / ``""`` — i.e. no-op — preserving current
+    behaviour for direct ``snakemake`` invocations that do not pass the extra flags.
 
     Args:
         raw: Parsed subsample config dict (e.g. from ``builds/<name>/subsample.yaml``).
         run_date: Reference date in ``YYYY-MM-DD`` format, or ``None`` / ``""`` to skip.
+        subsample_config_path: Path to the source YAML; used to resolve relative
+            include/exclude paths.  ``None`` skips path resolution.
+        backbone_strains: Absolute path to the backbone include-list written by
+            ``flexpipe-run --backbone-from``.  ``None`` disables backbone injection.
 
     Returns:
-        A shallow copy of *raw* with the ``defaults`` section updated.
+        A deep copy of *raw* with the injected overrides applied.
     """
     out = (
         resolve_subsample_paths(raw, subsample_config_path)
         if subsample_config_path is not None
         else copy.deepcopy(raw)
     )
-    if not run_date:
-        return out
-    out.setdefault("defaults", {})["max_date"] = run_date
-    logger.debug("resolve_subsample_config: set defaults.max_date=%s", run_date)
+    if run_date:
+        out.setdefault("defaults", {})["max_date"] = run_date
+        logger.debug("resolve_subsample_config: set defaults.max_date=%s", run_date)
+    if backbone_strains:
+        out.setdefault("samples", {})["__backbone__"] = {"include": backbone_strains}
+        logger.debug(
+            "resolve_subsample_config: injected __backbone__ include-list from %s",
+            backbone_strains,
+        )
     return out
 
 
