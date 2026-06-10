@@ -10,7 +10,7 @@ import yaml
 
 from flexpipe.config import FlexpipeConfig, ViralqcConfig
 from flexpipe.paths import WorkdirPaths
-from flexpipe.run import _run_snakemake, run_pipeline, validate_run_date
+from flexpipe.run import _materialize_backbone, _run_snakemake, run_pipeline, validate_run_date
 
 FIXTURE_CONFIG = Path(__file__).parent.parent / "fixtures" / "config_division_build.yaml"
 
@@ -489,3 +489,109 @@ class TestMinSequencesGuardrail:
             stage="phylo",
         )
         assert rc == 0
+
+
+# ---------------------------------------------------------------------------
+# _materialize_backbone
+# ---------------------------------------------------------------------------
+
+
+def _write_prev_metadata(prev_workdir: Path, strains: list[str]) -> None:
+    """Write a minimal subsampled metadata TSV to simulate a previous run."""
+    meta_dir = prev_workdir / "results" / "subsampled"
+    meta_dir.mkdir(parents=True)
+    cols = ["strain", "date", "country"]
+    lines = ["\t".join(cols)]
+    for s in strains:
+        lines.append(f"{s}\t2024-01-01\tBrazil")
+    (meta_dir / "metadata.tsv").write_text("\n".join(lines) + "\n")
+
+
+class TestMaterializeBackbone:
+    """_materialize_backbone edge-case and happy-path coverage."""
+
+    def test_none_backbone_from_returns_none(self, tmp_path):
+        paths = WorkdirPaths.from_root(tmp_path / "current")
+        paths.ensure_dirs()
+        assert _materialize_backbone(None, paths) is None
+
+    def test_happy_path_writes_strain_file(self, tmp_path):
+        prev = tmp_path / "prev"
+        current = tmp_path / "current"
+        _write_prev_metadata(prev, ["strainA", "strainB", "strainC"])
+        paths = WorkdirPaths.from_root(current)
+        paths.ensure_dirs()
+
+        result = _materialize_backbone(prev, paths)
+
+        assert result is not None
+        assert result == paths.backbone_strains
+        content = result.read_text().splitlines()
+        assert set(content) == {"strainA", "strainB", "strainC"}
+
+    def test_happy_path_strain_count(self, tmp_path):
+        prev = tmp_path / "prev"
+        current = tmp_path / "current"
+        _write_prev_metadata(prev, [f"s{i}" for i in range(10)])
+        paths = WorkdirPaths.from_root(current)
+        paths.ensure_dirs()
+
+        result = _materialize_backbone(prev, paths)
+        assert result is not None
+        assert len(result.read_text().splitlines()) == 10
+
+    def test_missing_previous_metadata_returns_none(self, tmp_path):
+        prev = tmp_path / "prev_that_doesnt_exist"
+        current = tmp_path / "current"
+        paths = WorkdirPaths.from_root(current)
+        paths.ensure_dirs()
+        # No metadata file at prev — must gracefully return None
+        assert _materialize_backbone(prev, paths) is None
+
+    def test_empty_previous_metadata_returns_none(self, tmp_path):
+        prev = tmp_path / "prev"
+        current = tmp_path / "current"
+        _write_prev_metadata(prev, [])  # header only, no strains
+        paths = WorkdirPaths.from_root(current)
+        paths.ensure_dirs()
+        assert _materialize_backbone(prev, paths) is None
+
+    def test_self_reference_raises_system_exit(self, tmp_path):
+        paths = WorkdirPaths.from_root(tmp_path)
+        paths.ensure_dirs()
+        with pytest.raises(SystemExit, match="current workdir"):
+            _materialize_backbone(tmp_path, paths)
+
+    def test_backbone_from_propagates_to_run_pipeline(self, monkeypatch, tmp_path):
+        """run_pipeline passes backbone_from through and cfg gets backbone_strains set."""
+        prev = tmp_path / "prev"
+        current = tmp_path / "current"
+        _write_prev_metadata(prev, ["strain1", "strain2"])
+
+        # Also satisfy the subsampled-metadata boundary check
+        sub_dir = current / "results" / "subsampled"
+        sub_dir.mkdir(parents=True)
+        cols = ["strain", "date", "country", "division", "location", "clade",
+                "clade_truncated", "region", "host", "source", "data_use"]
+        lines = ["\t".join(cols)]
+        for i in range(10):
+            lines.append("\t".join([f"seq{i}", "2026-01-01", "Brazil", "SP", "SP",
+                                    "I", "I", "South America", "human", "Pathoplexus", "OPEN"]))
+        (sub_dir / "metadata.tsv").write_text("\n".join(lines) + "\n")
+
+        monkeypatch.setattr("flexpipe.run.load_config", lambda *a, **kw: _make_mock_cfg())
+        mock_snakemake = MagicMock(return_value=0)
+        monkeypatch.setattr("flexpipe.run._run_snakemake", mock_snakemake)
+
+        rc = run_pipeline(
+            config_path=FIXTURE_CONFIG,
+            workdir=current,
+            run_date="2026-06-01",
+            stage="ingest",
+            backbone_from=prev,
+        )
+        assert rc == 0
+        # backbone_strains.txt must have been written in the current workdir
+        assert (current / "config" / "backbone_strains.txt").exists()
+        content = (current / "config" / "backbone_strains.txt").read_text().splitlines()
+        assert set(content) == {"strain1", "strain2"}
