@@ -421,11 +421,15 @@ rule qc_summary:
 # ─── Subsampling ──────────────────────────────────────────────────────────────
 
 rule resolve_subsample_config:
-    """Write a workdir-local copy of the subsample config with defaults.max_date injected.
+    """Write a workdir-local copy of the subsample config with runtime overrides injected.
 
     When flexpipe-run passes --config run_date=<YYYY-MM-DD>, this rule injects that date
     as the upper bound for augur subsample so the analysis window is reproducibly anchored
     to the declared reference date rather than the system clock.
+
+    When flexpipe-run passes --backbone-from <prev_workdir>, a synthetic sample set
+    __backbone__ is injected with an include path pointing at the materialized strain list
+    so augur subsample force-keeps those strains regardless of group caps.
 
     When run_date is empty (direct snakemake invocation), the source subsample config is
     copied unchanged — preserving current behaviour.
@@ -433,7 +437,8 @@ rule resolve_subsample_config:
     input:
         subsample_cfg = files.subsample_config
     params:
-        run_date = _run_date
+        run_date        = _run_date,
+        backbone_strains = _sub.get("backbone_strains") or ""
     output:
         resolved = f"{_wd}/config/subsample_resolved.yaml"
     run:
@@ -441,7 +446,12 @@ rule resolve_subsample_config:
         from flexpipe.config import resolve_subsample_config
         with open(input.subsample_cfg, encoding="utf-8") as fh:
             raw = yaml.safe_load(fh) or {}
-        resolved = resolve_subsample_config(raw, params.run_date, input.subsample_cfg)
+        resolved = resolve_subsample_config(
+            raw,
+            params.run_date,
+            input.subsample_cfg,
+            backbone_strains=params.backbone_strains or None,
+        )
         import os; os.makedirs(os.path.dirname(output.resolved), exist_ok=True)
         with open(output.resolved, "w", encoding="utf-8") as fh:
             yaml.safe_dump(resolved, fh, default_flow_style=False, sort_keys=False)

@@ -17,7 +17,8 @@ Usage::
         --workdir /data/runs/yfv-brazil/2025-06-01 \\
         --run-date 2025-06-01 \\
         [--stage ingest|phylo|all] \\
-        [--cores 4]
+        [--cores 4] \\
+        [--backbone-from /data/runs/yfv-brazil/2023-06-01]
 
 Exit codes:
     0 — success
@@ -26,6 +27,7 @@ Exit codes:
 """
 
 import argparse
+import csv
 import logging
 import subprocess
 import sys
@@ -97,6 +99,88 @@ def _seed_coordinate_cache_with_shared(
     )
 
 
+def _materialize_backbone(
+    backbone_from: Path | None,
+    paths: WorkdirPaths,
+) -> Path | None:
+    """Extract the previous run's subsampled strain list and write it to the workdir.
+
+    Reads ``<backbone_from>/results/subsampled/metadata.tsv``, pulls the ``strain``
+    column, and writes one strain per line to ``paths.backbone_strains``.  Returns the
+    output path so the caller can set ``cfg.subsampling.backbone_strains``.
+
+    Returns ``None`` (no-op) when:
+
+    * *backbone_from* is ``None`` (feature disabled).
+    * *backbone_from* resolves to the current workdir (self-reference guard — exits 2).
+    * The previous metadata file is missing (warns, continues without backbone).
+    * The previous metadata has no strains (warns, continues without backbone).
+
+    Args:
+        backbone_from: Path to the previous run's workdir, or ``None``.
+        paths: :class:`~flexpipe.paths.WorkdirPaths` for the current run.
+
+    Returns:
+        Absolute :class:`~pathlib.Path` to the written include-list, or ``None``.
+    """
+    if backbone_from is None:
+        return None
+
+    prev_root = Path(backbone_from).resolve()
+    if prev_root == paths.root:
+        raise SystemExit(
+            f"--backbone-from points at the current workdir ({paths.root}).\n"
+            "Pass a *previous* run's workdir, not the one being built."
+        )
+
+    prev_metadata = WorkdirPaths.from_root(prev_root).subsampled_metadata
+    if not prev_metadata.exists():
+        logger.warning(
+            "backbone: no subsampled metadata found at %s — proceeding without backbone.",
+            prev_metadata,
+        )
+        return None
+
+    strains: list[str] = []
+    try:
+        with open(prev_metadata, newline="", encoding="utf-8") as fh:
+            reader = csv.DictReader(fh, delimiter="\t")
+            if reader.fieldnames is None or "strain" not in reader.fieldnames:
+                logger.warning(
+                    "backbone: previous metadata at %s has no 'strain' column — "
+                    "proceeding without backbone.",
+                    prev_metadata,
+                )
+                return None
+            for row in reader:
+                s = row.get("strain", "").strip()
+                if s:
+                    strains.append(s)
+    except Exception as exc:
+        logger.warning(
+            "backbone: could not read %s (%s) — proceeding without backbone.", prev_metadata, exc
+        )
+        return None
+
+    if not strains:
+        logger.warning(
+            "backbone: previous metadata at %s contains no strains — proceeding without backbone.",
+            prev_metadata,
+        )
+        return None
+
+    out = paths.backbone_strains
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text("\n".join(strains) + "\n", encoding="utf-8")
+    logger.info(
+        "backbone: materialized %d strains from %s → %s",
+        len(strains),
+        prev_metadata,
+        out,
+    )
+    return out
+
+
 def _run_snakemake(
     snakefile: Path,
     config_path: Path,
@@ -149,6 +233,7 @@ def run_pipeline(
     run_date: str,
     stage: str = "all",
     cores: int = 4,
+    backbone_from: Path | None = None,
 ) -> int:
     """Run the pipeline for one build.
 
@@ -158,6 +243,10 @@ def run_pipeline(
         run_date: Reference date for this run (``YYYY-MM-DD``).
         stage: ``"ingest"``, ``"phylo"``, or ``"all"`` (default).
         cores: Number of CPU cores to pass to Snakemake.
+        backbone_from: Path to a previous run's workdir.  When provided, the previous
+            run's subsampled strain list is force-included in the new subsample so the
+            sequence SET stays stable across reruns.  ``None`` (default) disables the
+            feature — behaviour is identical to the current pipeline.
 
     Returns:
         Exit code (0 = success).
@@ -207,6 +296,7 @@ def run_pipeline(
             run_date=run_date,
             stage=stage,
             cores=cores,
+            backbone_from=backbone_from,
         )
     finally:
         lock.release()
@@ -221,8 +311,15 @@ def _run_pipeline_locked(
     run_date: str,
     stage: str,
     cores: int,
+    backbone_from: Path | None = None,
 ) -> int:
     """Inner pipeline body — called inside the workdir lock."""
+    # Materialize the backbone strain list before writing the resolved config so
+    # cfg.subsampling.backbone_strains propagates into the single Snakemake --configfile.
+    backbone_path = _materialize_backbone(backbone_from, paths)
+    if backbone_path is not None:
+        cfg.subsampling.backbone_strains = str(backbone_path)
+
     snakemake_overrides = write_snakemake_config_overrides(
         cfg, paths.snakemake_config_overrides, config_path
     )
@@ -238,6 +335,9 @@ def _run_pipeline_locked(
 
     manifest = Manifest(run_date=run_date, build_name=build_name, config_path=config_path)
     manifest.record_provenance(cfg, snakemake_overrides)
+    if backbone_path is not None:
+        manifest.record("backbone_from", str(backbone_from))
+        manifest.record("backbone_strain_count", len(backbone_path.read_text().splitlines()))
 
     min_sequences = cfg.qc.min_sequences
 
@@ -330,6 +430,20 @@ def main() -> None:
         help="Number of CPU cores for Snakemake (default: 4)",
     )
     parser.add_argument(
+        "--backbone-from",
+        default=None,
+        type=Path,
+        metavar="PREV_WORKDIR",
+        help=(
+            "Path to a previous run's workdir.  When provided, the strain list from that "
+            "run's results/subsampled/metadata.tsv is force-included in the new subsample "
+            "via augur subsample's per-sample include mechanism.  The new subsample becomes "
+            "the union of (stable backbone strains) + (freshly-selected new sequences), "
+            "making results comparable across runs.  Omit for a fully-fresh subsample "
+            "(default)."
+        ),
+    )
+    parser.add_argument(
         "--log-level",
         default="INFO",
         choices=["DEBUG", "INFO", "WARNING", "ERROR"],
@@ -356,5 +470,6 @@ def main() -> None:
         run_date=run_date,
         stage=args.stage,
         cores=args.cores,
+        backbone_from=args.backbone_from.resolve() if args.backbone_from else None,
     )
     sys.exit(rc)

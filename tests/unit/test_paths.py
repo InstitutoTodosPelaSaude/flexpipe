@@ -72,6 +72,12 @@ class TestWorkdirPathsProperties:
     def test_phylo_log_under_logs(self, paths):
         assert str(paths.phylo_log).startswith(str(paths.logs_dir))
 
+    def test_backbone_strains_under_generated_config(self, paths):
+        assert str(paths.backbone_strains).startswith(str(paths.generated_config_dir))
+
+    def test_backbone_strains_filename(self, paths):
+        assert paths.backbone_strains.name == "backbone_strains.txt"
+
 
 class TestWorkdirPathsEnsureDirs:
     """ensure_dirs() creates all directories idempotently."""
