@@ -33,6 +33,7 @@ class TestDefaults:
         assert cfg.parameters.ufboot == 1000
         assert cfg.options.threads == 4
         assert cfg.subsampling.random_seed == 42
+        assert cfg.subsampling.backbone_strains is None
         assert cfg.curation.clade_levels == 1
         assert cfg.curation.lineage_parser == "none"
         assert cfg.curation.lineage_columns.genotype == "genotype"
@@ -503,6 +504,42 @@ class TestWriteSnakemakeConfigOverrides:
         assert Path(loaded["files"]["clades"]).is_absolute()
         assert Path(loaded["files"]["auspice_config"]).is_absolute()
         assert Path(loaded["files"]["subsample_config"]).is_absolute()
+
+    def test_backbone_strains_default_none_in_resolved_yaml(self, tmp_path):
+        """backbone_strains defaults to None and propagates into the resolved YAML."""
+        cfg = FlexpipeConfig(
+            data_source="pathoplexus",
+            pathoplexus={"organism": "yellow-fever"},
+            viralqc=ViralqcConfig(
+                datasets_dir="/data/viralQC/datasets",
+                blast_database="/data/viralQC/datasets/blast.fasta",
+                blast_database_metadata="/data/viralQC/datasets/blast.tsv",
+            ),
+        )
+        assert cfg.subsampling.backbone_strains is None
+        out = write_snakemake_config_overrides(
+            cfg, tmp_path / "snakemake_resolved.yaml", FIXTURE_CONFIG
+        )
+        loaded = yaml.safe_load(out.read_text())
+        assert loaded["subsampling"]["backbone_strains"] is None
+
+    def test_backbone_strains_set_in_resolved_yaml(self, tmp_path):
+        """When backbone_strains is set on the config, it propagates into the resolved YAML."""
+        cfg = FlexpipeConfig(
+            data_source="pathoplexus",
+            pathoplexus={"organism": "yellow-fever"},
+            viralqc=ViralqcConfig(
+                datasets_dir="/data/viralQC/datasets",
+                blast_database="/data/viralQC/datasets/blast.fasta",
+                blast_database_metadata="/data/viralQC/datasets/blast.tsv",
+            ),
+        )
+        cfg.subsampling.backbone_strains = "/tmp/workdir/config/backbone_strains.txt"
+        out = write_snakemake_config_overrides(
+            cfg, tmp_path / "snakemake_resolved.yaml", FIXTURE_CONFIG
+        )
+        loaded = yaml.safe_load(out.read_text())
+        assert loaded["subsampling"]["backbone_strains"] == "/tmp/workdir/config/backbone_strains.txt"
 
 
 # ---------------------------------------------------------------------------

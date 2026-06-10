@@ -306,6 +306,15 @@ class TraitsConfig(BaseModel):
 class SubsamplingConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
     random_seed: int = 42
+    backbone_strains: str | None = None
+    """Absolute path to a one-strain-per-line include-list from a previous run.
+
+    Populated at runtime by ``flexpipe-run --backbone-from``; never authored in build
+    ``config.yaml`` (it would bake a machine-specific absolute path into version control).
+    When set, ``resolve_subsample_config`` injects a synthetic ``samples.__backbone__``
+    sample set so ``augur subsample`` force-keeps the listed strains regardless of group
+    caps.  ``None`` (the default) disables the feature entirely.
+    """
 
 
 class LineageColumnsConfig(BaseModel):
