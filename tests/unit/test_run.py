@@ -571,12 +571,38 @@ class TestMaterializeBackbone:
         # Also satisfy the subsampled-metadata boundary check
         sub_dir = current / "results" / "subsampled"
         sub_dir.mkdir(parents=True)
-        cols = ["strain", "date", "country", "division", "location", "clade",
-                "clade_truncated", "region", "host", "source", "data_use"]
+        cols = [
+            "strain",
+            "date",
+            "country",
+            "division",
+            "location",
+            "clade",
+            "clade_truncated",
+            "region",
+            "host",
+            "source",
+            "data_use",
+        ]
         lines = ["\t".join(cols)]
         for i in range(10):
-            lines.append("\t".join([f"seq{i}", "2026-01-01", "Brazil", "SP", "SP",
-                                    "I", "I", "South America", "human", "Pathoplexus", "OPEN"]))
+            lines.append(
+                "\t".join(
+                    [
+                        f"seq{i}",
+                        "2026-01-01",
+                        "Brazil",
+                        "SP",
+                        "SP",
+                        "I",
+                        "I",
+                        "South America",
+                        "human",
+                        "Pathoplexus",
+                        "OPEN",
+                    ]
+                )
+            )
         (sub_dir / "metadata.tsv").write_text("\n".join(lines) + "\n")
 
         monkeypatch.setattr("flexpipe.run.load_config", lambda *a, **kw: _make_mock_cfg())

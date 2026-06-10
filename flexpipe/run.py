@@ -157,7 +157,9 @@ def _materialize_backbone(
                 if s:
                     strains.append(s)
     except Exception as exc:
-        logger.warning("backbone: could not read %s (%s) — proceeding without backbone.", prev_metadata, exc)
+        logger.warning(
+            "backbone: could not read %s (%s) — proceeding without backbone.", prev_metadata, exc
+        )
         return None
 
     if not strains:

@@ -539,7 +539,9 @@ class TestWriteSnakemakeConfigOverrides:
             cfg, tmp_path / "snakemake_resolved.yaml", FIXTURE_CONFIG
         )
         loaded = yaml.safe_load(out.read_text())
-        assert loaded["subsampling"]["backbone_strains"] == "/tmp/workdir/config/backbone_strains.txt"
+        assert (
+            loaded["subsampling"]["backbone_strains"] == "/tmp/workdir/config/backbone_strains.txt"
+        )
 
 
 # ---------------------------------------------------------------------------

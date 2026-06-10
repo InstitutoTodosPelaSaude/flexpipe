@@ -105,13 +105,17 @@ class TestResolveSubsampleConfigBackbone:
 
     def test_injects_backbone_sample_set(self):
         raw = self._base_config()
-        result = resolve_subsample_config(raw, None, backbone_strains="/tmp/cfg/backbone_strains.txt")
+        result = resolve_subsample_config(
+            raw, None, backbone_strains="/tmp/cfg/backbone_strains.txt"
+        )
         assert "__backbone__" in result["samples"]
         assert result["samples"]["__backbone__"] == {"include": "/tmp/cfg/backbone_strains.txt"}
 
     def test_backbone_does_not_affect_existing_samples(self):
         raw = self._base_config()
-        result = resolve_subsample_config(raw, None, backbone_strains="/tmp/cfg/backbone_strains.txt")
+        result = resolve_subsample_config(
+            raw, None, backbone_strains="/tmp/cfg/backbone_strains.txt"
+        )
         assert "focal" in result["samples"]
         assert result["samples"]["focal"] == raw["samples"]["focal"]
 

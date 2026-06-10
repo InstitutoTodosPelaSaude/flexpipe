@@ -60,6 +60,35 @@ for forward-compatibility but does not use it). Omitting it defaults to today wi
 runs with the same `--run-date` and the same config produce the same `config_hash` and `run_id`
 in the manifest. When not passed, `augur subsample` has no upper date bound.
 
+**`--backbone-from` semantics:** opt-in stable backbone — pass the workdir of a previous run to
+force-include its subsampled strain list in the new subsample.  The new subsample becomes the
+union of *(stable backbone strains) + (freshly-selected new sequences)*, making results comparable
+across runs (e.g. a 2-year-later rerun of an RSV build).
+
+```bash
+# Run A (initial build — e.g. June 2024)
+flexpipe-run \
+    --config   builds/rsv-a-brazil/config.yaml \
+    --workdir  /path/to/workdir/rsv-A \
+    --run-date 2024-06-01
+
+# Run B (2 years later — backbone anchors the 2024 selection)
+flexpipe-run \
+    --config        builds/rsv-a-brazil/config.yaml \
+    --workdir       /path/to/workdir/rsv-B \
+    --run-date      2026-06-01 \
+    --backbone-from /path/to/workdir/rsv-A
+```
+
+Key limitations of `--backbone-from`:
+- **Best-effort retention:** strains dropped by upstream QC (`augur filter`) or
+  `clade_filter` cannot be force-kept — `include` only applies within `augur subsample`.
+  Backbone retention is bounded by the quality contract.
+- **Runtime-only:** never put the backbone path in `builds/<name>/config.yaml` (it bakes a
+  machine-specific absolute path into version control).  Always pass it via the CLI flag.
+- **Self-reference guard:** pointing `--backbone-from` at the current workdir exits with code 2.
+- **Missing previous run:** a warning is logged and the run proceeds without a backbone.
+
 ### Workflow Control
 ```bash
 # Run ingest only
@@ -243,6 +272,13 @@ path, not the workdir-local resolved snapshot. The Snakefile reads
 - Reads `builds/<name>/subsample.yaml`
 - For YFV Brazil: subsamples by division (state) and year
 - Generates subsampled metadata and sequences in `<workdir>/results/subsampled/`
+- **Backbone support** (`--backbone-from`): when enabled, `resolve_subsample_config` injects a
+  synthetic `samples.__backbone__: {include: <workdir>/config/backbone_strains.txt}` entry so
+  `augur subsample` force-keeps the previous run's strains regardless of group caps.
+  The `backbone_strains.txt` file is written by `_materialize_backbone()` in `run.py` before
+  Snakemake is invoked; `SubsamplingConfig.backbone_strains` carries the path through the
+  resolved config to the Snakefile.  Feature is a complete no-op when `backbone_strains` is
+  `None` (the default).
 
 **Colors and coordinates** (can be run in parallel):
 - `flexpipe-name2hue`: deterministic hue assignment from subsampled metadata
