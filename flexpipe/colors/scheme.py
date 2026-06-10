@@ -218,13 +218,17 @@ def effective_levels(
 
     if root_level == "auto":
         if not detect_from:
-            logger.warning("clade_root_level=auto but --detect-root-from not provided; using full levels")
+            logger.warning(
+                "clade_root_level=auto but --detect-root-from not provided; using full levels"
+            )
             return levels
         detect_df = pd.read_csv(detect_from, sep="\t", dtype=str).fillna("")
         root = find_polymorphic_root(levels, detect_df)
     else:
         if root_level not in levels:
-            logger.warning("clade_root_level=%r not in levels %s; using full levels", root_level, levels)
+            logger.warning(
+                "clade_root_level=%r not in levels %s; using full levels", root_level, levels
+            )
             return levels
         root = root_level
 

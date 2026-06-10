@@ -300,12 +300,20 @@ def main() -> None:
                 clade_root = find_polymorphic_root(clade_levels_cfg, detect_df)
                 logger.info("Auto-detected clade root level: %r", clade_root)
             else:
-                logger.warning("--root-level auto requires --detect-root-from; using default root %r", clade_root)
+                logger.warning(
+                    "--root-level auto requires --detect-root-from; using default root %r",
+                    clade_root,
+                )
         elif root_level_arg in clade_levels_cfg:
             clade_root = root_level_arg
             logger.info("Clade root level pinned to: %r", clade_root)
         else:
-            logger.warning("--root-level %r not in clade levels %s; using default %r", root_level_arg, clade_levels_cfg, clade_root)
+            logger.warning(
+                "--root-level %r not in clade levels %s; using default %r",
+                root_level_arg,
+                clade_levels_cfg,
+                clade_root,
+            )
 
     all_warnings = []
     sections = []  # (comment, {cat: hue})

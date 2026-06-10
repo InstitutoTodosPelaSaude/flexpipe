@@ -122,7 +122,9 @@ def _assert_phylo_profile(output: str, build_config: Path) -> None:
     if date_confidence:
         assert "--date-confidence" in output
     else:
-        assert "--date-confidence" not in output, "Unexpected --date-confidence for date_confidence=false"
+        assert (
+            "--date-confidence" not in output
+        ), "Unexpected --date-confidence for date_confidence=false"
     if traits_confidence:
         assert "--confidence" in output
     else:
