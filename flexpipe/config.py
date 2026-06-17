@@ -543,7 +543,7 @@ class FragmentConfig(BaseModel):
         if not grades:
             raise ValueError(
                 "fragment.target_quality must not be empty. "
-                "Specify at least one passing grade, e.g. [\"A\", \"B\"]."
+                'Specify at least one passing grade, e.g. ["A", "B"].'
             )
         valid = {"A", "B", "C", "D"}
         invalid = sorted(set(grades) - valid)

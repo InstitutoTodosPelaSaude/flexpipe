@@ -149,6 +149,7 @@ class TestEnsureSourceFeature:
 
     def test_no_op_when_source_present(self):
         from Bio.SeqFeature import FeatureLocation, SeqFeature
+
         src_feat = SeqFeature(FeatureLocation(0, 450, 1), type="source")
         rec = _make_record(length=450, features=[_cds(0, 450, "N"), src_feat])
         original_count = len(rec.features)

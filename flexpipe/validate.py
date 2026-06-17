@@ -524,10 +524,9 @@ def _check_fragment_dataset(
 
         # Check target gene coverage (case-insensitive for robustness against
         # dataset naming variations, e.g. "N" vs "n").
-        gene_covered = (
-            target_gene.lower() == ds_target_gene.lower()
-            or target_gene.lower() in [r.lower() for r in ds_target_regions]
-        )
+        gene_covered = target_gene.lower() == ds_target_gene.lower() or target_gene.lower() in [
+            r.lower() for r in ds_target_regions
+        ]
         if gene_covered:
             matching_datasets.append(ds_name)
 
