@@ -1,6 +1,6 @@
 defaults:
   # Exclude strains in the ignore list
-  exclude: builds/measles-b3-global/ignore.txt
+  exclude: builds/measles-b3-n450-global/ignore.txt
   # Restrict to sequences collected from year 2000 onward (MeV molecular clock
   # calibration is reliable on modern sequences; older outliers increase noise)
   min_date: 2000

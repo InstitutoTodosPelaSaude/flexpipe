@@ -70,7 +70,7 @@ mode: "fragment"
 
 fragment:
   target_gene: "N"           # /gene qualifier in the ViralQC dataset
-  min_target_coverage: 0.70  # minimum targetGeneCoverage (default 0.70)
+  min_target_coverage: 0.25  # minimum targetGeneCoverage — see note below
   target_quality: ["A", "B"] # passing targetGeneQuality grades
 ```
 
@@ -78,8 +78,15 @@ fragment:
 |-----|------|---------|-------------|
 | `mode` | `"whole-genome"` \| `"fragment"` | `"whole-genome"` | Analysis mode |
 | `fragment.target_gene` | string | `""` (required in fragment mode) | Target gene name (matches ViralQC dataset) |
-| `fragment.min_target_coverage` | float 0–1 | `0.70` | Minimum fraction of target gene covered |
+| `fragment.min_target_coverage` | float 0–1 | `0.70` | Minimum fraction of **target gene** covered |
 | `fragment.target_quality` | list | `["A","B"]` | Passing targetGeneQuality grades |
+
+> **Important:** `min_target_coverage` is measured against the **full length of the target
+> gene**, not the fragment window.  A 450-nt N450 fragment covers ~28.5 % of the 1,578-nt
+> measles N gene, so setting `min_target_coverage: 0.70` would drop every valid N450 sequence.
+> For sub-gene fragments like N450, set this value below the fraction of the gene your window
+> covers (e.g. `0.25`).  The default of `0.70` is appropriate only when your sequences cover
+> ≥ 70 % of the full target gene (e.g. a near-complete E gene fragment).
 
 ### Required Companion Settings
 
@@ -167,7 +174,7 @@ will be NaN or very low).  The active gate is
 - **Reference**: 450-nt N450 slice, single CDS `/gene=N`, id `NC_001498.1`
 - **Data source**: Pathoplexus (`measles`)
 - **Clade filter**: `clade_truncated` = `B3` (upstream of subsampling)
-- **Fragment config**: `target_gene: N`, `min_target_coverage: 0.70`
+- **Fragment config**: `target_gene: N`, `min_target_coverage: 0.25` (N450 covers ~28.5 % of the N gene)
 - **ViralQC dataset**: `measles-N450-WHO-2012` (declares `target_gene: N`)
 
 ### Quick Start
@@ -181,7 +188,7 @@ flexpipe-run \
 
 Expected outputs after a full run:
 
-- `<workdir>/results/viralqc/sequences_target_regions.fasta` — extracted N450 fragments
+- `<workdir>/results/viralqc/outputs/sequences_target_regions.fasta` — extracted N450 fragments
 - `<workdir>/results/subsampled/sequences.fasta` — subsampled N450 sequences
 - `<workdir>/auspice/results.json` — N450 tree (450-column alignment)
 

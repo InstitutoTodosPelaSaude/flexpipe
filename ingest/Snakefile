@@ -401,19 +401,19 @@ rule curate_qc:
             --output    {output.curated:q}
 
         if [ "{params.mode}" = "fragment" ]; then
-            # Fragment mode: filter on target_gene_coverage instead of whole-genome coverage.
+            # Fragment mode: filter on per-target-gene metrics instead of whole-genome metrics.
             # targetGeneCoverage measures coverage of the full target gene (e.g. measles N gene
             # = 1578 nt); a 450-nt N450 fragment covers ~28.5% of the full gene.  Set
             # fragment.min_target_coverage below that ratio so valid fragments are not dropped.
-            # Sequences with target_gene_coverage=0 do not overlap the target gene at all
-            # (they cover other genomic regions) and must be excluded to avoid gap-only
-            # alignment columns in the phylogenetic tree.
+            # Sequences with target_gene_coverage=0 (or NaN — ViralQC could not compute it)
+            # do not overlap the target gene and produce gap-only alignment columns; both are
+            # excluded by the strict >= gate (NaN fails a numeric comparison in pandas).
             augur filter \
                 --metadata        {output.curated:q} \
                 --sequences       {input.sequences:q} \
                 --query-columns   target_gene_coverage:float \
-                --query           "target_gene_coverage.isna() or target_gene_coverage >= {params.min_target_coverage}" \
-                --exclude-where   {params.req_col_filter:q} {params.quality_filter:q} \
+                --query           "target_gene_coverage >= {params.min_target_coverage}" \
+                --exclude-where   {params.req_col_filter:q} {params.target_quality_filter:q} \
                 --output-log      {output.filter_log:q} \
                 --output-metadata  {output.metadata:q} \
                 --output-sequences {output.sequences:q}

@@ -168,6 +168,7 @@ def join_viralqc(
                     pass
                 # "GENE: float" or "G1: v1, G2: v2, ..." dict-like format
                 gene = str(row[tg_col]).strip() if tg_col and tg_col in row.index else ""
+                first_key = None
                 first_val = float("nan")
                 for part in s.split(","):
                     part = part.strip()
@@ -181,7 +182,18 @@ def join_viralqc(
                     if gene and k.strip() == gene:
                         return num  # exact match for configured target gene
                     if pd.isna(first_val):
+                        first_key = k.strip()
                         first_val = num  # keep first numeric value as fallback
+                if not pd.isna(first_val) and gene and first_key and first_key != gene:
+                    logger.warning(
+                        "targetGeneCoverage gene-name skew for '%s': "
+                        "expected '%s' but not found in dict '%s'; "
+                        "using first-entry value from gene '%s'.",
+                        row.get("strain", "?"),
+                        gene,
+                        s,
+                        first_key,
+                    )
                 return first_val
 
             df["target_gene_coverage"] = df.apply(_parse_coverage, axis=1)

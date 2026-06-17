@@ -76,12 +76,22 @@ class TestParseRegion:
 # ── _find_feature_interval ────────────────────────────────────────────────────
 
 
+def _cds_minus(start, end, gene_name="N"):
+    """CDS on the reverse (minus) strand."""
+    return SeqFeature(
+        FeatureLocation(start, end, strand=-1),
+        type="CDS",
+        qualifiers={"gene": [gene_name]},
+    )
+
+
 class TestFindFeatureInterval:
     def test_finds_simple_cds(self):
         record = _make_record(features=[_cds(107, 1685)])
-        start, end = _find_feature_interval(record, "N", "CDS")
+        start, end, strand = _find_feature_interval(record, "N", "CDS")
         assert start == 107
         assert end == 1685
+        assert strand == 1
 
     def test_finds_by_gene_qualifier(self):
         record = _make_record(
@@ -90,9 +100,18 @@ class TestFindFeatureInterval:
                 _cds(200, 900, "N"),
             ]
         )
-        start, end = _find_feature_interval(record, "N", "CDS")
+        start, end, strand = _find_feature_interval(record, "N", "CDS")
         assert start == 200
         assert end == 900
+        assert strand == 1
+
+    def test_returns_minus_strand(self):
+        """Negative-strand CDS must surface strand=-1."""
+        record = _make_record(features=[_cds_minus(300, 900, "N")])
+        start, end, strand = _find_feature_interval(record, "N", "CDS")
+        assert start == 300
+        assert end == 900
+        assert strand == -1
 
     def test_raises_when_gene_absent(self):
         record = _make_record(features=[_cds(0, 100, "H")])
@@ -108,9 +127,10 @@ class TestFindFeatureInterval:
             ]
         )
         # Both intervals are found; min start / max end
-        start, end = _find_feature_interval(record, "N", "CDS")
+        start, end, strand = _find_feature_interval(record, "N", "CDS")
         assert start == 100
         assert end == 500
+        assert strand == 1
 
 
 # ── _ensure_cds_feature ───────────────────────────────────────────────────────
@@ -269,3 +289,30 @@ class TestSliceReference:
         cds = [f for f in sub.features if f.type == "CDS"]
         assert len(cds) == 1
         assert cds[0].qualifiers.get("gene") == ["N"]
+
+    def test_negative_strand_gene_propagates_strand(self, tmp_path):
+        """Synthesised source/CDS for a minus-strand gene must use strand=-1."""
+        full = _make_record(length=2000, features=[_cds_minus(500, 950, "N")])
+        src = tmp_path / "full.gb"
+        SeqIO.write(full, str(src), "genbank")
+
+        # Slice the full gene window — BioPython will reframe the CDS to 0..450
+        # but with strand=-1, so we only need to check the synthesised source.
+        sub = slice_reference(src, gene="N", feature_type="CDS")
+        assert len(sub.seq) == 450  # 950 - 500
+        source_feats = [f for f in sub.features if f.type == "source"]
+        assert len(source_feats) == 1
+        assert int(source_feats[0].location.strand) == -1
+
+    def test_non_codon_length_emits_warning(self, tmp_path, caplog):
+        """Synthesising a CDS over a non-multiple-of-3 region emits a warning."""
+        import logging
+
+        # Record with no CDS in window 0..100 (not divisible by 3: 100 % 3 = 1)
+        full = _make_record(length=1000, features=[])
+        src = tmp_path / "full.gb"
+        SeqIO.write(full, str(src), "genbank")
+
+        with caplog.at_level(logging.WARNING, logger="flexpipe.phylo.reference_slice"):
+            slice_reference(src, region="1..100", gene="N")
+        assert any("not a multiple of 3" in rec.message for rec in caplog.records)

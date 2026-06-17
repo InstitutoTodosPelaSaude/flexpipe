@@ -509,18 +509,21 @@ class FragmentConfig(BaseModel):
     ``qc.min_coverage`` gate when ``mode='fragment'``.
 
     ``target_quality`` is applied to ViralQC's ``targetGeneQuality`` column
-    (A/B/C/D) and replaces ``qc.genome_quality`` when ``mode='fragment'``.
+    (A/B/C/D) and gates fragment sequences independently of ``qc.genome_quality``
+    (which applies to whole-genome coverage and remains active in fragment mode
+    for cross-contamination checks, but is NOT the primary filter).
 
     Examples::
 
-        # Measles nucleoprotein N450 build
+        # Measles nucleoprotein N450 build (N450 covers ~28.5% of the N gene;
+        # min_target_coverage must be below that fraction, e.g. 0.25)
         mode: "fragment"
         fragment:
           target_gene: "N"
-          min_target_coverage: 0.70
+          min_target_coverage: 0.25
           target_quality: ["A", "B"]
 
-        # Dengue serotype envelope gene
+        # Dengue serotype envelope gene (full-gene fragment; 0.70 is appropriate)
         mode: "fragment"
         fragment:
           target_gene: "E"
@@ -531,6 +534,25 @@ class FragmentConfig(BaseModel):
     target_gene: str = ""
     min_target_coverage: float = Field(default=0.70, ge=0.0, le=1.0)
     target_quality: list[str] = Field(default_factory=lambda: ["A", "B"])
+
+    @field_validator("target_quality", mode="before")
+    @classmethod
+    def _check_quality_grades(cls, v: list) -> list[str]:
+        """Reject empty lists and invalid grade values."""
+        grades = [str(g).strip().upper() for g in v]
+        if not grades:
+            raise ValueError(
+                "fragment.target_quality must not be empty. "
+                "Specify at least one passing grade, e.g. [\"A\", \"B\"]."
+            )
+        valid = {"A", "B", "C", "D"}
+        invalid = sorted(set(grades) - valid)
+        if invalid:
+            raise ValueError(
+                f"fragment.target_quality contains invalid grades: {invalid}. "
+                "Valid grades are A, B, C, D."
+            )
+        return grades
 
 
 class LocalSequencesConfig(BaseModel):

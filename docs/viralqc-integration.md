@@ -239,7 +239,7 @@ In fragment mode, the `curate_qc` rule uses ViralQC's extracted sequence file as
 `--sequences` input instead of the merged raw FASTA:
 
 ```
-<workdir>/results/viralqc/sequences_target_regions.fasta
+<workdir>/results/viralqc/outputs/sequences_target_regions.fasta
 ```
 
 This file contains each record trimmed to the target region.  Length-heterogeneous

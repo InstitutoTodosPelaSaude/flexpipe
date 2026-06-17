@@ -83,12 +83,14 @@ def _find_feature_interval(
     record,
     gene_name: str,
     feature_type: str,
-) -> tuple[int, int]:
-    """Return the 0-based half-open ``(start, end)`` spanning all intervals of
-    the named gene feature.
+) -> tuple[int, int, int]:
+    """Return the 0-based half-open ``(start, end, strand)`` spanning all intervals
+    of the named gene feature.
 
-    Raises ``ValueError`` if no matching feature is found.
+    ``strand`` is 1 (forward) or -1 (reverse); falls back to 1 if the feature
+    has no strand information.  Raises ``ValueError`` if no matching feature is found.
     """
+    matching_features = []
     candidates = []
     for feature in record.features:
         if str(feature.type) != feature_type:
@@ -96,6 +98,7 @@ def _find_feature_interval(
         gene_vals = [str(v) for v in feature.qualifiers.get("gene", [])]
         if gene_name not in gene_vals:
             continue
+        matching_features.append(feature)
         candidates.extend(_feature_intervals(feature))
     if not candidates:
         raise ValueError(
@@ -106,12 +109,20 @@ def _find_feature_interval(
         )
     first_start = min(s for s, _e in candidates)
     last_end = max(e for _s, e in candidates)
-    has_compound = any(
-        len(_feature_intervals(f)) > 1
-        for f in record.features
-        if str(f.type) == feature_type
-        and gene_name in [str(v) for v in f.qualifiers.get("gene", [])]
-    )
+
+    # Determine strand from the first matching feature; warn when inconsistent.
+    strand = int(matching_features[0].location.strand or 1)
+    strands = {int(f.location.strand or 1) for f in matching_features}
+    if len(strands) > 1:
+        logger.warning(
+            "Feature '%s'/%s has inconsistent strands across parts; "
+            "using strand=%d for the synthesised features.",
+            gene_name,
+            feature_type,
+            strand,
+        )
+
+    has_compound = any(len(_feature_intervals(f)) > 1 for f in matching_features)
     if has_compound:
         logger.warning(
             "Feature '%s'/%s has a compound/join location (%d parts). "
@@ -123,10 +134,10 @@ def _find_feature_interval(
             first_start + 1,
             last_end,
         )
-    return first_start, last_end
+    return first_start, last_end, strand
 
 
-def _ensure_source_feature(sub_record, organism: str) -> None:
+def _ensure_source_feature(sub_record, organism: str, strand: int = 1) -> None:
     """Ensure a ``source`` feature spanning the full record exists.
 
     Biopython's slice operator only carries over features whose coordinates
@@ -134,39 +145,62 @@ def _ensure_source_feature(sub_record, organism: str) -> None:
     window (e.g. a whole-genome ``source`` annotation) are silently dropped.
     ``augur translate`` requires a ``source`` feature, so we synthesise one
     when none is present.
+
+    Args:
+        sub_record: The sliced BioPython SeqRecord to modify in-place.
+        organism: Organism name for the ``/organism`` qualifier.
+        strand: Strand of the original feature (1 or -1); used for the
+            synthesised ``source`` feature.
     """
     has_source = any(str(f.type) == "source" for f in sub_record.features)
     if has_source:
         return
     length = len(sub_record.seq)
     source_f = SeqFeature(
-        location=FeatureLocation(0, length, strand=1),
+        location=FeatureLocation(0, length, strand=strand),
         type="source",
         qualifiers={"organism": [organism]} if organism else {},
     )
     sub_record.features.insert(0, source_f)
 
 
-def _ensure_cds_feature(sub_record, gene_name: str) -> None:
+def _ensure_cds_feature(sub_record, gene_name: str, strand: int = 1) -> None:
     """Ensure at least one CDS feature with /gene=gene_name exists.
 
     ``augur translate`` needs a CDS in the reference to produce amino-acid
     mutations.  If Biopython's slicing left no CDS (e.g. the user specified
     a bare ``--region`` outside any annotated CDS), synthesise one spanning
     the full record.
+
+    Args:
+        sub_record: The sliced BioPython SeqRecord to modify in-place.
+        gene_name: Value for the ``/gene`` and ``/product`` qualifiers.
+        strand: Strand of the original feature (1 or -1).  Negative-strand
+            genes are rare in single-gene fragment builds, but passing the
+            correct strand ensures ``augur translate`` reads the right frame.
     """
     has_cds = any(str(f.type) == "CDS" for f in sub_record.features)
     if has_cds:
         return
     length = len(sub_record.seq)
+    if length % 3 != 0:
+        logger.warning(
+            "Synthesised CDS 1..%d /gene='%s': length %d is not a multiple of 3. "
+            "Ensure --region starts on a codon boundary; otherwise augur translate "
+            "will produce incorrect amino-acid mutations.",
+            length,
+            gene_name,
+            length,
+        )
     logger.warning(
-        "No CDS feature in the sliced record — synthesising CDS 1..%d /gene='%s'. "
-        "Review the output reference.",
+        "No CDS feature in the sliced record — synthesising CDS 1..%d /gene='%s' "
+        "strand=%d.  Review the output reference.",
         length,
         gene_name,
+        strand,
     )
     cds = SeqFeature(
-        location=FeatureLocation(0, length, strand=1),
+        location=FeatureLocation(0, length, strand=strand),
         type="CDS",
         qualifiers={"gene": [gene_name], "product": [gene_name]},
     )
@@ -197,6 +231,9 @@ def slice_reference(
     """
     record = SeqIO.read(str(source), "genbank")
     effective_gene = gene or ""
+    # Strand is resolved from the matched feature when --gene is used; for bare
+    # --region slices the strand is unknown and defaults to 1 (forward).
+    strand: int = 1
 
     if region:
         start, end = _parse_region(region)
@@ -208,13 +245,14 @@ def slice_reference(
             source,
         )
     elif effective_gene:
-        start, end = _find_feature_interval(record, effective_gene, feature_type)
+        start, end, strand = _find_feature_interval(record, effective_gene, feature_type)
         logger.info(
-            "Found %s/%s at %d..%d; slicing",
+            "Found %s/%s at %d..%d (strand=%d); slicing",
             effective_gene,
             feature_type,
             start,
             end,
+            strand,
         )
     else:
         raise ValueError("Provide --region or --gene to specify the slice.")
@@ -242,10 +280,11 @@ def slice_reference(
     # Ensure source and CDS features exist for augur translate.
     # Biopython drops features that completely span the slice (both endpoints
     # outside the window), so a whole-genome `source` annotation is never
-    # carried over automatically — we synthesise it here.
+    # carried over automatically — we synthesise it here using the original
+    # feature's strand so negative-strand genes translate correctly.
     organism = record.annotations.get("organism", "")
-    _ensure_source_feature(sub, organism)
-    _ensure_cds_feature(sub, effective_gene or "target")
+    _ensure_source_feature(sub, organism, strand=strand)
+    _ensure_cds_feature(sub, effective_gene or "target", strand=strand)
 
     logger.info(
         "Sliced record %s: %d bp, %d features",

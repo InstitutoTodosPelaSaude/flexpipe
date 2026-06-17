@@ -771,3 +771,46 @@ class TestFragmentConfig:
         )
         assert cfg.mode == "whole-genome"
         assert cfg.fragment.target_gene == "N"
+
+    # ── target_quality validator ──────────────────────────────────────────────
+
+    def test_target_quality_valid_grades(self):
+        """A, B, C, D are all accepted individually or combined."""
+        for grades in (["A"], ["B"], ["A", "B"], ["A", "B", "C", "D"]):
+            cfg = FlexpipeConfig(
+                **self._base(
+                    mode="fragment",
+                    fragment={"target_gene": "N", "target_quality": grades},
+                )
+            )
+            assert sorted(cfg.fragment.target_quality) == sorted(grades)
+
+    def test_target_quality_empty_list_raises(self):
+        """An empty target_quality silently excludes all sequences — reject it."""
+        with pytest.raises(pydantic.ValidationError, match="must not be empty"):
+            FlexpipeConfig(
+                **self._base(
+                    mode="fragment",
+                    fragment={"target_gene": "N", "target_quality": []},
+                )
+            )
+
+    def test_target_quality_invalid_grade_raises(self):
+        """Grade 'Z' is not a valid ViralQC quality level."""
+        with pytest.raises(pydantic.ValidationError, match="invalid grades"):
+            FlexpipeConfig(
+                **self._base(
+                    mode="fragment",
+                    fragment={"target_gene": "N", "target_quality": ["A", "Z"]},
+                )
+            )
+
+    def test_target_quality_grades_uppercased(self):
+        """Validator normalises lowercase grades to uppercase."""
+        cfg = FlexpipeConfig(
+            **self._base(
+                mode="fragment",
+                fragment={"target_gene": "N", "target_quality": ["a", "b"]},
+            )
+        )
+        assert set(cfg.fragment.target_quality) == {"A", "B"}

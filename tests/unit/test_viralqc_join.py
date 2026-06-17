@@ -354,3 +354,101 @@ class TestJoinViralqcFragmentMode:
         assert result.loc[result["strain"] == "SEQ001", "target_gene_quality"].iloc[0] == "A"
         assert result.loc[result["strain"] == "SEQ002", "target_gene_quality"].iloc[0] == "B"
         assert result.loc[result["strain"] == "SEQ003", "target_gene_quality"].iloc[0] == "D"
+
+
+# ---------------------------------------------------------------------------
+# _parse_coverage: dict-like format
+# ---------------------------------------------------------------------------
+
+
+class TestParseCoverageFormat:
+    """Tests for the 'GENE: float' dict-like targetGeneCoverage parser inside join_viralqc."""
+
+    def _run(self, tg_cov: str, target_gene: str = "N", tmp_path=None) -> float:
+        """Helper: write a single-row ViralQC TSV and return target_gene_coverage."""
+        import tempfile
+        from pathlib import Path
+
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "vqc.tsv"
+            row = {
+                "seqName": "SEQ001",
+                "genomeQuality": "A",
+                "targetGene": target_gene,
+                "targetGeneCoverage": tg_cov,
+                "targetGeneQuality": "A",
+            }
+            import pandas as _pd
+
+            _pd.DataFrame([row]).to_csv(str(path), sep="\t", index=False)
+            df = _make_metadata("SEQ001")
+            result = join_viralqc(df, str(path), {}, mode="fragment")
+            return float(result.loc[0, "target_gene_coverage"])
+
+    def test_plain_float_string(self):
+        assert abs(self._run("0.97") - 0.97) < 1e-6
+
+    def test_plain_float_zero(self):
+        assert abs(self._run("0.0") - 0.0) < 1e-6
+
+    def test_dict_format_exact_gene_match(self):
+        """'N: 0.28, F: 0.91' with targetGene=N should return 0.28."""
+        val = self._run("N: 0.28, F: 0.91", target_gene="N")
+        assert abs(val - 0.28) < 1e-6
+
+    def test_dict_format_other_gene_match(self):
+        """'N: 0.28, F: 0.91' with targetGene=F should return 0.91."""
+        val = self._run("N: 0.28, F: 0.91", target_gene="F")
+        assert abs(val - 0.91) < 1e-6
+
+    def test_dict_format_single_entry(self):
+        """Single 'GENE: value' without a comma."""
+        val = self._run("N: 0.35", target_gene="N")
+        assert abs(val - 0.35) < 1e-6
+
+    def test_dict_format_gene_name_skew_uses_first_value(self):
+        """When targetGene doesn't match any key, the FIRST numeric value is used."""
+        # targetGene=E but coverage dict only has N and F — fallback to first (N: 0.10)
+        val = self._run("N: 0.10, F: 0.80", target_gene="E")
+        assert abs(val - 0.10) < 1e-6
+
+    def test_dict_format_gene_name_skew_emits_warning(self, caplog):
+        """Gene-name skew must emit a logger.warning."""
+        import logging
+
+        import pandas as _pd
+        import tempfile
+        from pathlib import Path
+
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "vqc.tsv"
+            row = {
+                "seqName": "SEQ001",
+                "genomeQuality": "A",
+                "targetGene": "E",  # E is not in the coverage dict
+                "targetGeneCoverage": "N: 0.10, F: 0.80",
+                "targetGeneQuality": "A",
+            }
+            _pd.DataFrame([row]).to_csv(str(path), sep="\t", index=False)
+            df = _make_metadata("SEQ001")
+            with caplog.at_level(logging.WARNING, logger="flexpipe.curate.viralqc_join"):
+                join_viralqc(df, str(path), {}, mode="fragment")
+        assert any("gene-name skew" in rec.message for rec in caplog.records)
+
+    def test_empty_coverage_string_returns_nan(self):
+        import math
+
+        val = self._run("")
+        assert math.isnan(val)
+
+    def test_malformed_part_skipped(self):
+        """A malformed key:value pair is skipped; the next valid pair wins."""
+        # "bad_part, N: 0.55" — bad_part has no colon → skipped
+        val = self._run("bad_part, N: 0.55", target_gene="N")
+        assert abs(val - 0.55) < 1e-6
+
+    def test_all_malformed_returns_nan(self):
+        import math
+
+        val = self._run("no_colons_at_all", target_gene="N")
+        assert math.isnan(val)
