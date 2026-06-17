@@ -27,6 +27,10 @@ logger = logging.getLogger(__name__)
 _CACHE_COLS = ["level", "name", "query", "latitude", "longitude"]
 
 
+def _empty_cache_df() -> pd.DataFrame:
+    return pd.DataFrame(columns=_CACHE_COLS)
+
+
 def merge_coordinate_cache(
     new_latlongs: Union[str, Path],
     cache_path: Union[str, Path],
@@ -133,20 +137,34 @@ def _read_cache(path: Union[str, Path]) -> pd.DataFrame:
     """Read a coordinate cache TSV, returning an empty DataFrame if file is missing.
 
     Handles two on-disk formats transparently:
-    - **New format** (written by ``merge_coordinate_cache``): has a header row
-      starting with ``"level\\t"``.
-    - **Legacy / latlongs format** (written by ``write_output`` or the old
-      Snakefile inline block): no header; blank lines separate trait groups.
+    - **New format**: ``level name query latitude longitude``.
+    - **Legacy headered format**: ``level name latitude longitude`` or
+      ``level query lat lon display_name``.
+    - **Legacy / latlongs format**: no header; blank lines separate trait groups.
     """
     p = Path(path)
     if not p.exists():
-        return pd.DataFrame(columns=_CACHE_COLS)
+        return _empty_cache_df()
+    if p.stat().st_size == 0:
+        return _empty_cache_df()
 
     with open(p, encoding="utf-8") as fh:
         first_line = fh.readline()
 
-    if first_line.startswith("level\t"):
+    first_fields = first_line.rstrip("\n").split("\t")
+    if first_fields and first_fields[0] == "level":
         df = pd.read_csv(p, sep="\t", dtype=str).fillna("")
+        if "lat" in df.columns and "latitude" not in df.columns:
+            df["latitude"] = df["lat"]
+        if "lon" in df.columns and "longitude" not in df.columns:
+            df["longitude"] = df["lon"]
+        if "name" not in df.columns:
+            if "display_name" in df.columns:
+                display = df["display_name"].astype(str).str.strip()
+                query = df.get("query", pd.Series([""] * len(df), index=df.index))
+                df["name"] = display.where(display != "", query)
+            else:
+                df["name"] = df.get("query", "")
         if "query" not in df.columns:
             df["query"] = df.get("name", "")
     else:
@@ -171,4 +189,5 @@ def _read_cache(path: Union[str, Path]) -> pd.DataFrame:
     for col in _CACHE_COLS:
         if col not in df.columns:
             df[col] = ""
+    df = df[df["name"].astype(str).str.strip() != ""]
     return df[_CACHE_COLS]

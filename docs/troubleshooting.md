@@ -138,9 +138,7 @@ Clade_A	ORF1ab	100	T
 
 **Cause**: NCBI requires an email for rate-limiting. It's not configured.
 
-**Fix**: Provide email via one of:
-1. Config file: `ncbi.email: user@example.com`
-2. Environment variable: `export NCBI_EMAIL=user@example.com`
+**Fix**: Provide a real contact email before running the build. Set `ncbi.email` in the build config, or export `NCBI_EMAIL` in your shell environment.
 
 ---
 
@@ -153,10 +151,13 @@ Clade_A	ORF1ab	100	T
 **Fix**:
 1. Pre-seed the cache with known locations:
    ```bash
-   flexpipe-update-cache --new-cache builds/<name>/cache_coordinates.tsv --existing-cache shared_cache.tsv
+   flexpipe-update-cache \
+     --new-latlongs /path/to/latlongs.tsv \
+     --cache builds/<name>/cache_coordinates.tsv \
+     --output builds/<name>/cache_coordinates.tsv
    ```
 2. Or, set `coordinates.shared_cache` to a pre-built shared cache file to reuse across builds
-3. Manaully add entries to `builds/<name>/cache_coordinates.tsv` for frequently-used locations
+3. Manually add entries to `builds/<name>/cache_coordinates.tsv` for frequently-used locations
 
 ---
 

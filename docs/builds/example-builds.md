@@ -83,8 +83,8 @@ Example configuration:
 data_source: ncbi
 ncbi:
   taxid: 11082
-  email: ${NCBI_EMAIL}
-  api_key: ${NCBI_API_KEY}
+  email: ""  # required before running, or set NCBI_EMAIL
+  api_key: ""  # optional, or set NCBI_API_KEY
 ```
 
 ### Local Builds

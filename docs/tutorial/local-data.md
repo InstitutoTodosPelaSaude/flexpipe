@@ -28,7 +28,7 @@ You need two files (in Pathoplexus TSV format):
 ### metadata.tsv
 
 ```
-accessionVersion	geoLocCountry	geoLocAdmin1	collectionDate
+accessionVersion	geoLocCountry	geoLocAdmin1	sampleCollectionDate
 SEQ_001	Brazil	SP	2025-01-15
 SEQ_002	Brazil	RJ	2025-02-10
 ```
@@ -37,7 +37,7 @@ Minimal required columns:
 - `accessionVersion` → strain ID
 - `geoLocCountry` → country
 - `geoLocAdmin1` → state/region
-- `collectionDate` → date (YYYY-MM-DD)
+- `sampleCollectionDate` → date (YYYY-MM-DD)
 
 ### sequences.fasta
 
@@ -50,40 +50,33 @@ AGACGACGAC...
 
 ### Store Them
 
-For this tutorial, use the example files:
+For this tutorial, the checked-in example build already points at these files:
 
 ```bash
-export LOCAL_META=builds/local-example/example_metadata.tsv
-export LOCAL_SEQ=builds/local-example/example_sequences.fasta
+builds/local-example/local_data/metadata.tsv
+builds/local-example/local_data/sequences.fasta
 ```
 
-(Create real files if you have your own data.)
+Replace those files, or update the config paths below, when you have your own data.
 
-## Step 2: Update Config
+## Step 2: Check Config
 
-Edit `builds/local-example/config.yaml`:
+`builds/local-example/config.yaml` is ready to run with the bundled tutorial files:
 
-**Current**:
+```yaml
+data_source: "local"
+
+local:
+  metadata:  "builds/local-example/local_data/metadata.tsv"
+  sequences: "builds/local-example/local_data/sequences.fasta"
+```
+
+For your own data, edit the `local` paths. Relative paths are resolved from the build config directory, and existing repo-root-relative paths are still accepted:
+
 ```yaml
 local:
-  metadata: "/absolute/path/to/metadata.tsv"
-  sequences: "/absolute/path/to/sequences.fasta"
-```
-
-**Edit to** (use absolute paths):
-
-```bash
-cd builds/local-example
-sed -i '' "s|/absolute/path/to/metadata.tsv|$(pwd)/example_metadata.tsv|" config.yaml
-sed -i '' "s|/absolute/path/to/sequences.fasta|$(pwd)/example_sequences.fasta|" config.yaml
-cd -
-```
-
-Or manually edit:
-```yaml
-local:
-  metadata: "/Users/you/flexpipe/builds/local-example/example_metadata.tsv"
-  sequences: "/Users/you/flexpipe/builds/local-example/example_sequences.fasta"
+  metadata: "local_data/my_metadata.tsv"
+  sequences: "local_data/my_sequences.fasta"
 ```
 
 ## Step 3: Run
@@ -130,7 +123,7 @@ Your metadata must use Pathoplexus column names:
 | Accession | `accessionVersion` |
 | Country | `geoLocCountry` |
 | State | `geoLocAdmin1` |
-| Date | `collectionDate` |
+| Date | `sampleCollectionDate` |
 
 ### Authority: FASTA File
 

@@ -45,19 +45,11 @@ Test integration for a specific build:
 pytest -m integration -k "denv3"
 ```
 
-### Registering New Builds in Integration Tests
+### Integration Coverage for New Builds
 
-To add your build to automated integration testing, edit `tests/integration/conftest.py`:
+Integration tests automatically discover `builds/*/config.yaml`. Add the build
+directory and config, then run:
 
-```python
-builds_to_test = [
-    "yfv-brazil",
-    "denv3-brazil",
-    "my-pathogen",  # Add your build here
-]
-```
-
-Then:
 ```bash
 pytest -m integration -k "my-pathogen"
 ```

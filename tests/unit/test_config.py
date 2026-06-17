@@ -168,6 +168,13 @@ def yfv_config_path():
 
 
 class TestLoadConfig:
+    def _make_fake_datasets(self, tmp_path: Path) -> Path:
+        datasets = tmp_path / "datasets"
+        datasets.mkdir()
+        (datasets / "blast.fasta").write_text(">seq1\nATCG\n")
+        (datasets / "blast.tsv").write_text("accession\torganism\nNC_001\tyellow-fever\n")
+        return datasets
+
     def test_load_division_config(self, yfv_config_path):
         cfg = load_config(yfv_config_path, workdir="/tmp/testrun", skip_viralqc=True)
         assert isinstance(cfg, FlexpipeConfig)
@@ -207,6 +214,74 @@ class TestLoadConfig:
         )
         cfg = load_config(config_yaml, workdir="/tmp/from_arg", skip_viralqc=True)
         assert cfg.paths.workdir == "/tmp/from_arg"
+
+    def test_run_mode_preflight_applies_when_viralqc_section_is_omitted(
+        self, tmp_path, monkeypatch
+    ):
+        datasets = self._make_fake_datasets(tmp_path)
+        monkeypatch.setenv("VIRALQC_DATASETS_DIR", str(datasets))
+        config_yaml = tmp_path / "config.yaml"
+        config_yaml.write_text(
+            "data_source: pathoplexus\n" "pathoplexus:\n  organism: yellow-fever\n"
+        )
+
+        cfg = load_config(config_yaml)
+
+        assert cfg.viralqc.mode == "run"
+        assert cfg.viralqc.datasets_dir == str(datasets)
+        assert cfg.viralqc.blast_database == str(datasets / "blast.fasta")
+
+    def test_run_mode_without_viralqc_section_still_requires_datasets(self, tmp_path, monkeypatch):
+        import flexpipe.config as cfg_module
+
+        monkeypatch.delenv("VIRALQC_DATASETS_DIR", raising=False)
+        monkeypatch.setattr(cfg_module, "__file__", "/nonexistent/path/flexpipe/config.py")
+        config_yaml = tmp_path / "config.yaml"
+        config_yaml.write_text(
+            "data_source: pathoplexus\n" "pathoplexus:\n  organism: yellow-fever\n"
+        )
+
+        with pytest.raises(SystemExit, match="ViralQC datasets directory not configured"):
+            load_config(config_yaml)
+
+    def test_skip_mode_does_not_require_viralqc_datasets(self, tmp_path, monkeypatch):
+        import flexpipe.config as cfg_module
+
+        monkeypatch.delenv("VIRALQC_DATASETS_DIR", raising=False)
+        monkeypatch.setattr(cfg_module, "__file__", "/nonexistent/path/flexpipe/config.py")
+        config_yaml = tmp_path / "config.yaml"
+        config_yaml.write_text(
+            "data_source: pathoplexus\n"
+            "pathoplexus:\n  organism: yellow-fever\n"
+            "viralqc:\n  mode: skip\n"
+        )
+
+        cfg = load_config(config_yaml)
+
+        assert cfg.viralqc.mode == "skip"
+        assert cfg.viralqc.datasets_dir == ""
+
+    def test_precomputed_mode_does_not_require_viralqc_datasets(self, tmp_path, monkeypatch):
+        import flexpipe.config as cfg_module
+
+        monkeypatch.delenv("VIRALQC_DATASETS_DIR", raising=False)
+        monkeypatch.setattr(cfg_module, "__file__", "/nonexistent/path/flexpipe/config.py")
+        precomputed = tmp_path / "results.tsv"
+        precomputed.write_text("strain\tgenome_quality\tcoverage\tclade\n")
+        config_yaml = tmp_path / "config.yaml"
+        config_yaml.write_text(
+            "data_source: pathoplexus\n"
+            "pathoplexus:\n  organism: yellow-fever\n"
+            "viralqc:\n"
+            "  mode: precomputed\n"
+            "  precomputed: results.tsv\n"
+        )
+
+        cfg = load_config(config_yaml)
+
+        assert cfg.viralqc.mode == "precomputed"
+        assert cfg.viralqc.precomputed == str(precomputed)
+        assert cfg.viralqc.datasets_dir == ""
 
     def test_build_relative_paths_resolve_from_config_dir(self, tmp_path, monkeypatch):
         build = tmp_path / "build"

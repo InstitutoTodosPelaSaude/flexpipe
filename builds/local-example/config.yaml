@@ -52,7 +52,7 @@ region_source: "country"
 # ── Data source ──────────────────────────────────────────────────────────────
 # data_source: local — skip remote fetch entirely.
 # Supply your own metadata TSV (PPX-convention columns) and FASTA sequences.
-# See docs/plan_pipeline_flexibility.md for the required column contract.
+# See docs/pipeline/local-data.md for the required column contract.
 data_source: "local"
 
 local:

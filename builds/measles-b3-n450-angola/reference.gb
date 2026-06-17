@@ -1,0 +1,24 @@
+LOCUS       NC_001498.1              450 bp    cRNA             UNK 01-JAN-1980
+DEFINITION  Measles virus, complete genome [1233..1682].
+ACCESSION   NC_001498
+VERSION     NC_001498.1
+KEYWORDS    .
+SOURCE      .
+  ORGANISM  Measles morbillivirus
+            .
+FEATURES             Location/Qualifiers
+     source          1..450
+                     /organism="Measles morbillivirus"
+     CDS             1..450
+                     /gene="N"
+                     /product="N"
+ORIGIN
+        1 gtcagttcca cattggcatc cgaactcggt atcactgccg aggatgcaag gcttgtttca
+       61 gagattgcaa tgcatactac tgaggacagg atcagtagag cggtcggacc cagacaagcc
+      121 caagtgtcat ttctacacgg tgatcaaagt gagaatgagc taccaggatt ggggggcaag
+      181 gaagatagga gggtcaaaca gggtcgggga gaagccaggg agagctacag agaaaccggg
+      241 tccagcagag caagtgatgc gagagctgcc catcctccaa ccagcatgcc cctagacatt
+      301 gacactgcat cggagtcagg ccaagatccg caggacagtc gaaggtcagc tgacgccctg
+      361 ctcaggctgc aagccatggc aggaatcttg gaagaacaag gctcagacac ggacacccct
+      421 agggtataca atgacagaga tcttctagac
+//

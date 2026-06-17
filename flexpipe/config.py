@@ -570,7 +570,7 @@ class LocalConfig(BaseModel):
     so that the ``augur curate rename`` step in ``curate_qc`` works unchanged.
     Alternatively, if canonical names (``strain``, ``date``, ``country``, …) are
     already present, the rename step silently skips the missing source fields.
-    See the post-merge metadata contract in ``docs/plan_pipeline_flexibility.md``.
+    See the local-data metadata contract in ``docs/pipeline/local-data.md``.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -949,8 +949,10 @@ def load_config(
 
     cfg = FlexpipeConfig(**raw)
 
-    # Resolve ViralQC paths (side-effectful — separate from pydantic validation)
-    if not skip_viralqc and "viralqc" in raw:
+    # Resolve ViralQC paths only for real ViralQC runs.  Skipped/precomputed modes
+    # do not need local datasets, while the default "run" mode must be preflighted
+    # even when the YAML omits the optional ``viralqc`` section entirely.
+    if not skip_viralqc and cfg.viralqc.mode == "run":
         cfg.viralqc = resolve_viralqc_paths(cfg.viralqc)
 
     return cfg

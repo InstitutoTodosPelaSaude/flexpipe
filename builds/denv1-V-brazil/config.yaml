@@ -58,7 +58,7 @@ clade_filter:
   match: exact
 
 region_source: "division"
-data_source: "local"
+data_source: "pathoplexus"
 
 local:
   metadata:  "data/metadata.tsv"

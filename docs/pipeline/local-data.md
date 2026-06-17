@@ -21,7 +21,7 @@ local:
   sequences: path/to/sequences.fasta
 ```
 
-Both `metadata` and `sequences` are **required** when using `data_source: local`. Paths are relative to the repository root.
+Both `metadata` and `sequences` are **required** when using `data_source: local`. Relative paths are resolved from the build config directory, with repo-root-relative paths still accepted for existing builds.
 
 ## Metadata Format
 
@@ -33,7 +33,7 @@ Your TSV file must use **Pathoplexus (ITpS) column names**. These are mapped to 
 | `geoLocCountry` | `country` | Country of origin |
 | `geoLocAdmin1` | `division` | State/province (if applicable) |
 | `geoLocAdmin2` | `location` | City/region (optional) |
-| `collectionDate` | `date` | Collection date (YYYY-MM-DD or flexible) |
+| `sampleCollectionDate` | `date` | Collection date (YYYY-MM-DD or flexible) |
 
 **Optional columns**:
 - `dataUseTerms` — data use policy (affects filtering/coloring)
@@ -42,7 +42,7 @@ Your TSV file must use **Pathoplexus (ITpS) column names**. These are mapped to 
 
 **Example**:
 ```tsv
-accessionVersion	geoLocCountry	geoLocAdmin1	collectionDate	dataUseTerms	lineage
+accessionVersion	geoLocCountry	geoLocAdmin1	sampleCollectionDate	dataUseTerms	lineage
 SEQ_001	Brazil	SP	2025-06-01	OPEN	DENV-3_III_B
 SEQ_002	Brazil	RJ	2025-06-10	OPEN	DENV-3_III_B
 ```
@@ -64,8 +64,8 @@ AGACGACGAC...
 
 With `data_source: local`:
 
-1. `fetch_local` rule copies metadata/sequences file paths (no download)
-2. `merge_local_sequences` rule is skipped (no merging with remote data)
+1. `fetch_local` rule copies metadata/sequences into the workdir (no download)
+2. `merge_local_sequences` passes those copied local files through unchanged
 3. ViralQC runs normally (unless disabled via `viralqc.mode: skip`)
 4. Curation, filtering, and subsampling proceed as usual
 
