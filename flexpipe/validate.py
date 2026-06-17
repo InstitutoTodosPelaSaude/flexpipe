@@ -296,6 +296,264 @@ def _check_no_clade_source(config_raw: dict, errors: list[str], warnings: list[s
         )
 
 
+def _check_fragment_mode(
+    config_raw: dict, build_dir: Path, errors: list[str], warnings: list[str]
+) -> None:
+    """Verify prerequisites for mode='fragment'.
+
+    No-op when mode != 'fragment'.  Checks:
+    - fragment.target_gene is set
+    - viralqc.mode is 'run' (skip/precomputed unsupported in v1)
+    - reference.gb looks like a gene-sized record (< 3000 bp) — warns if large
+    - target_gene appears as a /gene qualifier in the reference CDS features
+    - qc.min_coverage is noted as inert (fragment.min_target_coverage is active)
+    """
+    mode = config_raw.get("mode", "whole-genome")
+    if mode != "fragment":
+        return  # No-op for whole-genome builds
+
+    fragment = config_raw.get("fragment", {}) or {}
+    target_gene = str(fragment.get("target_gene", "") or "").strip()
+    if not target_gene:
+        msg = "fragment.target_gene is required when mode='fragment'"
+        errors.append(msg)
+        _err(msg)
+    else:
+        _ok(f"fragment.target_gene={target_gene!r}")
+
+    vqc_mode = str((config_raw.get("viralqc", {}) or {}).get("mode", "run") or "run")
+    if vqc_mode == "skip":
+        msg = "mode='fragment' is incompatible with viralqc.mode='skip' — use 'run'"
+        errors.append(msg)
+        _err(msg)
+    elif vqc_mode == "precomputed":
+        msg = "mode='fragment' with viralqc.mode='precomputed' is not yet supported"
+        errors.append(msg)
+        _err(msg)
+    else:
+        _ok(f"viralqc.mode={vqc_mode!r} (compatible with fragment mode)")
+
+    # Check the reference size and CDS gene annotation
+    ref_path = build_dir / "reference.gb"
+    if ref_path.exists():
+        try:
+            from Bio import SeqIO
+
+            record = SeqIO.read(str(ref_path), "genbank")
+            ref_len = len(record.seq)
+            if ref_len > 3000:
+                msg = (
+                    f"reference.gb is {ref_len} bp — looks like a whole-genome reference. "
+                    f"Fragment mode expects a gene-only reference (typically < 3000 bp). "
+                    f"Run flexpipe-reference-slice to produce the gene-only reference."
+                )
+                warnings.append(msg)
+                _warn(f"reference.gb is {ref_len} bp — expected a gene-only reference")
+            else:
+                _ok(f"reference.gb is {ref_len} bp (gene-sized — OK)")
+
+            if target_gene:
+                gene_names = set()
+                for feat in record.features:
+                    for v in feat.qualifiers.get("gene", []):
+                        gene_names.add(str(v))
+                if target_gene not in gene_names:
+                    msg = (
+                        f"fragment.target_gene='{target_gene}' not found as a /gene "
+                        f"qualifier in reference.gb (found: {sorted(gene_names) or 'none'}). "
+                        f"The reference and target_gene must match for augur translate "
+                        f"to annotate amino-acid mutations correctly."
+                    )
+                    warnings.append(msg)
+                    _warn(
+                        f"reference.gb has no /gene='{target_gene}' — "
+                        f"check that reference.gb is the correct gene-only record"
+                    )
+                else:
+                    _ok(f"/gene='{target_gene}' present in reference.gb CDS features")
+        except Exception as exc:  # noqa: BLE001
+            warnings.append(f"Could not inspect reference.gb for fragment checks: {exc}")
+            _warn(f"Could not inspect reference.gb: {exc}")
+    else:
+        # reference.gb missing — caught by _check_reference_gb; just note it here
+        _warn("reference.gb not found — cannot verify gene annotation")
+
+    min_target_cov = fragment.get("min_target_coverage", 0.70)
+    qc_min_cov = (config_raw.get("qc", {}) or {}).get("min_coverage", 0.70)
+    _ok(
+        f"QC thresholds: fragment.min_target_coverage={min_target_cov} (active), "
+        f"qc.min_coverage={qc_min_cov} (inert for fragment-only records)"
+    )
+
+
+def _check_fragment_dataset(
+    config_raw: dict, build_dir: Path, errors: list[str], warnings: list[str]
+) -> None:
+    """Hard guardrail: fragment mode requires an installed ViralQC/Nextclade dataset
+    that declares the configured target gene.
+
+    Reads the ViralQC datasets registry (``viralqc/config/datasets.yml``) resolved
+    via the same order as the ingest Snakefile:
+    ``viralqc.datasets_dir`` → ``$VIRALQC_DATASETS_DIR`` → ``viralQC/datasets/``.
+
+    No-op when mode != 'fragment' or when the datasets dir cannot be located.
+    """
+    import os
+
+    mode = config_raw.get("mode", "whole-genome")
+    if mode != "fragment":
+        return  # No-op for whole-genome builds
+
+    fragment = config_raw.get("fragment", {}) or {}
+    target_gene = str(fragment.get("target_gene", "") or "").strip()
+    if not target_gene:
+        return  # Already reported by _check_fragment_mode
+
+    vqc = config_raw.get("viralqc", {}) or {}
+    expected_virus = str(vqc.get("expected_virus", "") or "").strip()
+
+    # Resolve datasets dir: config → env → submodule default
+    datasets_dir = str(vqc.get("datasets_dir", "") or "").strip()
+    if not datasets_dir:
+        datasets_dir = os.environ.get("VIRALQC_DATASETS_DIR", "")
+    if not datasets_dir:
+        # Try the bundled submodule location relative to repo root
+        repo_root = build_dir.parent.parent  # builds/<name>/ → repo root
+        candidate = repo_root / "viralQC" / "datasets"
+        if candidate.is_dir():
+            datasets_dir = str(candidate)
+
+    if not datasets_dir or not Path(datasets_dir).is_dir():
+        warnings.append(
+            "ViralQC datasets directory not found — cannot verify dataset availability. "
+            "Set viralqc.datasets_dir or VIRALQC_DATASETS_DIR, or run "
+            "'bash scripts/install_viralqc.sh'."
+        )
+        _warn("ViralQC datasets dir not found — skipping dataset guardrail check")
+        return
+
+    # Look for the datasets registry. The ViralQC submodule layout is:
+    #   viralQC/
+    #     datasets/          ← datasets_dir
+    #     viralqc/
+    #       config/
+    #         datasets.yml   ← registry
+    # Try several relative positions to be robust across install layouts.
+    datasets_dir_path = Path(datasets_dir)
+    registry_candidates = [
+        datasets_dir_path.parent / "viralqc" / "config" / "datasets.yml",  # submodule
+        datasets_dir_path.parent / "config" / "datasets.yml",  # alt layout
+        datasets_dir_path.parent.parent / "viralqc" / "config" / "datasets.yml",
+        datasets_dir_path.parent.parent / "config" / "datasets.yml",
+    ]
+    registry_path = None
+    for candidate in registry_candidates:
+        if candidate.exists():
+            registry_path = candidate
+            break
+    if registry_path is None:
+        registry_path = registry_candidates[0]  # for error message
+    if not registry_path.exists():
+        warnings.append(
+            f"ViralQC datasets registry not found at {registry_path}. "
+            "Cannot verify fragment dataset availability."
+        )
+        _warn(f"datasets.yml not found at {registry_path} — skipping guardrail")
+        return
+    registry_path = Path(registry_path)  # ensure Path type
+
+    try:
+        import yaml as _yaml
+
+        registry = _yaml.safe_load(registry_path.read_text()) or {}
+    except Exception as exc:  # noqa: BLE001
+        warnings.append(f"Could not read datasets registry: {exc}")
+        _warn(f"Could not parse datasets.yml: {exc}")
+        return
+
+    # Find matching datasets: virus must match (alias-aware) and target_gene must cover
+    matching_datasets: list[str] = []
+    all_gene_options: list[str] = []
+
+    try:
+        from flexpipe.curate.viralqc_aliases import label_matches_entry, resolve_expected_entry
+
+        virus_entry = (
+            resolve_expected_entry(expected_virus, "viruses", aliases_file=None)
+            if expected_virus
+            else None
+        )
+    except Exception:  # noqa: BLE001
+        virus_entry = None
+
+    # The registry may be wrapped in a top-level key (e.g. "nextclade_data")
+    # Unwrap one level if the values aren't dicts with dataset fields.
+    registry_items = registry
+    if registry and not any(
+        isinstance(v, dict) and ("target_gene" in v or "virus_name" in v) for v in registry.values()
+    ):
+        # Try to find the first dict-valued key as the wrapper
+        for _wrapper_key, _wrapper_val in registry.items():
+            if isinstance(_wrapper_val, dict):
+                registry_items = _wrapper_val
+                break
+
+    for ds_name, ds_info in registry_items.items():
+        if not isinstance(ds_info, dict):
+            continue
+        ds_target_gene = str(ds_info.get("target_gene", "") or "").strip()
+        ds_target_regions = [str(r) for r in (ds_info.get("target_regions") or [])]
+        ds_virus_name = str(ds_info.get("virus_name", "") or "").strip()
+        ds_virus_species = str(ds_info.get("virus_species", "") or "").strip()
+
+        # Check virus match
+        if expected_virus and virus_entry is not None:
+            virus_label = ds_virus_name or ds_virus_species
+            if not label_matches_entry(virus_label, virus_entry):
+                continue
+        elif expected_virus:
+            # Fallback: loose substring match
+            ev_lower = expected_virus.lower()
+            if ev_lower not in (ds_virus_name + ds_virus_species).lower():
+                continue
+
+        # Track available genes for error messages
+        if ds_target_gene:
+            all_gene_options.append(ds_target_gene)
+        all_gene_options.extend(ds_target_regions)
+
+        # Check target gene coverage (case-insensitive for robustness against
+        # dataset naming variations, e.g. "N" vs "n").
+        gene_covered = target_gene.lower() == ds_target_gene.lower() or target_gene.lower() in [
+            r.lower() for r in ds_target_regions
+        ]
+        if gene_covered:
+            matching_datasets.append(ds_name)
+
+    if matching_datasets:
+        _ok(
+            f"fragment.target_gene='{target_gene}' is declared in "
+            f"{len(matching_datasets)} ViralQC dataset(s): "
+            f"{', '.join(matching_datasets[:3])}" + (" …" if len(matching_datasets) > 3 else "")
+        )
+    else:
+        available = sorted(set(all_gene_options))
+        msg = (
+            f"No installed ViralQC dataset declares target_gene='{target_gene}' "
+            f"for virus='{expected_virus or '(any)'}'. "
+            f"Fragment mode requires an available Nextclade/ViralQC dataset that "
+            f"extracts the target gene. "
+            f"Available target genes for this virus: {available or ['(none found)']}. "
+            f"Check viralqc.expected_virus and fragment.target_gene, or install the "
+            f"appropriate dataset (see docs/pipeline/fragment-analysis.md)."
+        )
+        errors.append(msg)
+        _err(
+            f"No dataset for virus='{expected_virus or '(any)'}' with "
+            f"target_gene='{target_gene}' — available: {available or ['(none)']}"
+        )
+
+
 def _check_data_source_prerequisites(
     config_raw: dict, build_dir: Path, errors: list[str], warnings: list[str]
 ) -> None:
@@ -433,6 +691,8 @@ def validate_build(config_path: str | Path) -> int:
     _check_clade_filter(config_raw, errors, warnings)
     _check_no_clade_source(config_raw, errors, warnings)
     _check_cache_coordinates_header(config_raw, build_dir, errors, warnings)
+    _check_fragment_mode(config_raw, build_dir, errors, warnings)
+    _check_fragment_dataset(config_raw, build_dir, errors, warnings)
 
     _summary(errors, warnings)
     return 1 if errors else 0

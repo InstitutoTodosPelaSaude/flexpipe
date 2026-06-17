@@ -142,6 +142,19 @@ viruses:
       - '^morbillivirus hominis$'
       - '^mev$'
 
+  yfv:
+    ictv_species: Orthoflavivirus flavi
+    aliases:
+      - yfv
+      - YFV
+      - Yellow fever virus
+      - yellow fever virus
+      - Orthoflavivirus flavi
+    patterns:
+      - '^yellow fever virus$'
+      - '^yfv$'
+      - '^orthoflavivirus flavi$'
+
 segments:
   ha:
     aliases:

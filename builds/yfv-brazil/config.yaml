@@ -75,6 +75,8 @@ ncbi:
 viralqc:
   conda_env: "viralQC"
   clade_column: "clade"
+  expected_virus: "yfv"
+  expected_segment: ""
   datasets_dir: ""          # set VIRALQC_DATASETS_DIR env var or override here
   blast_database: ""        # derived from datasets_dir by default
   blast_database_metadata: "" # derived from datasets_dir by default

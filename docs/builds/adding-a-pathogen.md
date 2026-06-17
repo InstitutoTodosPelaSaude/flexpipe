@@ -329,6 +329,79 @@ colours:
   - location
 ```
 
+## Fragment / Gene Window Builds
+
+When most sequences are partial (gene-length) or your analysis targets a specific
+marker window (e.g. measles N450, flu HA1, RSV F), use fragment mode.
+
+### When to choose fragment mode
+
+- Standard genotyping marker is a **sub-genomic window** (450 nt, 1 kb, etc.)
+- Most sequences in the database cover the gene only, not the full genome
+- You want QC gated on the **gene's** coverage/quality, not whole-genome coverage
+
+### Prerequisites
+
+Fragment mode requires a Nextclade dataset that declares a `target_gene` for your
+virus.  Check the ViralQC registry:
+
+```bash
+cat viralQC/viralqc/config/datasets.yml | grep -A3 "target_gene"
+```
+
+If no dataset exists, use `viralqc.mode: skip` (whole-genome mode only).
+
+### Step-by-step: adding a fragment build
+
+**1. Produce the gene-only reference:**
+
+```bash
+flexpipe-reference-slice \
+    --reference  builds/measles-b3-global/reference.gb \
+    --region     1233..1682 \
+    --gene       N  --feature-type CDS \
+    --new-id     NC_001498.1 \
+    --output-reference  builds/my-fragment-build/reference.gb \
+    --output-bed        builds/my-fragment-build/masks/reference_terminal.bed
+```
+
+For a tight coding window the BED will be empty — commit it anyway (the pipeline
+reads it unconditionally when `mask_sites_file` points to it).
+
+**2. Set `mode: fragment` in `config.yaml`:**
+
+```yaml
+mode: "fragment"
+
+fragment:
+  target_gene: "N"           # matches ViralQC dataset target_gene
+  min_target_coverage: 0.70
+  target_quality: ["A", "B"]
+
+viralqc:
+  mode: "run"          # fragment requires run — skip/precomputed forbidden
+  expected_virus: "measles"
+
+parameters:
+  mask_5prime: 0         # gene window has no UTR flanks
+  mask_3prime: 0
+  mask_sites_file: "builds/my-fragment-build/masks/reference_terminal.bed"
+```
+
+**3. Coordinate system:** all coordinates in `clades.tsv` must be **gene-relative**
+(position 1 = first base of the sliced window).
+
+**4. Validate:**
+
+```bash
+flexpipe-validate-build builds/my-fragment-build/config.yaml
+# ✓  mode=fragment: target_gene='N' set
+# ✓  Dataset found: measles-N450-WHO-2012 (target_gene=N, virus=measles)
+```
+
+Use `builds/measles-b3-n450-global/` as a worked reference example.  See
+[Fragment Analysis](../pipeline/fragment-analysis.md) for the full guide.
+
 ## Checklist
 
 - [ ] `config.yaml` updated with correct data source, reference, parameters

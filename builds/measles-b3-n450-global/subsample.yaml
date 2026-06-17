@@ -1,0 +1,16 @@
+defaults:
+  # Exclude strains in the ignore list
+  exclude: builds/measles-b3-n450-global/ignore.txt
+  # Restrict to sequences collected from year 2000 onward (MeV molecular clock
+  # calibration is reliable on modern sequences; older outliers increase noise)
+  min_date: 2000
+
+samples:
+  # Global even sampling: up to 5 sequences per country per year.
+  # After the clade_filter step, only B3 sequences reach this point,
+  # so sequences_per_group applies within B3.
+  global:
+    group_by:
+      - country
+      - year
+    sequences_per_group: 5

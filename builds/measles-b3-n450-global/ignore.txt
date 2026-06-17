@@ -1,0 +1,2 @@
+# Accessions to exclude from measles B3 global build.
+# Add accession IDs (one per line) for known bad sequences or lab strains.

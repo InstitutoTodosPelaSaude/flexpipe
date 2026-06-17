@@ -26,6 +26,49 @@ region_source: country    # country (global) or division (Brazil-only)
 | `data_source` | Literal | (required) | `pathoplexus`, `ncbi`, or `local` |
 | `region_source` | Literal | (required) | `country` (global) or `division` (Brazil state) |
 
+### mode
+
+Controls whether the analysis targets the whole genome or a specific gene/fragment:
+
+```yaml
+mode: "whole-genome"  # or: "fragment"
+```
+
+| Value | Behavior |
+|-------|----------|
+| `"whole-genome"` (default) | Standard pipeline; QC gates on `genome_quality` and `coverage` |
+| `"fragment"` | Uses ViralQC's extracted target-region FASTA; QC gates on `target_gene_coverage` and `target_gene_quality` |
+
+Fragment mode requires `viralqc.mode: run` and a Nextclade dataset that declares a
+`target_gene` for the virus.  See [Fragment Analysis](pipeline/fragment-analysis.md)
+for the full guide.
+
+### fragment
+
+Settings for gene/fragment analysis mode (`mode: "fragment"` only):
+
+```yaml
+fragment:
+  target_gene: "N"           # /gene qualifier in the ViralQC dataset (required)
+  min_target_coverage: 0.70  # minimum targetGeneCoverage (0.0–1.0)
+  target_quality: ["A", "B"] # passing targetGeneQuality grades
+```
+
+| Key | Type | Default | Purpose |
+|-----|------|---------|---------|
+| `target_gene` | string | `""` | Name of the target gene (e.g. `"N"`, `"HA"`, `"E"`); **required** when `mode: fragment` |
+| `min_target_coverage` | float 0–1 | `0.70` | Minimum fraction of target gene covered; sequences below this are excluded |
+| `target_quality` | list | `["A","B"]` | Accepted targetGeneQuality grades; grades not in this list are excluded |
+
+The `fragment:` section is inert when `mode: "whole-genome"` (the default).  Existing
+whole-genome builds that do not set `mode` are completely unaffected.
+
+**Validation rules:**
+- `target_gene` is required when `mode: "fragment"` (validator error if empty).
+- `viralqc.mode: skip` and `viralqc.mode: precomputed` are rejected in fragment mode (v1).
+- `flexpipe-validate-build` additionally checks that a ViralQC/Nextclade dataset
+  matching `viralqc.expected_virus` + `fragment.target_gene` exists in the registry.
+
 ### files
 
 ```yaml

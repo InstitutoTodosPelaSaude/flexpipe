@@ -1,0 +1,10 @@
+clade	gene	site	alt
+# Measles WHO genotype clade definitions — PLACEHOLDER.
+# In this N450 fragment build, measles genotypes are assigned by ViralQC/Nextclade
+# (nextstrain/measles/N450/WHO-2012) via the 'clade' metadata column.
+# The augur clades rule is a no-op (empty definitions); genotype labelling comes
+# from the 'clade' and 'clade_truncated' metadata columns in the Auspice export.
+#
+# If explicit branch-label definitions are added in future, all nucleotide positions
+# must be in the 450-nt N450 gene-relative coordinate frame (reference.gb coordinates),
+# NOT in NC_001498.1 whole-genome coordinates.

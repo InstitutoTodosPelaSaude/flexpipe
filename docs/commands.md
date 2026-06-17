@@ -201,6 +201,43 @@ flexpipe-collapse-traits \
   --output metadata_traits.tsv
 ```
 
+### flexpipe-reference-slice
+
+Extract a gene or coordinate window from a whole-genome `reference.gb`, producing a
+gene-only GenBank record and an optional gene-relative terminal mask BED.  Used to
+prepare the `reference.gb` for a fragment-mode build.
+
+```bash
+flexpipe-reference-slice \
+    --reference  builds/measles-b3-global/reference.gb \
+    --region     1233..1682 \
+    --gene       N  --feature-type CDS \
+    --new-id     NC_001498.1 \
+    --output-reference  builds/measles-b3-n450-global/reference.gb \
+    --output-bed        builds/measles-b3-n450-global/masks/reference_terminal.bed
+```
+
+| Flag | Default | Purpose |
+|------|---------|---------|
+| `--reference` | (required) | Source whole-genome GenBank file |
+| `--region` | `""` | 1-based inclusive coordinates `START..END` (e.g. `1233..1682`); overrides `--gene` |
+| `--gene` | `""` | `/gene` qualifier to locate the slice automatically |
+| `--feature-type` | `CDS` | Feature type searched when using `--gene` |
+| `--new-id` | source ID | Record ID for the output |
+| `--output-reference` | (required) | Path to write the gene-only GenBank |
+| `--output-bed` | `""` | Optional: path to write a gene-relative terminal mask BED |
+| `--profile` | `default` | Mask profile for `--output-bed` |
+| `--profile-file` | `""` | Override mask profiles YAML path |
+
+The output record is in **gene-relative coordinates** (position 1 = `START` in the
+source).  A CDS spanning the full slice is synthesized if no CDS survives Biopython's
+slice (required by `augur translate`).
+
+For a tight coding window (no UTR flanks), the BED written by `--output-bed` will be
+empty — this is correct and harmless.
+
+See [Fragment Analysis](pipeline/fragment-analysis.md) for the full workflow.
+
 ### flexpipe-reference-mask
 
 Generate terminal masking BED file from a reference genome (GenBank):

@@ -126,6 +126,13 @@ def reference_mask() -> None:
     main()
 
 
+def reference_slice() -> None:
+    """flexpipe-reference-slice — slice a gene/region from a whole-genome reference.gb."""
+    from flexpipe.phylo.reference_slice import main
+
+    main()
+
+
 def validate_build() -> None:
     """flexpipe-validate-build — validate a build config.yaml before running."""
     from flexpipe.validate import main

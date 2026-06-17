@@ -1,28 +1,29 @@
 # Example Builds
 
-flexpipe includes 15 example builds covering a range of viral pathogens and data sources. Each build is production-ready or template-quality.
+flexpipe includes 16 example builds covering a range of viral pathogens and data sources. Each build is production-ready or template-quality.
 
 ## All Builds
 
-| Build | Pathogen | Data Source | Region | Segmented | Focus |
-|-------|----------|-------------|--------|-----------|-------|
-| `yfv-brazil` | Yellow Fever Virus | Pathoplexus | Brazil | No | Production-tuned reference |
-| `denv1-brazil` | Dengue Virus 1 | Pathoplexus | Brazil | No | DENV serotype 1 |
-| `denv2-brazil` | Dengue Virus 2 | Pathoplexus | Brazil | No | DENV serotype 2 |
-| `denv3-brazil` | Dengue Virus 3 | Pathoplexus | Brazil | No | DENV serotype 3 (Track B template) |
-| `denv4-brazil` | Dengue Virus 4 | Pathoplexus | Brazil | No | DENV serotype 4 |
-| `zikv-brazil` | Zika Virus | NCBI | Brazil | No | NCBI data source template |
-| `chikv-brazil` | Chikungunya Virus | Pathoplexus | Brazil | No | Alphaviruses |
-| `rsv-a-brazil` | Respiratory Syncytial Virus A | Pathoplexus | Brazil | Yes (HA) | RSV serotype A |
-| `rsv-b-brazil` | Respiratory Syncytial Virus B | Pathoplexus | Brazil | Yes (HA) | RSV serotype B |
-| `rsv-global` | Respiratory Syncytial Virus | Pathoplexus | Global | Yes (HA) | Global RSV (not Brazil-specific) |
-| `orov-l-brazil` | Oropouche Virus | Pathoplexus | Brazil | Yes (L segment) | Single-segment L template |
-| `flu-h1n1-ha-brazil` | Influenza A H1N1 | NCBI | Brazil | Yes (HA) | Flu A H1N1 (HA only) |
-| `flu-h3n2-ha-brazil` | Influenza A H3N2 | NCBI | Brazil | Yes (HA) | Flu A H3N2 (HA only) |
-| `flu-b-ha-brazil` | Influenza B | NCBI | Brazil | Yes (HA) | Flu B (HA only) |
-| `measles-b3-global` | Measles (MeV) | Pathoplexus | Global | No | Genotype B3 only (`clade_filter` reference build) |
-| `mayv-global` | Mayaro Virus | NCBI | Global | No | First no-dataset build (`viralqc.mode: skip`) |
-| `local-example` | (User-defined) | Local | Brazil | No | Bring-your-own-data template |
+| Build | Pathogen | Data Source | Region | Mode | Focus |
+|-------|----------|-------------|--------|------|-------|
+| `yfv-brazil` | Yellow Fever Virus | Pathoplexus | Brazil | whole-genome | Production-tuned reference |
+| `denv1-brazil` | Dengue Virus 1 | Pathoplexus | Brazil | whole-genome | DENV serotype 1 |
+| `denv2-brazil` | Dengue Virus 2 | Pathoplexus | Brazil | whole-genome | DENV serotype 2 |
+| `denv3-brazil` | Dengue Virus 3 | Pathoplexus | Brazil | whole-genome | DENV serotype 3 (Track B template) |
+| `denv4-brazil` | Dengue Virus 4 | Pathoplexus | Brazil | whole-genome | DENV serotype 4 |
+| `zikv-brazil` | Zika Virus | NCBI | Brazil | whole-genome | NCBI data source template |
+| `chikv-brazil` | Chikungunya Virus | Pathoplexus | Brazil | whole-genome | Alphaviruses |
+| `rsv-a-brazil` | RSV A | Pathoplexus | Brazil | whole-genome | RSV serotype A |
+| `rsv-b-brazil` | RSV B | Pathoplexus | Brazil | whole-genome | RSV serotype B |
+| `rsv-global` | RSV | Pathoplexus | Global | whole-genome | Global RSV (not Brazil-specific) |
+| `orov-l-brazil` | Oropouche Virus | Pathoplexus | Brazil | whole-genome | Single-segment L template |
+| `flu-h1n1-ha-brazil` | Influenza A H1N1 | NCBI | Brazil | whole-genome | Flu A H1N1 (HA only) |
+| `flu-h3n2-ha-brazil` | Influenza A H3N2 | NCBI | Brazil | whole-genome | Flu A H3N2 (HA only) |
+| `flu-b-ha-brazil` | Influenza B | NCBI | Brazil | whole-genome | Flu B (HA only) |
+| `measles-b3-global` | Measles (MeV) | Pathoplexus | Global | whole-genome | Genotype B3 — `clade_filter` reference build |
+| **`measles-b3-n450-global`** | **Measles (MeV)** | **Pathoplexus** | **Global** | **fragment** | **N450 gene — fragment-mode reference build** |
+| `mayv-global` | Mayaro Virus | NCBI | Global | whole-genome | First no-dataset build (`viralqc.mode: skip`) |
+| `local-example` | (User-defined) | Local | Brazil | whole-genome | Bring-your-own-data template |
 
 ## Template Selection Guide
 
@@ -31,6 +32,11 @@ flexpipe includes 15 example builds covering a range of viral pathogens and data
 - **Pathoplexus/LAPIS**: `denv3-brazil`, `rsv-a-brazil`, `chikv-brazil`
 - **NCBI Entrez**: `zikv-brazil`, `flu-h1n1-ha-brazil`
 - **Local files**: `local-example`
+
+### Choose Based on Analysis Mode
+
+- **Whole-genome** (standard): any build except `measles-b3-n450-global`
+- **Fragment / gene window** (`mode: fragment`): `measles-b3-n450-global` — use this as the template for N450, flu HA, RSV F, etc.
 
 ### Choose Based on Virus Characteristics
 

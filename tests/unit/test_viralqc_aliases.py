@@ -27,8 +27,11 @@ def test_normalize_label_ignores_case_spacing_and_punctuation():
 
 def test_resolves_alias_key_and_literal_fallback():
     assert resolve_expected_entry("rsv_a", "viruses").key == "rsv_a"
-    fallback = resolve_expected_entry("Yellow fever virus", "viruses")
-    assert fallback.key == "Yellow fever virus"
+    # "Yellow fever virus" is now a registered alias for the yfv key
+    assert resolve_expected_entry("Yellow fever virus", "viruses").key == "yfv"
+    # An unregistered label falls back to a literal-key entry
+    fallback = resolve_expected_entry("Some Unknown Virus", "viruses")
+    assert fallback.key == "Some Unknown Virus"
 
 
 def test_rsv_a_alias_accepts_dataset_names_but_not_b():
