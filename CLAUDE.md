@@ -327,6 +327,7 @@ All parameters are in `builds/<name>/config.yaml` under `parameters` and `option
 | `flexpipe-colours` | `flexpipe.colors.scheme.main` |
 | `flexpipe-collapse-traits` | `flexpipe.phylo.traits.main` |
 | `flexpipe-reference-mask` | `flexpipe.phylo.reference_mask.main` |
+| `flexpipe-reference-slice` | `flexpipe.phylo.reference_slice.main` |
 
 ### Configuration Patterns
 
@@ -362,6 +363,22 @@ All parameters are in `builds/<name>/config.yaml` under `parameters` and `option
 - Generated BEDs should be reviewed before production surveillance use, then referenced via
   `parameters.mask_sites_file`.
 
+**Gene / fragment analysis mode** (`mode` in config):
+- Default `mode: "whole-genome"` — standard pipeline; QC gates on `genome_quality` / `coverage`.
+- `mode: "fragment"` — opt-in gene/region mode:
+  - Requires `viralqc.mode: run` (skip/precomputed forbidden in v1).
+  - Requires a Nextclade dataset declaring `target_gene` for the virus; `flexpipe-validate-build`
+    errors if none is found (`_check_fragment_dataset` in `flexpipe/validate.py`).
+  - ViralQC's `sequences_target_regions.fasta` is used as the sequence source in `curate_qc`.
+  - `join_viralqc` adds `target_gene_coverage`, `target_gene_quality`, `target_gene` columns.
+  - `augur filter` thresholds on `target_gene_coverage ≥ fragment.min_target_coverage` and
+    `target_gene_quality` in `fragment.target_quality`.
+  - `reference.gb` must be a gene-only slice produced by `flexpipe-reference-slice`.
+  - All phylo pipeline steps are unchanged; `augur align` reframes to gene coordinates.
+  - Reference build: `builds/measles-b3-n450-global/` (measles N450, 450 nt).
+  - `flexpipe-reference-slice` extracts a gene window from a whole-genome `reference.gb`:
+    `--region 1233..1682 --gene N` → 450-nt GenBank + gene-relative terminal mask BED.
+
 **PPX column contract**: Pathoplexus-style column names (`accessionVersion`, `geoLocCountry`, `geoLocAdmin1`, `geoLocAdmin2`, `dataUseTerms`, `lineage`) flow through the pipeline without modification until renamed by `augur curate rename` in the `curate_qc` rule. Never change these column names in ingest/merge logic.
 
 **Workdir isolation**: All generated artifacts (results, latlongs, colour_scheme, logs, manifest, coordinate cache) go to `<workdir>/`. The build directory (`builds/<name>/`) is read-only. The source tree is never modified during a run.
@@ -393,6 +410,11 @@ Key fields to update in `config.yaml`:
 - `viralqc.*` (or set `VIRALQC_DATASETS_DIR`)
 - `traits.columns` (which metadata fields to infer ancestral states for)
 - `traits.max_states` / `traits.rare_state_label` (TreeTime-safe categorical cap)
+- `mode` (`"whole-genome"` default; `"fragment"` for gene/region builds — see Gene/Fragment Analysis
+  Mode section above)
+- `fragment.target_gene` (required when `mode: fragment`; `/gene` qualifier in the ViralQC dataset)
+- `fragment.min_target_coverage` (default 0.70; minimum fraction of target gene covered)
+- `fragment.target_quality` (default `["A","B"]`; passing `targetGeneQuality` grades)
 
 ## Dependencies
 

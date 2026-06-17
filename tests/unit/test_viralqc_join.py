@@ -1,6 +1,7 @@
 """Unit tests for flexpipe.curate.viralqc_join.join_viralqc."""
 
 import pandas as pd
+import pytest
 
 from flexpipe.curate.viralqc_join import join_viralqc
 
@@ -258,3 +259,98 @@ class TestJoinViralqcContamination:
         # and wrong_segment must not overwrite a non-blank reason.
         assert result.loc[0, "genome_quality"] == "D"
         assert result.loc[0, "qc_exclusion_reason"] == "wrong_virus"
+
+
+# ---------------------------------------------------------------------------
+# Fragment mode tests
+# ---------------------------------------------------------------------------
+
+
+class TestJoinViralqcFragmentMode:
+    """Tests for mode='fragment' target-gene column joining."""
+
+    def _full_viralqc_row(
+        self, strain, genome_quality="A", cov="0.98", target_gene="N", tg_cov="0.92", tg_qual="A"
+    ):
+        return {
+            "seqName": strain,
+            "genomeQuality": genome_quality,
+            "coverage": cov,
+            "clade": "B3",
+            "targetGene": target_gene,
+            "targetGeneCoverage": tg_cov,
+            "targetGeneQuality": tg_qual,
+        }
+
+    def test_fragment_mode_joins_target_columns(self, tmp_path):
+        df = _make_metadata("SEQ001")
+        path = _write_viralqc(tmp_path, [self._full_viralqc_row("SEQ001")])
+        result = join_viralqc(df, path, {}, mode="fragment")
+        assert "target_gene_coverage" in result.columns
+        assert "target_gene_quality" in result.columns
+        assert "target_gene" in result.columns
+        assert float(result.loc[0, "target_gene_coverage"]) == pytest.approx(0.92)
+        assert result.loc[0, "target_gene_quality"] == "A"
+        assert result.loc[0, "target_gene"] == "N"
+
+    def test_whole_genome_mode_has_no_target_columns(self, tmp_path):
+        """Whole-genome path is byte-identical — no fragment columns added."""
+        df = _make_metadata("SEQ001")
+        path = _write_viralqc(tmp_path, [self._full_viralqc_row("SEQ001")])
+        result = join_viralqc(df, path, {}, mode="whole-genome")
+        assert "target_gene_coverage" not in result.columns
+        assert "target_gene_quality" not in result.columns
+        assert "target_gene" not in result.columns
+
+    def test_fragment_mode_no_file_ensures_columns(self):
+        df = _make_metadata("SEQ001")
+        result = join_viralqc(df, nextclade_path=None, viralqc_cfg={}, mode="fragment")
+        assert "target_gene_coverage" in result.columns
+        assert "target_gene_quality" in result.columns
+        assert "target_gene" in result.columns
+        import math
+
+        assert math.isnan(result.loc[0, "target_gene_coverage"])
+        assert result.loc[0, "target_gene_quality"] == ""
+        assert result.loc[0, "target_gene"] == ""
+
+    def test_fragment_mode_missing_columns_in_viralqc(self, tmp_path):
+        """ViralQC TSV without target columns (old dataset) gracefully produces NaN/empty."""
+        df = _make_metadata("SEQ001")
+        path = _write_viralqc(
+            tmp_path,
+            [{"seqName": "SEQ001", "genomeQuality": "A", "coverage": "0.95"}],
+        )
+        result = join_viralqc(df, path, {}, mode="fragment")
+        assert "target_gene_coverage" in result.columns
+        import math
+
+        assert math.isnan(result.loc[0, "target_gene_coverage"])
+
+    def test_fragment_mode_genome_quality_annotation_unchanged(self, tmp_path):
+        """Genome quality is still annotated in fragment mode (cosmetically).
+        The QC gate in the Snakefile uses target_gene_quality; this tests
+        that genome_quality annotation is not suppressed."""
+        df = _make_metadata("SEQ001")
+        path = _write_viralqc(
+            tmp_path,
+            [self._full_viralqc_row("SEQ001", genome_quality="C", tg_qual="A")],
+        )
+        result = join_viralqc(df, path, {}, mode="fragment")
+        # genome_quality C is annotated as usual
+        assert result.loc[0, "genome_quality"] == "C"
+        # target gene quality is A (passes the fragment gate)
+        assert result.loc[0, "target_gene_quality"] == "A"
+
+    def test_fragment_mode_multiple_sequences(self, tmp_path):
+        df = _make_metadata("SEQ001", "SEQ002", "SEQ003")
+        rows = [
+            self._full_viralqc_row("SEQ001", tg_qual="A", tg_cov="0.95"),
+            self._full_viralqc_row("SEQ002", tg_qual="B", tg_cov="0.75"),
+            self._full_viralqc_row("SEQ003", tg_qual="D", tg_cov="0.20"),
+        ]
+        path = _write_viralqc(tmp_path, rows)
+        result = join_viralqc(df, path, {}, mode="fragment")
+        assert result.loc[result["strain"] == "SEQ001", "target_gene_quality"].iloc[0] == "A"
+        assert result.loc[result["strain"] == "SEQ002", "target_gene_quality"].iloc[0] == "B"
+        assert result.loc[result["strain"] == "SEQ003", "target_gene_quality"].iloc[0] == "D"

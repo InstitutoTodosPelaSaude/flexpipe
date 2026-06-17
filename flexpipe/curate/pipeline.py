@@ -92,7 +92,7 @@ def run_curate(
     logger.info("Loaded: %d rows", len(df))
 
     # ── join ViralQC (BLAST + Nextclade) ─────────────────────────────────────
-    df = join_viralqc(df, nextclade_path, nc_cfg)
+    df = join_viralqc(df, nextclade_path, nc_cfg, mode=cfg.mode)
 
     # ── harmonize duplicate columns (PPX field → standard name) ──────────────
     # coverage: fill PPX rows (NaN) from LAPIS completeness field

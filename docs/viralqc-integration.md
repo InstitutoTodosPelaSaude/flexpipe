@@ -219,6 +219,57 @@ traits:
 
 ---
 
+## Fragment Mode: Target-Gene Columns
+
+When `mode: fragment` is set in `config.yaml`, flexpipe additionally reads three
+ViralQC output columns that are ignored in whole-genome mode:
+
+| ViralQC column | Mapped to | Type | Meaning |
+|----------------|-----------|------|---------|
+| `targetGeneCoverage` | `target_gene_coverage` | float 0–1 | Fraction of the target gene covered |
+| `targetGeneQuality` | `target_gene_quality` | str (A/B/C/D) | Quality grade for the target region |
+| `targetGene` | `target_gene` | str | Name of the target gene |
+
+These are joined into the curated metadata and exposed as filters in `augur filter`
+(replacing the whole-genome `coverage` / `genome_quality` gate).
+
+### Sequence Source
+
+In fragment mode, the `curate_qc` rule uses ViralQC's extracted sequence file as its
+`--sequences` input instead of the merged raw FASTA:
+
+```
+<workdir>/results/viralqc/sequences_target_regions.fasta
+```
+
+This file contains each record trimmed to the target region.  Length-heterogeneous
+inputs (mix of 450-nt fragments + full 15,910-nt genomes) are all reframed to the
+gene window by `augur align` against the gene-only reference.
+
+### Dataset Requirement
+
+Fragment mode requires a Nextclade dataset that declares `target_gene` (or
+`target_regions`) for your virus.  `flexpipe-validate-build` reads the ViralQC
+datasets registry and errors if no matching dataset is found.
+
+```bash
+# Check available datasets + target genes
+cat viralQC/viralqc/config/datasets.yml | grep -A3 "target_gene"
+```
+
+### Mode Restrictions
+
+| ViralQC mode | Whole-genome | Fragment |
+|--------------|:---:|:---:|
+| `run` | ✓ | ✓ |
+| `precomputed` | ✓ | ✗ (v1) |
+| `skip` | ✓ | ✗ |
+
+`precomputed` and `skip` are forbidden in fragment mode because neither produces
+`sequences_target_regions.fasta` or the target-gene columns.
+
+---
+
 ## Troubleshooting
 
 ### ViralQC Runs but Reports Wrong Virus

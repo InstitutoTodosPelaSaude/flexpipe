@@ -90,6 +90,27 @@ _quality_filter = [f"genome_quality={g}" for g in _fail_grades] + ["genome_quali
 _req_cols        = _qc.get("required_columns", ["strain", "date"])
 _req_col_filter  = [f"{col}=" for col in _req_cols]
 
+# ── Fragment analysis mode ────────────────────────────────────────────────────
+# mode: "whole-genome" (default) or "fragment"
+# In fragment mode the QC coverage/quality thresholds apply to ViralQC's per-target
+# columns (targetGeneCoverage / targetGeneQuality) rather than whole-genome metrics,
+# and the --sequences input to curate_qc is ViralQC's extracted target FASTA.
+_mode = config.get("mode", "whole-genome")
+_fragment = config.get("fragment", {}) or {}
+_min_target_coverage = float(_fragment.get("min_target_coverage", 0.70))
+_target_pass_grades  = set(_fragment.get("target_quality", ["A", "B"]))
+_target_fail_grades  = sorted({"A", "B", "C", "D"} - _target_pass_grades)
+_target_quality_filter = (
+    [f"target_gene_quality={g}" for g in _target_fail_grades] + ["target_gene_quality="]
+)
+
+if _mode == "fragment" and _viralqc_mode in ("skip", "precomputed"):
+    raise ValueError(
+        f"mode='fragment' is incompatible with viralqc.mode='{_viralqc_mode}'. "
+        "Fragment mode requires viralqc.mode='run' to produce the extracted "
+        "sequences_target_regions.fasta and per-target quality columns."
+    )
+
 # Optional force-coordinates file
 _force_file_arg  = ["--force-file", _coords["force_file"]] if _coords.get("force_file") else []
 _date_policy_arg = ["--policy", _curation["date_formats"]] if _curation.get("date_formats") else []
@@ -255,6 +276,8 @@ else:
     # "run" (default) — invoke ViralQC (BLAST + Nextclade).
     # genomeQuality (A/B/C/D) + coverage + clade; Pathoplexus clade preserved when vqc
     # does not assign one.
+    # In fragment mode, vqc also emits sequences_target_regions.fasta, which is declared
+    # as a named output so Snakemake tracks it and curate_qc can depend on it.
     rule viralqc:
         input:
             sequences = rules.merge_local_sequences.output.sequences
@@ -267,7 +290,8 @@ else:
             command      = _viralqc_command(_vqc),
             output_dir   = f"{_wd}/results/viralqc"
         output:
-            tsv = f"{_wd}/results/viralqc/outputs/results.tsv"
+            tsv          = f"{_wd}/results/viralqc/outputs/results.tsv",
+            target_fasta = f"{_wd}/results/viralqc/outputs/sequences_target_regions.fasta"
         shell:
             """
             mkdir -p {params.output_dir:q}
@@ -286,14 +310,39 @@ else:
                 --blast-database-metadata {params.blast_meta:q} \
                 --cores                   {threads} \
                 -v
+            # vqc writes sequences_target_regions.fasta inside the outputs/ subdir;
+            # create an empty placeholder when it is absent (whole-genome datasets
+            # that have no target regions).
+            if [ ! -f {output.target_fasta:q} ]; then
+                touch {output.target_fasta:q}
+            fi
             """
 
 
+# In fragment mode use ViralQC's extracted target FASTA as the sequence source;
+# in whole-genome mode use the merged full sequences.
+_curate_qc_sequences = (
+    rules.viralqc.output.target_fasta
+    if _mode == "fragment"
+    else rules.merge_local_sequences.output.sequences
+)
+
+# In fragment mode, request target_fasta as an additional input so Snakemake
+# tracks the dependency (it is already listed in viralqc.output, but naming it
+# here makes the dependency graph explicit even in whole-genome mode where the
+# placeholder empty file is created).
+_curate_qc_extra_inputs = (
+    {"target_fasta": rules.viralqc.output.target_fasta}
+    if _viralqc_mode == "run"
+    else {}
+)
+
 rule curate_qc:
     input:
-        metadata  = rules.merge_local_sequences.output.metadata,
-        sequences = rules.merge_local_sequences.output.sequences,
-        viralqc   = rules.viralqc.output.tsv
+        metadata     = rules.merge_local_sequences.output.metadata,
+        sequences    = _curate_qc_sequences,
+        viralqc      = rules.viralqc.output.tsv,
+        **_curate_qc_extra_inputs
     output:
         renamed    = temp(f"{_wd}/results/ingest/renamed_metadata.tsv"),
         normalized = temp(f"{_wd}/results/ingest/date_normalized_metadata.tsv"),
@@ -305,12 +354,18 @@ rule curate_qc:
         sequences  = f"{_wd}/results/ingest/final_sequences.fasta",
         filter_log = f"{_wd}/results/ingest/filter_log.tsv"
     params:
-        min_coverage    = _qc.get("min_coverage", 0.70),
-        quality_filter  = _quality_filter,
+        # Whole-genome QC thresholds
+        min_coverage         = _qc.get("min_coverage", 0.70),
+        quality_filter       = _quality_filter,
+        # Fragment-mode QC thresholds (applied when mode='fragment')
+        min_target_coverage  = _min_target_coverage,
+        target_quality_filter = _target_quality_filter,
+        # Common
         req_col_filter  = _req_col_filter,
         cfg             = _config,
         date_policy_arg = _date_policy_arg,
-        date_log        = f"{_wd}/results/ingest/date_normalization.tsv"
+        date_log        = f"{_wd}/results/ingest/date_normalization.tsv",
+        mode            = _mode
     shell:
         """
         augur curate rename \
@@ -345,15 +400,34 @@ rule curate_qc:
             --nextclade {input.viralqc:q} \
             --output    {output.curated:q}
 
-        augur filter \
-            --metadata        {output.curated:q} \
-            --sequences       {input.sequences:q} \
-            --query-columns   coverage:float \
-            --query           "coverage.isna() or coverage >= {params.min_coverage}" \
-            --exclude-where   {params.req_col_filter:q} {params.quality_filter:q} \
-            --output-log      {output.filter_log:q} \
-            --output-metadata  {output.metadata:q} \
-            --output-sequences {output.sequences:q}
+        if [ "{params.mode}" = "fragment" ]; then
+            # Fragment mode: filter on target_gene_coverage instead of whole-genome coverage.
+            # targetGeneCoverage measures coverage of the full target gene (e.g. measles N gene
+            # = 1578 nt); a 450-nt N450 fragment covers ~28.5% of the full gene.  Set
+            # fragment.min_target_coverage below that ratio so valid fragments are not dropped.
+            # Sequences with target_gene_coverage=0 do not overlap the target gene at all
+            # (they cover other genomic regions) and must be excluded to avoid gap-only
+            # alignment columns in the phylogenetic tree.
+            augur filter \
+                --metadata        {output.curated:q} \
+                --sequences       {input.sequences:q} \
+                --query-columns   target_gene_coverage:float \
+                --query           "target_gene_coverage.isna() or target_gene_coverage >= {params.min_target_coverage}" \
+                --exclude-where   {params.req_col_filter:q} {params.quality_filter:q} \
+                --output-log      {output.filter_log:q} \
+                --output-metadata  {output.metadata:q} \
+                --output-sequences {output.sequences:q}
+        else
+            augur filter \
+                --metadata        {output.curated:q} \
+                --sequences       {input.sequences:q} \
+                --query-columns   coverage:float \
+                --query           "coverage.isna() or coverage >= {params.min_coverage}" \
+                --exclude-where   {params.req_col_filter:q} {params.quality_filter:q} \
+                --output-log      {output.filter_log:q} \
+                --output-metadata  {output.metadata:q} \
+                --output-sequences {output.sequences:q}
+        fi
         """
 
 

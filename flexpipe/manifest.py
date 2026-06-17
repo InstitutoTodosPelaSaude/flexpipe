@@ -153,7 +153,9 @@ def _hash_config(config_path: Union[str, Path], run_date: Optional[str] = None) 
         # Always include the config file itself (may be named config.yaml or otherwise)
         h.update(config_path.read_bytes())
         # Include other deterministic build inputs if present
-        for name in sorted(["subsample.yaml", "clades.tsv", "reference.gb"]):
+        for name in sorted(
+            ["subsample.yaml", "clades.tsv", "reference.gb", "masks/reference_terminal.bed"]
+        ):
             candidate = build_dir / name
             if candidate.exists():
                 h.update(candidate.read_bytes())

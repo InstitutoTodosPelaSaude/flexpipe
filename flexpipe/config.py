@@ -492,6 +492,47 @@ class CladeFilterConfig(BaseModel):
         return str(v).strip()
 
 
+class FragmentConfig(BaseModel):
+    """Gene/fragment analysis mode parameters.
+
+    Active only when the root ``mode`` is ``"fragment"``.
+
+    ``target_gene`` is a documentation and validation hint: it declares which
+    gene this build analyses (e.g. ``"N"`` for measles nucleoprotein) and must
+    match the ``target_gene`` declared in the corresponding ViralQC/Nextclade
+    dataset.  ViralQC selects the dataset automatically via ``nextclade sort``;
+    flexpipe cannot override that selection, but ``flexpipe-validate-build``
+    verifies that a dataset with the expected target gene is installed.
+
+    ``min_target_coverage`` is applied to ViralQC's ``targetGeneCoverage``
+    column (a per-target float, 0–1) and replaces the whole-genome
+    ``qc.min_coverage`` gate when ``mode='fragment'``.
+
+    ``target_quality`` is applied to ViralQC's ``targetGeneQuality`` column
+    (A/B/C/D) and replaces ``qc.genome_quality`` when ``mode='fragment'``.
+
+    Examples::
+
+        # Measles nucleoprotein N450 build
+        mode: "fragment"
+        fragment:
+          target_gene: "N"
+          min_target_coverage: 0.70
+          target_quality: ["A", "B"]
+
+        # Dengue serotype envelope gene
+        mode: "fragment"
+        fragment:
+          target_gene: "E"
+          min_target_coverage: 0.70
+    """
+
+    model_config = ConfigDict(extra="forbid")
+    target_gene: str = ""
+    min_target_coverage: float = Field(default=0.70, ge=0.0, le=1.0)
+    target_quality: list[str] = Field(default_factory=lambda: ["A", "B"])
+
+
 class LocalSequencesConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
     enabled: bool = False
@@ -546,6 +587,8 @@ class FlexpipeConfig(BaseModel):
     regions: RegionsConfig = Field(default_factory=RegionsConfig)
     region_source: Literal["country", "division"] = "country"
     data_source: Literal["pathoplexus", "ncbi", "local"] = "pathoplexus"
+    mode: Literal["whole-genome", "fragment"] = "whole-genome"
+    fragment: FragmentConfig = Field(default_factory=FragmentConfig)
     pathoplexus: PathoplexusConfig = Field(default_factory=PathoplexusConfig)
     ncbi: NcbiConfig = Field(default_factory=NcbiConfig)
     local: LocalConfig = Field(default_factory=LocalConfig)
@@ -601,6 +644,31 @@ class FlexpipeConfig(BaseModel):
             raise ValueError(
                 "viralqc.precomputed path is required when viralqc.mode='precomputed'.\n"
                 "Set viralqc.precomputed to the path of a pre-run ViralQC results.tsv."
+            )
+        return self
+
+    @model_validator(mode="after")
+    def check_fragment_mode(self) -> FlexpipeConfig:
+        """Enforce prerequisites when mode='fragment'."""
+        if self.mode != "fragment":
+            return self
+        if not self.fragment.target_gene:
+            raise ValueError(
+                "fragment.target_gene is required when mode='fragment'.\n"
+                "Set it to the target gene declared in the corresponding ViralQC/Nextclade "
+                "dataset, e.g. target_gene: 'N' for measles nucleoprotein."
+            )
+        if self.viralqc.mode == "skip":
+            raise ValueError(
+                "mode='fragment' is incompatible with viralqc.mode='skip'.\n"
+                "Fragment mode requires ViralQC's extracted sequences_target_regions.fasta "
+                "and per-target coverage/quality columns, which skip mode does not produce.\n"
+                "Use viralqc.mode='run' (or 'precomputed' — see docs)."
+            )
+        if self.viralqc.mode == "precomputed":
+            raise ValueError(
+                "mode='fragment' with viralqc.mode='precomputed' is not yet supported in v1.\n"
+                "Use viralqc.mode='run' for fragment mode builds."
             )
         return self
 

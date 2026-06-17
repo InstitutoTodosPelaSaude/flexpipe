@@ -15,6 +15,7 @@ configuration
 pipeline/overview
 pipeline/ingest
 pipeline/phylogenetics
+pipeline/fragment-analysis
 pipeline/local-data
 builds/overview
 builds/adding-a-pathogen

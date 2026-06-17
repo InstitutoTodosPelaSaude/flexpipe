@@ -646,3 +646,128 @@ class TestQcMinSequences:
             },
         )
         assert cfg.qc.min_sequences == 0
+
+
+# ---------------------------------------------------------------------------
+# FragmentConfig + mode='fragment' cross-field validators
+# ---------------------------------------------------------------------------
+
+
+class TestFragmentConfig:
+    """Tests for mode='fragment' configuration."""
+
+    def _base(self, **overrides):
+        kwargs = dict(
+            data_source="pathoplexus",
+            pathoplexus={"organism": "measles"},
+            viralqc={"mode": "run", "expected_virus": "measles"},
+        )
+        kwargs.update(overrides)
+        return kwargs
+
+    # ── defaults ─────────────────────────────────────────────────────────────
+
+    def test_whole_genome_is_default_mode(self):
+        cfg = FlexpipeConfig(**self._base())
+        assert cfg.mode == "whole-genome"
+
+    def test_fragment_defaults(self):
+        cfg = FlexpipeConfig(**self._base())
+        assert cfg.fragment.target_gene == ""
+        assert cfg.fragment.min_target_coverage == pytest.approx(0.70)
+        assert cfg.fragment.target_quality == ["A", "B"]
+
+    # ── valid fragment configs ────────────────────────────────────────────────
+
+    def test_fragment_mode_valid(self):
+        cfg = FlexpipeConfig(
+            **self._base(
+                mode="fragment",
+                fragment={"target_gene": "N", "min_target_coverage": 0.70},
+            )
+        )
+        assert cfg.mode == "fragment"
+        assert cfg.fragment.target_gene == "N"
+
+    def test_fragment_min_target_coverage_bounds(self):
+        """0.0 and 1.0 are valid; <0 and >1 are not."""
+        for valid in (0.0, 0.5, 1.0):
+            cfg = FlexpipeConfig(
+                **self._base(
+                    mode="fragment",
+                    fragment={"target_gene": "N", "min_target_coverage": valid},
+                )
+            )
+            assert cfg.fragment.min_target_coverage == pytest.approx(valid)
+
+        with pytest.raises(pydantic.ValidationError):
+            FlexpipeConfig(
+                **self._base(
+                    mode="fragment",
+                    fragment={"target_gene": "N", "min_target_coverage": -0.01},
+                )
+            )
+        with pytest.raises(pydantic.ValidationError):
+            FlexpipeConfig(
+                **self._base(
+                    mode="fragment",
+                    fragment={"target_gene": "N", "min_target_coverage": 1.01},
+                )
+            )
+
+    # ── cross-field validators ────────────────────────────────────────────────
+
+    def test_fragment_mode_missing_target_gene_raises(self):
+        with pytest.raises(pydantic.ValidationError, match="fragment.target_gene is required"):
+            FlexpipeConfig(
+                **self._base(
+                    mode="fragment",
+                    fragment={"target_gene": ""},
+                )
+            )
+
+    def test_fragment_mode_no_fragment_section_raises(self):
+        """Omitting the fragment section defaults target_gene to '' → error."""
+        with pytest.raises(pydantic.ValidationError, match="fragment.target_gene is required"):
+            FlexpipeConfig(**self._base(mode="fragment"))
+
+    def test_fragment_mode_skip_viralqc_raises(self):
+        with pytest.raises(pydantic.ValidationError, match="incompatible with viralqc.mode='skip'"):
+            FlexpipeConfig(
+                **self._base(
+                    mode="fragment",
+                    fragment={"target_gene": "N"},
+                    viralqc={"mode": "skip"},
+                )
+            )
+
+    def test_fragment_mode_precomputed_viralqc_raises(self):
+        with pytest.raises(
+            pydantic.ValidationError,
+            match="not yet supported",
+        ):
+            FlexpipeConfig(
+                **self._base(
+                    mode="fragment",
+                    fragment={"target_gene": "N"},
+                    viralqc={
+                        "mode": "precomputed",
+                        "precomputed": "/tmp/fake_results.tsv",
+                    },
+                )
+            )
+
+    def test_invalid_mode_raises(self):
+        with pytest.raises(pydantic.ValidationError):
+            FlexpipeConfig(**self._base(mode="gene"))  # unknown mode
+
+    def test_whole_genome_with_fragment_section_is_fine(self):
+        """A fragment: section in a whole-genome build is silently ignored."""
+        cfg = FlexpipeConfig(
+            **self._base(
+                mode="whole-genome",
+                fragment={"target_gene": "N"},
+            )
+        )
+        assert cfg.mode == "whole-genome"
+        assert cfg.fragment.target_gene == "N"
