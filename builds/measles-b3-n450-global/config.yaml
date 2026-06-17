@@ -98,14 +98,6 @@ data_source: "pathoplexus"
 
 pathoplexus:
   organism: "measles"
-  metadata_fields:
-    - accessionVersion
-    - sampleCollectionDate
-    - geoLocCountry
-    - geoLocAdmin1
-    - geoLocAdmin2
-    - dataUseTerms
-    - lineage
   query_params:
     dataUseTerms: "OPEN"
   strip_fasta_id_suffix: false

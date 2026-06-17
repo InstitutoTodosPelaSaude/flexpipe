@@ -65,7 +65,7 @@ viralqc:
   datasets_dir: ""
   blast_database: ""
   blast_database_metadata: ""
-  expected_virus: "yellow_fever"   # example — override for your pathogen
+  expected_virus: "yfv"   # example — override for your pathogen
 
 qc:
   genome_quality:
