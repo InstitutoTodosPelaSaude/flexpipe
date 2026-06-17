@@ -42,6 +42,7 @@ from pathlib import Path
 
 from Bio import SeqIO
 from Bio.SeqFeature import FeatureLocation, SeqFeature
+from Bio.SeqRecord import SeqRecord
 
 from flexpipe.phylo.reference_mask import (
     _feature_intervals,
@@ -214,7 +215,7 @@ def slice_reference(
     gene: str | None = None,
     feature_type: str = "CDS",
     new_id: str | None = None,
-) -> object:  # Bio.SeqRecord.SeqRecord
+) -> SeqRecord:
     """Slice a GenBank record to a gene/region window.
 
     Args:
@@ -374,6 +375,7 @@ def main() -> None:
     if args.output_bed:
         profile = load_mask_profile(args.profile_file or None, profile=args.profile)
         intervals = derive_terminal_masks(sub, profile)
+        assert sub.id is not None
         write_bed(sub.id, intervals, args.output_bed)
         logger.info(
             "Wrote %d gene-relative mask intervals to %s",
