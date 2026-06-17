@@ -415,10 +415,10 @@ class TestParseCoverageFormat:
     def test_dict_format_gene_name_skew_emits_warning(self, caplog):
         """Gene-name skew must emit a logger.warning."""
         import logging
-
-        import pandas as _pd
         import tempfile
         from pathlib import Path
+
+        import pandas as _pd
 
         with tempfile.TemporaryDirectory() as td:
             path = Path(td) / "vqc.tsv"
