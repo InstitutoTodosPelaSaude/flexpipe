@@ -1,6 +1,6 @@
 # Console Commands
 
-flexpipe provides 16 console-line tools for running the pipeline and working with individual processing steps. Most are called automatically by `flexpipe-run`, but you can invoke them directly for debugging, testing, or custom workflows.
+flexpipe provides 17 console-line tools for running the pipeline and working with individual processing steps. Most are called automatically by `flexpipe-run`, but you can invoke them directly for debugging, testing, or custom workflows.
 
 ## Main Orchestrator
 
@@ -24,7 +24,8 @@ flexpipe-run \
 | `--workdir` | PATH | (required) | Output directory |
 | `--run-date` | YYYY-MM-DD | today | Upper date bound for subsampling (subsample only) |
 | `--stage` | {ingest,phylo,all} | `all` | Which stage(s) to run |
-| `--cores` | INT | auto | Number of CPU cores for Snakemake |
+| `--cores` | INT | 4 | Number of CPU cores for Snakemake |
+| `--backbone-from` | PATH | (optional) | Previous workdir whose subsampled strain list should be force-included |
 | `--log-level` | {DEBUG,INFO,WARNING,ERROR} | `INFO` | Logging verbosity |
 
 **Workdir lock**: Acquires exclusive lock at `<workdir>/.flexpipe.lock`. Second invocation exits with code 2.
@@ -41,7 +42,8 @@ Fetch sequences from Pathoplexus/LAPIS:
 flexpipe-fetch-pathoplexus \
   --config builds/yfv-brazil/config.yaml \
   --metadata-output results/metadata.tsv \
-  --sequences-output results/sequences.fasta
+  --sequences-output results/sequences.fasta \
+  --run-date 2026-01-01
 ```
 
 ### flexpipe-fetch-ncbi
@@ -50,12 +52,13 @@ Fetch sequences from NCBI Entrez by taxid:
 
 ```bash
 flexpipe-fetch-ncbi \
-  --config builds/yfv-brazil/config.yaml \
+  --config builds/zikv-brazil/config.yaml \
   --metadata-output results/metadata.tsv \
-  --sequences-output results/sequences.fasta
+  --sequences-output results/sequences.fasta \
+  --run-date 2026-01-01
 ```
 
-Requires `NCBI_EMAIL` environment variable. Optional: `NCBI_API_KEY` for higher rate limits.
+NCBI builds require a contact email before running: set `ncbi.email` in the build config or export `NCBI_EMAIL`. Optional: `NCBI_API_KEY` for higher rate limits.
 
 ### flexpipe-merge
 
@@ -63,9 +66,11 @@ Merge local surveillance sequences (ITpS format) with remote data:
 
 ```bash
 flexpipe-merge \
-  --config builds/yfv-brazil/config.yaml \
-  --remote-metadata results/metadata.tsv \
-  --remote-sequences results/sequences.fasta \
+  --pathoplexus-metadata results/ingest/pathoplexus_metadata.tsv \
+  --pathoplexus-sequences results/ingest/pathoplexus_sequences.fasta \
+  --local-metadata data/metadata.tsv \
+  --local-sequences data/new_sequences.fasta \
+  --enabled true \
   --metadata-output merged_metadata.tsv \
   --sequences-output merged_sequences.fasta
 ```
@@ -91,9 +96,10 @@ Parse flexible date formats and normalize to YYYY-MM-DD:
 ```bash
 flexpipe-normalize-dates \
   --metadata metadata.tsv \
-  --date-column collectionDate \
-  --date-formats dates.yaml \
-  --output normalized.tsv
+  --date-field date \
+  --policy dates.yaml \
+  --output normalized.tsv \
+  --log date_normalization.tsv
 ```
 
 Logs ambiguous/unparseable dates to a separate file.
@@ -101,6 +107,15 @@ Logs ambiguous/unparseable dates to a separate file.
 ### flexpipe-qc-summary
 
 Generate QC statistics summary from curation output:
+
+```bash
+flexpipe-qc-summary \
+  --curated results/ingest/curated_metadata.tsv \
+  --filter-log results/ingest/filter_log.tsv \
+  --final results/ingest/final_metadata.tsv \
+  --qc-report results/qc_report.json \
+  --qc-summary results/qc_summary.tsv
+```
 
 ### flexpipe-filter-clade
 
@@ -131,12 +146,6 @@ When `clade_filter.column` is empty or absent from the config, all sequences pas
 `flexpipe-filter-clade` is called automatically by the `clade_filter` rule in `ingest/Snakefile` for every build. Direct invocation is useful for debugging filter behavior on a curated metadata file before a full run.
 ```
 
-```bash
-flexpipe-qc-summary \
-  --metadata curated_metadata.tsv \
-  --output qc_summary.tsv
-```
-
 ## Visualization Helpers
 
 ### flexpipe-coordinates
@@ -146,8 +155,8 @@ Geocode locations (country, division, location) via Nominatim with rate-limiting
 ```bash
 flexpipe-coordinates \
   --metadata metadata.tsv \
-  --latitude-column latitude \
-  --longitude-column longitude \
+  --columns country division location \
+  --cache cache/cache_coordinates.tsv \
   --output latlongs.tsv
 ```
 
@@ -159,8 +168,8 @@ Merge coordinate caches from multiple runs:
 
 ```bash
 flexpipe-update-cache \
-  --new-cache cache_from_run1.tsv \
-  --existing-cache shared_cache.tsv \
+  --new-latlongs latlongs.tsv \
+  --cache cache/cache_coordinates.tsv \
   --output merged_cache.tsv
 ```
 
@@ -171,6 +180,8 @@ Assign deterministic hues to metadata values for consistent coloring:
 ```bash
 flexpipe-name2hue \
   --metadata metadata.tsv \
+  --config builds/yfv-brazil/config.yaml \
+  --cache cache/name2hue.tsv \
   --output name2hue.tsv
 ```
 
@@ -180,9 +191,9 @@ Generate hex colors for all metadata values based on hierarchy and hue assignmen
 
 ```bash
 flexpipe-colours \
-  --metadata metadata.tsv \
-  --hues name2hue.tsv \
-  --color-scheme colours \
+  --input metadata.tsv \
+  --colours name2hue.tsv \
+  --levels continent country division location \
   --output colour_scheme.tsv
 ```
 
@@ -195,10 +206,11 @@ Collapse rare states in a traits column before TreeTime inference:
 ```bash
 flexpipe-collapse-traits \
   --metadata metadata.tsv \
-  --trait-column division \
+  --columns division location \
   --max-states 10 \
   --rare-state-label "Other" \
-  --output metadata_traits.tsv
+  --output metadata_traits.tsv \
+  --log traits_collapsed.tsv
 ```
 
 ### flexpipe-reference-slice

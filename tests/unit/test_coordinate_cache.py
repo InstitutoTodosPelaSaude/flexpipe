@@ -35,6 +35,15 @@ class TestReadCache:
         assert len(result) == 0
         assert list(result.columns) == ["level", "name", "query", "latitude", "longitude"]
 
+    def test_empty_file_returns_empty_df(self, tmp_path):
+        p = tmp_path / "empty.tsv"
+        p.write_text("")
+
+        result = _read_cache(p)
+
+        assert len(result) == 0
+        assert list(result.columns) == ["level", "name", "query", "latitude", "longitude"]
+
     def test_reads_tsv_with_header_correctly(self, tmp_path):
         p = tmp_path / "cache.tsv"
         _write_cache(
@@ -48,6 +57,23 @@ class TestReadCache:
         assert len(result) == 2
         assert result["name"].tolist() == ["São Paulo", "Brazil"]
         assert result["query"].tolist() == ["São Paulo", "Brazil"]
+
+    def test_reads_legacy_headered_query_lat_lon_display_name_cache(self, tmp_path):
+        p = tmp_path / "cache.tsv"
+        p.write_text(
+            "level\tquery\tlat\tlon\tdisplay_name\n"
+            "location\tBrazil, São Paulo, Campinas\t-22.90\t-47.06\tCampinas\n"
+            "division\tBrazil, São Paulo\t-23.55\t-46.63\t\n",
+            encoding="utf-8",
+        )
+
+        result = _read_cache(p)
+
+        assert len(result) == 2
+        assert result["name"].tolist() == ["Campinas", "Brazil, São Paulo"]
+        assert result["query"].tolist() == ["Brazil, São Paulo, Campinas", "Brazil, São Paulo"]
+        assert result["latitude"].tolist() == ["-22.90", "-23.55"]
+        assert result["longitude"].tolist() == ["-47.06", "-46.63"]
 
     def test_reads_headerless_tsv(self, tmp_path):
         """Legacy format (old Snakefile inline block or latlongs.tsv) — no header row."""

@@ -36,9 +36,9 @@ Uses provided TSV (metadata) and FASTA (sequences) files. Authority: FASTA file 
 - `geoLocCountry` → `country`
 - `geoLocAdmin1` → `division`
 - `geoLocAdmin2` → `location`
-- `collectionDate` → `date`
+- `sampleCollectionDate` → `date`
 
-**Output**: files are referenced in-place; no copy rule.
+**Output**: files are copied into the workdir by the `fetch_local` rule.
 
 ## Merge Local Sequences (Optional)
 
@@ -49,7 +49,7 @@ If you have local surveillance sequences to combine with remote data:
 **Input**: 
 - Remote metadata + sequences (from fetch step)
 - Local sequences: ITpS Excel (`.xlsx`) or TSV format
-- `config.local_sequences.samples_per_file` (optional, default 200)
+- `local_sequences.enabled`, `local_sequences.metadata`, and `local_sequences.sequences`
 
 The merge tool auto-detects xlsx vs TSV and extracts both sequence counts and metadata, preferring local ITpS records over remote duplicates.
 

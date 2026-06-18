@@ -1,0 +1,126 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# flexpipe build configuration: Measles N450 genotype B3 — Angola surveillance
+#
+# Extends measles-b3-n450-global with local Angola surveillance sequences
+# (data/new_sequences.fasta + data/angola_metadata_ppx.tsv).
+# All build files (reference, clades, masks) are shared with the global build.
+# ──────────────────────────────────────────────────────────────────────────────
+
+# ── Pipeline mode ─────────────────────────────────────────────────────────────
+mode: "fragment"
+
+fragment:
+  target_gene: "N"           # matches ViralQC measles-N450-WHO-2012 target_gene
+  min_target_coverage: 0.25  # N450 fragments cover ~28.5% of the full N gene (450/1578 nt)
+  target_quality: ["A", "B"] # passing targetGeneQuality grades
+
+# ── Build files ───────────────────────────────────────────────────────────────
+files:
+  keep:             "builds/measles-b3-n450-angola/keep.txt"
+  ignore:           "builds/measles-b3-n450-angola/ignore.txt"
+  cache:            "builds/measles-b3-n450-angola/cache_coordinates.tsv"
+  reference:        "builds/measles-b3-n450-angola/reference.gb"
+  clades:           "builds/measles-b3-n450-angola/clades.tsv"
+  auspice_config:   "builds/measles-b3-n450-angola/auspice_config.json"
+  subsample_config: "builds/measles-b3-n450-angola/subsample.yaml"
+
+# ── Phylogenetic parameters ───────────────────────────────────────────────────
+parameters:
+  mask_5prime: 0
+  mask_3prime: 0
+  mask_sites: ""
+  mask_sites_file: "builds/measles-b3-n450-angola/masks/reference_terminal.bed"
+  ufboot: 1000
+  model: "GTR+G"
+  root: "least-squares"
+  coalescent: "skyline"
+  date_inference: "marginal"
+  date_confidence: false
+  divergence_units: "mutations"
+  clock_filter_iqd: 4
+  ancestral_inference: "joint"
+  traits_confidence: false
+
+options:
+  threads: 4
+
+# ── Coordinates / colours ─────────────────────────────────────────────────────
+coordinates:
+  columns: "country"
+
+colours:
+  host:     "source"
+  geo:      "continent country region"
+  clade:    "clade_truncated clade"
+  source:   "source"
+  data_use: "data_use"
+
+# ── Traits ────────────────────────────────────────────────────────────────────
+traits:
+  columns:          "region country"
+  max_states:       200
+  rare_state_label: "other"
+
+# ── Subsampling ───────────────────────────────────────────────────────────────
+subsampling:
+  random_seed: 42
+
+# ── Curation ──────────────────────────────────────────────────────────────────
+curation:
+  clade_levels:    1
+  clade_separator: "."
+  lineage_parser:  "none"
+
+# ── Clade filter: restrict to genotype B3 ─────────────────────────────────────
+clade_filter:
+  column:  "clade_truncated"
+  include: ["B3"]
+  match:   "exact"
+
+# ── Region / geography ────────────────────────────────────────────────────────
+region_source: "country"
+
+# ── Local surveillance sequences ──────────────────────────────────────────────
+local_sequences:
+  enabled: true
+  metadata:  "data/angola_metadata_ppx.tsv"
+  sequences: "data/new_sequences.fasta"
+
+# ── Data source ───────────────────────────────────────────────────────────────
+data_source: "pathoplexus"
+
+pathoplexus:
+  organism: "measles"
+  query_params:
+    dataUseTerms: "OPEN"
+  strip_fasta_id_suffix: false
+  # genome_size reflects the N450 target length (450 nt); used for coherence
+  # but inert in fragment mode (QC thresholds use targetGeneCoverage instead).
+  genome_size: 450
+
+ncbi:
+  taxid: 0
+  genome_size: 0
+
+# ── ViralQC ───────────────────────────────────────────────────────────────────
+viralqc:
+  conda_env: "viralQC"
+  clade_column: "clade"
+  expected_virus:   "measles"
+  expected_segment: ""
+  datasets_dir: ""
+  blast_database: ""
+  blast_database_metadata: ""
+  # Fragment mode requires viralqc.mode='run' (skip/precomputed are incompatible)
+  mode: "run"
+
+# ── QC ────────────────────────────────────────────────────────────────────────
+qc:
+  # genome_quality and min_coverage apply to whole-genome metrics and are inert
+  # for fragment-only records (which have whole-genome coverage ~3%). The active
+  # QC thresholds in fragment mode are fragment.min_target_coverage and
+  # fragment.target_quality above.
+  genome_quality: ["A", "B"]
+  min_coverage: 0.70
+  min_sequences: 10
+  required_columns: ["strain", "date", "country"]

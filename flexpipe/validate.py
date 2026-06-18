@@ -2,7 +2,7 @@
 
 Loads the build ``config.yaml`` with ``skip_viralqc=True``, runs pydantic
 validation, then applies a set of checks that map to common live-run blockers
-recorded in ``builds/GAPS_LOG.md`` and ``builds/MULTI_BUILD_LEARNINGS.md``.
+recorded in ``builds/GAPS_LOG.md`` and the build documentation.
 
 Exit codes:
     0 — all checks passed (errors = 0)

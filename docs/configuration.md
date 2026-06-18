@@ -129,12 +129,12 @@ Additional pipeline flags:
 
 ```yaml
 options:
-  keep_files: true
+  threads: 4
 ```
 
 | Key | Type | Default | Purpose |
 |-----|------|---------|---------|
-| `keep_files` | bool | true | Retain intermediate outputs (set false to save disk) |
+| `threads` | int | 4 | Threads requested by Snakemake rules; capped by `--cores` |
 
 ### Curation
 
@@ -184,13 +184,15 @@ Metadata fields for coloring hierarchy (general to specific):
 
 ```yaml
 colours:
-  - continent
-  - country
-  - division
-  - location
+  host: "host"
+  clade: "clade_truncated clade"
+  geo: "continent country division location"
+  source: "source"
+  data_use: "data_use"
+  clade_root_level: ""
 ```
 
-Determines the color hierarchy in Auspice. Top-level categories get fixed hues; sub-levels derive shades.
+Determines the color hierarchy in Auspice. Each value is a space-separated list of metadata columns from general to specific. Top-level categories get fixed hues from bundled or build-specific hue tables; sub-levels derive shades.
 
 ### traits
 
@@ -198,20 +200,16 @@ Ancestral state inference:
 
 ```yaml
 traits:
-  columns:
-    - region
-    - country
-    - division
-    - clade_truncated
-  max_states: 15
-  rare_state_label: "Other"
+  columns: "region country division clade_truncated"
+  max_states: 200
+  rare_state_label: "other"
 ```
 
 | Key | Type | Default | Purpose |
 |-----|------|---------|---------|
-| `columns` | list | [] | Metadata fields for ancestral inference |
-| `max_states` | int | 15 | Max unique states per column (rarer ones collapsed) |
-| `rare_state_label` | string | "Other" | Label for collapsed rare states |
+| `columns` | string | `"division location clade"` | Space-separated metadata fields for ancestral inference |
+| `max_states` | int | 200 | Max unique states per column (rarer ones collapsed) |
+| `rare_state_label` | string | "other" | Label for collapsed rare states |
 
 ### coordinates
 
@@ -219,11 +217,15 @@ Geocoding configuration:
 
 ```yaml
 coordinates:
+  columns: "country division location"
+  force_file: ""
   shared_cache: ""
 ```
 
 | Key | Type | Default | Purpose |
 |-----|------|---------|---------|
+| `columns` | string | `"country"` | Space-separated metadata columns to geocode |
+| `force_file` | string | "" | Optional manual coordinate overrides (`place TAB lat TAB lon`) |
 | `shared_cache` | string | "" | Optional shared cache file (alternative to build cache) |
 
 ### qc
@@ -356,8 +358,8 @@ ncbi:
   genome_size: 11000
   min_length: 8000
   max_length: 12000
-  email: "user@example.com"
-  api_key: ""
+  email: ""  # required before running, or set NCBI_EMAIL
+  api_key: ""  # optional, or set NCBI_API_KEY
   min_date: 2020-01-01
   extra_search_term: ""
 ```
@@ -394,12 +396,16 @@ Merge local surveillance data with remote:
 
 ```yaml
 local_sequences:
-  samples_per_file: 200
+  enabled: false
+  metadata: "data/metadata.xlsx"
+  sequences: "data/new_sequences.fasta"
 ```
 
 | Key | Type | Default | Purpose |
 |-----|------|---------|---------|
-| `samples_per_file` | int | 200 | Max samples per file when merging ITpS xlsx/TSV |
+| `enabled` | bool | false | Merge local surveillance records into remote Pathoplexus/NCBI data |
+| `metadata` | string | `"data/metadata.xlsx"` | Local ITpS xlsx/TSV/PPX metadata file |
+| `sequences` | string | `"data/new_sequences.fasta"` | Local FASTA file; FASTA IDs are authoritative |
 
 ## ViralQC Integration
 
@@ -407,11 +413,11 @@ local_sequences:
 viralqc:
   expected_virus: "dengue"
   expected_segment: "genome"
-  conda_env: "viralqc"
-  clade_column: "nextclade_clade"
+  conda_env: "viralQC"
+  clade_column: "clade"
   aliases_file: ""
   datasets_dir: ""
-  blast_database: "nt"
+  blast_database: ""
   blast_database_metadata: ""
   executable: "vqc"
   runner: "conda"
@@ -421,10 +427,10 @@ viralqc:
 
 | Key | Type | Default | Purpose |
 |-----|------|---------|---------|
-| `expected_virus` | string | (required) | Virus name (alias-aware; see [ViralQC Integration](viralqc-integration.md)) |
-| `expected_segment` | string | (required) | Segment (e.g., `genome`, `ha`, `l`) |
-| `conda_env` | string | "viralqc" | Conda environment name |
-| `clade_column` | string | "nextclade_clade" | ViralQC output column for clade |
+| `expected_virus` | string | "" | Virus name for cross-contamination filtering (alias-aware; see [ViralQC Integration](viralqc-integration.md)) |
+| `expected_segment` | string | "" | Segment (e.g., `genome`, `ha`, `l`) |
+| `conda_env` | string | "viralQC" | Conda environment name |
+| `clade_column` | string | "clade" | ViralQC output column for clade |
 | `aliases_file` | string | "" | Override aliases (YAML) |
 | `datasets_dir` | string | (auto-discovered) | ViralQC datasets directory |
 | `runner` | Literal | "conda" | `conda`, `mamba`, `micromamba`, `direct` |

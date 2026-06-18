@@ -81,19 +81,9 @@ Should report something like:
 ... passed in X.XXs
 ```
 
-## Step 7: Set NCBI Email (Optional)
+## Step 7: Prepare NCBI Contact Details
 
-If you plan to use NCBI data, set your email:
-
-```bash
-export NCBI_EMAIL=your.email@example.com
-```
-
-Add this to your shell profile (`~/.bashrc`, `~/.zshrc`) to persist it:
-
-```bash
-echo 'export NCBI_EMAIL=your.email@example.com' >> ~/.zshrc
-```
+If you plan to use NCBI data, provide a real contact email before running an NCBI build. Set `ncbi.email` in the build config, or set `NCBI_EMAIL` in your shell environment. `NCBI_API_KEY` is optional for higher rate limits.
 
 ## Troubleshooting
 
