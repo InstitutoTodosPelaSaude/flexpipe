@@ -11,7 +11,7 @@ viralqc:
   expected_virus: "dengue"
   expected_segment: "genome"
   conda_env: "viralqc"
-  clade_column: "nextclade_clade"
+  clade_column: "clade"
   aliases_file: ""
   datasets_dir: ""
   blast_database: "nt"
@@ -29,6 +29,37 @@ viralqc:
 | `run` | Execute ViralQC | First-pass analysis; typical use case |
 | `precomputed` | Use pre-generated results file | Reanalysis with existing QC |
 | `skip` | Skip ViralQC entirely | Data already QC'd; rapid turnaround |
+
+## Clade Column Selection
+
+`viralqc.clade_column` (default `"clade"`) selects which column of ViralQC's
+`results.tsv` becomes the pipeline's `clade` metadata field (joined in
+`flexpipe/curate/viralqc_join.py`). This matters because ViralQC v1.1.0 retains
+several alternative clade columns per dataset, and Nextclade's naming has drifted
+over time — for some viruses the default `clade` column is now a sparse new
+nomenclature that leaves most sequences `unassigned`.
+
+Choose `clade_column` per virus:
+
+| Virus / dataset | `clade_column` | Notes |
+|-----------------|----------------|-------|
+| Seasonal influenza A HA; flu-B Victoria (per-lineage dataset) | `legacy-clade` | Yields the classic clade (e.g. `6B.1A.5a.2a`). The default `clade` is the new sparse subclade system and returns mostly `unassigned` for older sequences. |
+| Combined flu-B dataset | `legacy-clade-vic` | Lineage-suffixed variant of `legacy-clade`. |
+| hMPV | `legacy_clade` | Underscore (not hyphen); gives classic names such as `A2b1` / `A2b2`. |
+| measles, RSV, dengue, YFV, Zika, mumps, SARS-CoV-2 (pango) | `clade` (default) | Keep the default. |
+
+Background: Nextclade's 2025-10-22 influenza update moved the classic clade to
+`legacy-clade`. On a broad flu reference set, leaving `clade_column` at the
+default `clade` gives roughly 0% clade assignment.
+
+Two robustness behaviors in the join:
+
+- **`<int>.0` normalization**: pure-integer legacy clades that an older
+  `results.tsv` coerced to float text (e.g. `1.0`) are collapsed back to `1`, so
+  a clade does not split into separate `1` and `1.0` categories.
+- **Missing-column warning**: if the configured `clade_column` is absent from the
+  ViralQC output, a warning is logged and `clade` is left blank (previously it was
+  silently blank with no signal).
 
 ## Alias Resolution
 
@@ -100,7 +131,7 @@ ViralQC outputs a TSV with columns:
 - `strain` — sequence ID
 - `virus` — ICTV species name (matched against aliases)
 - `segment` — viral segment (matched against expected)
-- `nextclade_clade` — Nextclade-assigned clade
+- `clade` — Nextclade-assigned clade (or an alternative column selected via `clade_column`; see above)
 - `genome_quality` — grade (A, B, C, D)
 - `coverage` — aligned fraction (0.0–1.0)
 

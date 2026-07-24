@@ -430,13 +430,23 @@ viralqc:
 | `expected_virus` | string | "" | Virus name for cross-contamination filtering (alias-aware; see [ViralQC Integration](viralqc-integration.md)) |
 | `expected_segment` | string | "" | Segment (e.g., `genome`, `ha`, `l`) |
 | `conda_env` | string | "viralQC" | Conda environment name |
-| `clade_column` | string | "clade" | ViralQC output column for clade |
+| `clade_column` | string | "clade" | ViralQC output column mapped to the `clade` metadata field (see per-virus guidance below) |
 | `aliases_file` | string | "" | Override aliases (YAML) |
 | `datasets_dir` | string | (auto-discovered) | ViralQC datasets directory |
 | `runner` | Literal | "conda" | `conda`, `mamba`, `micromamba`, `direct` |
 | `executable` | string | "vqc" | ViralQC executable name |
 | `mode` | Literal | "run" | `run`, `precomputed`, `skip` |
 | `precomputed` | string | "" | Path to precomputed results (required if `mode=precomputed`) |
+
+**`clade_column` per virus**: ViralQC v1.1.0 retains alternative clade columns, and the
+default `clade` column is now a sparse new nomenclature for some viruses. Use
+`clade_column: legacy-clade` for seasonal influenza A HA and per-lineage flu-B Victoria
+(gives e.g. `6B.1A.5a.2a`; the default `clade` returns mostly `unassigned`),
+`clade_column: legacy-clade-vic` for the combined flu-B dataset, and
+`clade_column: legacy_clade` (underscore) for hMPV (classic `A2b1`/`A2b2` names). Keep the
+default `clade` for measles, RSV, dengue, YFV, Zika, mumps, and SARS-CoV-2 (pango). If the
+configured column is absent from ViralQC output, `clade` is left blank and a warning is logged.
+See [ViralQC Integration](viralqc-integration.md#clade-column-selection).
 
 **`skip` mode and length-based coverage**: When `viralqc.mode: skip`, coverage is computed as
 `min(seq_len / genome_size, 1.0)` when `genome_size > 0` (from `ncbi.genome_size` or
