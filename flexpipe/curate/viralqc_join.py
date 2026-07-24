@@ -99,6 +99,13 @@ def join_viralqc(
         nc_cols = {"seqName": "strain"}
         if clade_col in nc.columns:
             nc_cols[clade_col] = "_nc_clade"
+        else:
+            logger.warning(
+                "viralqc.clade_column=%r not found in ViralQC output columns; "
+                "clade will be left blank. Check the dataset emits that column "
+                "(e.g. 'legacy-clade' for flu, 'legacy_clade' for hMPV).",
+                clade_col,
+            )
         if "genomeQuality" in nc.columns:
             nc_cols["genomeQuality"] = "_nc_genome_quality"
         if "coverage" in nc.columns:
@@ -127,9 +134,15 @@ def join_viralqc(
         df.drop(columns=["_has_viralqc"], inplace=True)
 
         if "_nc_clade" in df.columns:
+            # Defensive: ViralQC results.tsv written before the dtype=str fix may
+            # carry pure-integer legacy clades coerced to float text ('1'->'1.0').
+            # Collapse '<int>.0' back to '<int>' so e.g. flu clade 1 does not split
+            # into separate '1' and '1.0' categories. Safe: no real clade level is
+            # a bare '.0' suffix.
+            nc_clade = df["_nc_clade"].str.replace(r"^(\d+)\.0$", r"\1", regex=True)
             existing = df.get("clade", pd.Series("", index=df.index)).fillna("")
-            has_nc_clade = df["_nc_clade"].notna() & (df["_nc_clade"].str.strip() != "")
-            df["clade"] = df["_nc_clade"].where(has_nc_clade, existing)
+            has_nc_clade = nc_clade.notna() & (nc_clade.str.strip() != "")
+            df["clade"] = nc_clade.where(has_nc_clade, existing)
             df.drop(columns=["_nc_clade"], inplace=True)
 
         if "_nc_genome_quality" in df.columns:
