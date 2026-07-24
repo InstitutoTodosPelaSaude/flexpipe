@@ -81,6 +81,64 @@ class TestJoinViralqcClade:
         result = join_viralqc(df, path, {"clade_column": "clade"})
         assert result.loc[result["strain"] == "SEQ002", "clade"].iloc[0] == "CLADE_B"
 
+    def test_alternative_clade_column_selected(self, tmp_path):
+        """clade_column='legacy-clade' pulls the legacy column into clade."""
+        df = _make_metadata("SEQ001", "SEQ002")
+        path = _write_viralqc(
+            tmp_path,
+            [
+                {"seqName": "SEQ001", "clade": "C.1.9",
+                 "legacy-clade": "3C.2a1b.2a.2a.1", "genomeQuality": "A"},
+                {"seqName": "SEQ002", "clade": "", "legacy-clade": "6", "genomeQuality": "C"},
+            ],
+        )
+        result = join_viralqc(df, path, {"clade_column": "legacy-clade"})
+        assert result.loc[result["strain"] == "SEQ001", "clade"].iloc[0] == "3C.2a1b.2a.2a.1"
+        # bare-integer legacy clade preserved verbatim (no float artifact)
+        assert result.loc[result["strain"] == "SEQ002", "clade"].iloc[0] == "6"
+
+    def test_float_artifact_collapsed(self, tmp_path):
+        """A '<int>.0' artifact from a pre-dtype-fix results.tsv collapses back."""
+        df = _make_metadata("A", "B", "C")
+        path = _write_viralqc(
+            tmp_path,
+            [
+                {"seqName": "A", "clade": "1.0", "genomeQuality": "A"},
+                {"seqName": "B", "clade": "6B.1A.5a.2a.1", "genomeQuality": "A"},
+                {"seqName": "C", "clade": "10.0", "genomeQuality": "A"},
+            ],
+        )
+        result = join_viralqc(df, path, {"clade_column": "clade"})
+        got = dict(zip(result["strain"], result["clade"]))
+        assert got == {"A": "1", "B": "6B.1A.5a.2a.1", "C": "10"}
+
+    def test_missing_clade_column_still_yields_clade(self, tmp_path):
+        """Configured clade_column absent AND no pre-existing clade → clade exists (blank)."""
+        df = _make_metadata("SEQ001")  # no clade column
+        path = _write_viralqc(
+            tmp_path, [{"seqName": "SEQ001", "legacy_clade": "A2b2", "genomeQuality": "A"}]
+        )
+        result = join_viralqc(df, path, {"clade_column": "legacy-clade"})
+        assert "clade" in result.columns
+        assert result.loc[0, "clade"] == ""
+
+    def test_empty_selected_column_warns(self, tmp_path, caplog):
+        """Selected column present but empty for all matched rows → warning, no crash."""
+        import logging
+
+        df = _make_metadata("SEQ001", "SEQ002")
+        path = _write_viralqc(
+            tmp_path,
+            [
+                {"seqName": "SEQ001", "clade": "B3", "legacy-clade": "", "genomeQuality": "A"},
+                {"seqName": "SEQ002", "clade": "B3", "legacy-clade": "", "genomeQuality": "A"},
+            ],
+        )
+        with caplog.at_level(logging.WARNING):
+            result = join_viralqc(df, path, {"clade_column": "legacy-clade"})
+        assert (result["clade"] == "").all()
+        assert "empty for all" in caplog.text
+
 
 class TestJoinViralqcQuality:
     """Genome quality and coverage columns."""

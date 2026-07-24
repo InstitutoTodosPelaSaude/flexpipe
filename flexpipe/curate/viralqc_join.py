@@ -130,6 +130,7 @@ def join_viralqc(
         df = df.merge(nc_sub, on="strain", how="left")
 
         missing_vqc = df["_has_viralqc"].fillna("") != "1"
+        n_with_viralqc = int((~missing_vqc).sum())
         df.loc[missing_vqc, "qc_exclusion_reason"] = "missing_viralqc"
         df.drop(columns=["_has_viralqc"], inplace=True)
 
@@ -142,6 +143,18 @@ def join_viralqc(
             nc_clade = df["_nc_clade"].str.replace(r"^(\d+)\.0$", r"\1", regex=True)
             existing = df.get("clade", pd.Series("", index=df.index)).fillna("")
             has_nc_clade = nc_clade.notna() & (nc_clade.str.strip() != "")
+            # The selected column exists but is empty for every ViralQC-matched
+            # sequence — almost always a mis-selected clade_column for this virus
+            # (e.g. 'legacy-clade' on a dataset that only populates 'clade').
+            if n_with_viralqc and not bool(has_nc_clade.any()):
+                logger.warning(
+                    "viralqc.clade_column=%r is present in ViralQC output but empty "
+                    "for all %d matched sequence(s); clade falls back to any existing "
+                    "value. Check this is the right column for this virus "
+                    "(e.g. 'legacy-clade' for flu, 'legacy_clade' for hMPV).",
+                    clade_col,
+                    n_with_viralqc,
+                )
             df["clade"] = nc_clade.where(has_nc_clade, existing)
             df.drop(columns=["_nc_clade"], inplace=True)
 
@@ -288,7 +301,12 @@ def join_viralqc(
     else:
         df["qc_exclusion_reason"] = "missing_viralqc"
 
-    # Ensure these columns always exist (even if ViralQC was not run)
+    # Ensure these columns always exist (even if ViralQC was not run, or the
+    # configured clade_column was absent from ViralQC output and the source
+    # metadata carried no clade). Guarantees the warned-about "clade left blank"
+    # contract and prevents a downstream KeyError in clade_truncated/clade_filter.
+    if "clade" not in df.columns:
+        df["clade"] = ""
     if "genome_quality" not in df.columns:
         df["genome_quality"] = ""
     if "qc_overall_status" not in df.columns:
