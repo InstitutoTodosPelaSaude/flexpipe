@@ -250,12 +250,25 @@ path, not the workdir-local resolved snapshot. The Snakefile reads
 
 **Quality control via ViralQC**:
 - Runs `vqc` in the `viralQC` conda environment; vendored as a git submodule at `viralQC/`
+  (pinned to **v1.1.0**, which retains alternative clade columns in `results.tsv`)
 - Outputs genome quality grades (A–D) and Nextclade clade assignments
 - ViralQC datasets resolution order: `viralqc.datasets_dir` config key → `$VIRALQC_DATASETS_DIR` → `viralQC/datasets/` (auto-discovered from submodule)
 - `viralqc.expected_virus` and `viralqc.expected_segment` are alias-aware. Built-in aliases live
   in `flexpipe/data/viralqc/aliases.yaml`; use `viralqc.aliases_file` for overrides. Prefer
   operational keys (`rsv_a`, `flu_a_h1n1`, `ha`) when ViralQC labels vary. ICTV species names are
   metadata in the registry, not broad match keys unless explicitly listed as aliases.
+- `viralqc.clade_column` (default `"clade"`) selects which `results.tsv` column becomes the
+  pipeline's `clade` (in `flexpipe/curate/viralqc_join.py`). Nextclade naming has drifted, so the
+  default `clade` is a sparse new nomenclature for some viruses. Use `legacy-clade` for seasonal
+  influenza A HA and per-lineage flu-B Victoria (gives e.g. `6B.1A.5a.2a`; default `clade` returns
+  mostly `unassigned` for older sequences), `legacy-clade-vic` for the combined flu-B dataset, and
+  `legacy_clade` (underscore) for hMPV (classic `A2b1`/`A2b2`). Keep the default `clade` for
+  measles, RSV, dengue, YFV, Zika, mumps, and SARS-CoV-2 (pango). Nextclade's 2025-10-22 flu update
+  moved the classic clade to `legacy-clade`, so the default `clade` on a broad flu reference set
+  gives ~0% assignment.
+- The join also normalizes a `<int>.0` float artifact in clade values back to `<int>` (so `1.0`
+  and `1` do not split), and warns when the configured `clade_column` is absent from ViralQC
+  output (previously left silently blank).
 - Set up with: `bash scripts/install_viralqc.sh` (creates env, downloads datasets, runs tests)
 
 **Curation** (`flexpipe-curate` / `flexpipe.curate.pipeline`):
@@ -407,6 +420,10 @@ Key fields to update in `config.yaml`:
 - `coordinates.shared_cache` (optional shared geocode seed cache override)
 - `viralqc.expected_virus` / `viralqc.expected_segment` (alias keys or literal labels)
 - `viralqc.aliases_file` (optional override for ViralQC label aliases)
+- `viralqc.clade_column` (which `results.tsv` column feeds `clade`; default `"clade"`. Use
+  `legacy-clade` for seasonal flu A HA / per-lineage flu-B Victoria, `legacy-clade-vic` for the
+  combined flu-B dataset, `legacy_clade` for hMPV; keep the default for measles, RSV, dengue, YFV,
+  Zika, mumps, SARS-CoV-2. See "Quality control via ViralQC" above.)
 - `viralqc.*` (or set `VIRALQC_DATASETS_DIR`)
 - `traits.columns` (which metadata fields to infer ancestral states for)
 - `traits.max_states` / `traits.rare_state_label` (TreeTime-safe categorical cap)

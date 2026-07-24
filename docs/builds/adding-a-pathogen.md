@@ -96,6 +96,7 @@ pathoplexus:
 viralqc:
   expected_virus: "dengue"  # Alias-aware key
   expected_segment: "genome"
+  clade_column: "clade"     # ViralQC results.tsv column mapped to `clade`
   mode: "run"  # or: precomputed, skip
 ```
 
@@ -105,6 +106,12 @@ vqc --list-viruses
 ```
 
 If your virus isn't listed or has a different name, create/update aliases (see [ViralQC Integration](../viralqc-integration.md)).
+
+Set `clade_column` per virus: `legacy-clade` for seasonal influenza A HA and per-lineage flu-B
+Victoria (default `clade` is now a sparse subclade system and returns mostly `unassigned`),
+`legacy-clade-vic` for the combined flu-B dataset, `legacy_clade` (underscore) for hMPV; keep the
+default `clade` for measles, RSV, dengue, YFV, Zika, mumps, and SARS-CoV-2. See
+[Clade Column Selection](../viralqc-integration.md#clade-column-selection).
 
 #### Curation
 
