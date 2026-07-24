@@ -87,8 +87,12 @@ class TestJoinViralqcClade:
         path = _write_viralqc(
             tmp_path,
             [
-                {"seqName": "SEQ001", "clade": "C.1.9",
-                 "legacy-clade": "3C.2a1b.2a.2a.1", "genomeQuality": "A"},
+                {
+                    "seqName": "SEQ001",
+                    "clade": "C.1.9",
+                    "legacy-clade": "3C.2a1b.2a.2a.1",
+                    "genomeQuality": "A",
+                },
                 {"seqName": "SEQ002", "clade": "", "legacy-clade": "6", "genomeQuality": "C"},
             ],
         )
