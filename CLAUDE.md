@@ -407,6 +407,14 @@ flexpipe-run --config builds/my-pathogen/config.yaml --workdir /tmp/my-run
 Key fields to update in `config.yaml`:
 - `data_source` (pathoplexus or ncbi)
 - `pathoplexus.organism` / `ncbi.taxid`
+  - **Influenza A taxid caveat:** do *not* fetch by the subtype-level taxids (`114727` H1N1,
+    `119210` H3N2). NCBI stopped assigning recent submissions to those taxa, so a subtype-taxid
+    fetch silently misses essentially all sequences collected after ~2018 (they live under the
+    generic *Influenza A virus* taxon, with the subtype only in the strain name). Use
+    `ncbi.taxid: 11320` plus `ncbi.extra_search_term` to scope to the subtype
+    (e.g. `"AND H1N1[All Fields]"` / `"AND H3N2[All Fields]"`), and let ViralQC identify the
+    segment/subtype/clade (`viralqc.expected_segment: ha`, `viralqc.clade_column: legacy-clade`).
+    Symptom of the trap: a build whose sampling cuts off around 2018 with no contemporary tips.
 - `parameters.mask_5prime/3prime` (terminal masking in bp; 0 for full-genome) — **these values
   are per-reference**: YFV uses 142/548 (X03700.1); you must re-derive them for any new reference
 - `parameters.mask_sites_file` (optional BED file path for generated terminal masks or

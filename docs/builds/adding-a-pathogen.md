@@ -79,6 +79,24 @@ ncbi:
 
 Find your taxid: [NCBI Taxonomy](https://www.ncbi.nlm.nih.gov/taxonomy)
 
+> **Influenza A caveat:** do not use the subtype-level taxids (`114727` for H1N1, `119210` for
+> H3N2). NCBI no longer assigns recent submissions to them, so a subtype-taxid fetch silently
+> stops around 2018 and misses all contemporary sequences. Instead use the generic *Influenza A
+> virus* taxon `taxid: 11320` with an `extra_search_term` to scope to the subtype, and let ViralQC
+> identify the segment/subtype/clade:
+>
+> ```yaml
+> ncbi:
+>   taxid: 11320
+>   extra_search_term: "AND H1N1[All Fields]"   # or "AND H3N2[All Fields]"
+> viralqc:
+>   expected_segment: "ha"
+>   clade_column: "legacy-clade"
+> ```
+>
+> A build whose sampling inexplicably cuts off around 2018 with no recent tips is the tell-tale
+> sign of the subtype-taxid trap.
+
 #### Pathoplexus Configuration
 
 ```yaml
