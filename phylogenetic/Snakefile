@@ -196,8 +196,14 @@ rule tree:
     shell:
         """
         mkdir -p $(dirname {output.tree:q})
+        # -st DNA is explicit on purpose: IQ-TREE 3.1.1 fails sequence-type detection
+        # ("ERROR: Unknown sequence type") on perfectly valid nucleotide alignments, most
+        # often low-diversity ones carrying a masked block, while iqtree2 reads the same
+        # files without complaint. flexpipe only builds nucleotide trees, so pinning DNA
+        # restricts nothing.
         iqtree3 \
             -s     {input.alignment:q} \
+            -st    DNA \
             -m     {params.model:q} \
             {params.bootstrap_args:q} \
             -T     {threads} \
