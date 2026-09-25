@@ -7,9 +7,14 @@ Nextclade dataset).  Every sequence gets ``genomeQuality='A'`` and
 retain all sequences.
 
 When ``genome_size > 0`` is supplied, ``coverage`` is computed as
-``min(sequence_length / genome_size, 1.0)`` so that ``qc.min_coverage`` acts as
-a real length-based filter.  When ``genome_size == 0`` (default), every sequence
-gets ``coverage = '1.0'`` (backward-compatible behaviour).
+``min(unambiguous_bases / genome_size, 1.0)``, where unambiguous bases are
+A, C, G, T and U.  Ambiguity codes, N and gaps do not count, so
+``qc.min_coverage`` gates on how much of the genome was actually resolved.
+When ``genome_size == 0`` (default), every sequence gets ``coverage = '1.0'``
+(backward-compatible behaviour).
+
+Note that ``viralqc.mode='run'`` reports real coverage from ViralQC, so the two
+modes now mean the same thing by ``coverage``.
 
 **Important:** this mode bypasses contamination and segment checks.  Use only
 when the input sequences are already curated and quality-controlled, or when the
@@ -26,33 +31,40 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 
-def _iter_fasta_ids_and_seqlens(fasta_path: str) -> list[tuple[str, int]]:
-    """Return a list of (id, sequence_length) pairs from a FASTA file.
+_UNAMBIGUOUS = frozenset("ACGTUacgtu")
 
-    Sequence length is measured in FASTA bases (excluding header and blank
-    lines); gap characters and IUPAC ambiguity codes are counted as-is.
+
+def _iter_fasta_base_counts(fasta_path: str) -> list[tuple[str, int, int]]:
+    """Return (id, total_length, unambiguous_bases) triples from a FASTA file.
+
+    Total length counts every character on the sequence lines, including gaps,
+    N and IUPAC ambiguity codes.  The unambiguous count keeps only A, C, G, T
+    and U, which is what coverage is measured against.
     """
-    result: list[tuple[str, int]] = []
+    result: list[tuple[str, int, int]] = []
     current_id: str | None = None
     current_len: int = 0
+    current_unambiguous: int = 0
     with open(fasta_path, encoding="utf-8", errors="replace") as fh:
         for line in fh:
             stripped = line.strip()
             if stripped.startswith(">"):
                 if current_id is not None:
-                    result.append((current_id, current_len))
+                    result.append((current_id, current_len, current_unambiguous))
                 current_id = stripped[1:].split()[0]
                 current_len = 0
+                current_unambiguous = 0
             elif current_id is not None:
                 current_len += len(stripped)
+                current_unambiguous += sum(1 for ch in stripped if ch in _UNAMBIGUOUS)
     if current_id is not None:
-        result.append((current_id, current_len))
+        result.append((current_id, current_len, current_unambiguous))
     return result
 
 
 def iter_fasta_ids(fasta_path: str) -> list[str]:
     """Return a list of sequence IDs (header field before first space) from a FASTA file."""
-    return [seq_id for seq_id, _ in _iter_fasta_ids_and_seqlens(fasta_path)]
+    return [seq_id for seq_id, _, _ in _iter_fasta_base_counts(fasta_path)]
 
 
 def write_synthetic_viralqc_tsv(
@@ -67,7 +79,8 @@ def write_synthetic_viralqc_tsv(
     - ``genomeQuality = 'A'`` (best quality grade)
     - ``qc.overallStatus = 'good'``
     - ``coverage``:
-        - When *genome_size* > 0: ``min(seq_len / genome_size, 1.0)`` (4 d.p.)
+        - When *genome_size* > 0: ``min(unambiguous_bases / genome_size, 1.0)``
+          (4 d.p.); A, C, G, T and U count, N and ambiguity codes do not
         - When *genome_size* == 0 (default): ``'1.0'`` (unchanged behaviour)
 
     The join in ``flexpipe-curate`` then populates those columns as if ViralQC
@@ -75,31 +88,31 @@ def write_synthetic_viralqc_tsv(
     without BLAST or Nextclade.
 
     When *genome_size* > 0, ``qc.min_coverage`` in the build config acts as a
-    real minimum-length gate: sequences shorter than
-    ``genome_size * min_coverage`` bp are assigned a fractional coverage and
-    excluded by the downstream ``augur filter`` step.
+    real resolved-genome gate: a sequence resolving fewer than
+    ``genome_size * min_coverage`` unambiguous bases is assigned a fractional
+    coverage and excluded by the downstream ``augur filter`` step.
 
     Args:
         fasta_path: Path to the merged sequences FASTA produced by ``merge_local_sequences``.
         output_path: Destination path for the synthetic ``results.tsv``.
-        genome_size: Expected genome size in bp.  0 means no length-based
-            coverage (every sequence gets coverage 1.0).
+        genome_size: Expected genome size in bp.  0 means no coverage
+            computation (every sequence gets coverage 1.0).
     """
-    ids_and_lengths = _iter_fasta_ids_and_seqlens(fasta_path)
+    base_counts = _iter_fasta_base_counts(fasta_path)
     out = Path(output_path)
     out.parent.mkdir(parents=True, exist_ok=True)
     with open(out, "w", newline="", encoding="utf-8") as fh:
         writer = csv.writer(fh, delimiter="\t")
         writer.writerow(["seqName", "genomeQuality", "coverage", "qc.overallStatus"])
-        for seq_id, seq_len in ids_and_lengths:
+        for seq_id, _seq_len, n_unambiguous in base_counts:
             if genome_size > 0:
-                cov = str(round(min(seq_len / genome_size, 1.0), 4))
+                cov = str(round(min(n_unambiguous / genome_size, 1.0), 4))
             else:
                 cov = "1.0"
             writer.writerow([seq_id, "A", cov, "good"])
     logger.info(
         "synthesize_viralqc: wrote %d synthetic rows to %s (genome_size=%d)",
-        len(ids_and_lengths),
+        len(base_counts),
         output_path,
         genome_size,
     )

@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from flexpipe.ingest.synthesize_viralqc import (
-    _iter_fasta_ids_and_seqlens,
+    _iter_fasta_base_counts,
     iter_fasta_ids,
     write_synthetic_viralqc_tsv,
 )
@@ -94,25 +94,35 @@ class TestWriteSyntheticViralqcTsv:
         assert names == ["LOCAL001", "LOCAL002", "LOCAL003"]
 
 
-# ── Internal helper: _iter_fasta_ids_and_seqlens ──────────────────────────────
+# ── Internal helper: _iter_fasta_base_counts ──────────────────────────────────
 
 
-class TestIterFastaIdsAndSeqlens:
-    def test_returns_id_and_length_pairs(self, sample_fasta):
-        pairs = _iter_fasta_ids_and_seqlens(str(sample_fasta))
-        # sample_fasta has 3 sequences each 8 bp
-        assert pairs == [("LOCAL001", 8), ("LOCAL002", 8), ("LOCAL003", 8)]
+class TestIterFastaBaseCounts:
+    def test_returns_id_length_and_unambiguous_triples(self, sample_fasta):
+        triples = _iter_fasta_base_counts(str(sample_fasta))
+        # sample_fasta has 3 sequences each 8 bp, all unambiguous
+        assert triples == [("LOCAL001", 8, 8), ("LOCAL002", 8, 8), ("LOCAL003", 8, 8)]
 
     def test_empty_fasta_returns_empty(self, tmp_path):
         f = tmp_path / "empty.fasta"
         f.write_text("")
-        assert _iter_fasta_ids_and_seqlens(str(f)) == []
+        assert _iter_fasta_base_counts(str(f)) == []
 
     def test_multiline_sequence_sums_lengths(self, tmp_path):
         f = tmp_path / "multi.fasta"
         f.write_text(">SEQ1\nAAAA\nCCCC\n>SEQ2\nGGGG\n")
-        pairs = _iter_fasta_ids_and_seqlens(str(f))
-        assert pairs == [("SEQ1", 8), ("SEQ2", 4)]
+        triples = _iter_fasta_base_counts(str(f))
+        assert triples == [("SEQ1", 8, 8), ("SEQ2", 4, 4)]
+
+    def test_n_and_ambiguity_codes_do_not_count_as_resolved(self, tmp_path):
+        f = tmp_path / "ambig.fasta"
+        f.write_text(">SEQ1\nACGTNNRY--\n")
+        assert _iter_fasta_base_counts(str(f)) == [("SEQ1", 10, 4)]
+
+    def test_lowercase_and_rna_count_as_resolved(self, tmp_path):
+        f = tmp_path / "lower.fasta"
+        f.write_text(">SEQ1\nacgtU\n")
+        assert _iter_fasta_base_counts(str(f)) == [("SEQ1", 5, 5)]
 
     def test_iter_fasta_ids_still_works(self, sample_fasta):
         """iter_fasta_ids should remain backward-compatible."""
@@ -203,3 +213,33 @@ class TestLengthBasedCoverage:
             for row in reader:
                 assert row["genomeQuality"] == "A"
                 assert row["qc.overallStatus"] == "good"
+
+
+class TestCoverageCountsOnlyResolvedBases:
+    """A GenBank record padded with N is full-length but mostly unresolved."""
+
+    def _read_coverage(self, tsv_path: Path) -> dict[str, float]:
+        with open(tsv_path, newline="") as fh:
+            reader = csv.DictReader(fh, delimiter="\t")
+            return {row["seqName"]: float(row["coverage"]) for row in reader}
+
+    def test_n_padded_full_length_sequence_is_not_full_coverage(self, tmp_path):
+        fasta = tmp_path / "s.fasta"
+        fasta.write_text(">PADDED\n" + "ACGT" + "N" * 96 + "\n")  # 100 bp, 4 resolved
+        out = tmp_path / "r.tsv"
+        write_synthetic_viralqc_tsv(str(fasta), str(out), genome_size=100)
+        assert self._read_coverage(out)["PADDED"] == 0.04
+
+    def test_fully_resolved_sequence_still_reaches_one(self, tmp_path):
+        fasta = tmp_path / "s.fasta"
+        fasta.write_text(">CLEAN\n" + "ACGT" * 25 + "\n")  # 100 bp, all resolved
+        out = tmp_path / "r.tsv"
+        write_synthetic_viralqc_tsv(str(fasta), str(out), genome_size=100)
+        assert self._read_coverage(out)["CLEAN"] == 1.0
+
+    def test_ambiguity_codes_are_not_counted(self, tmp_path):
+        fasta = tmp_path / "s.fasta"
+        fasta.write_text(">AMBIG\nACGTRYKMSW\n")  # 10 bp, 4 resolved
+        out = tmp_path / "r.tsv"
+        write_synthetic_viralqc_tsv(str(fasta), str(out), genome_size=10)
+        assert self._read_coverage(out)["AMBIG"] == 0.4
