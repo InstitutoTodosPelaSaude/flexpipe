@@ -58,32 +58,55 @@ def load_data_table(
         return pd.read_csv(fh, sep="\t", dtype=str, comment=comment).fillna("")
 
 
+def _deep_merge(base: Any, over: Any) -> Any:
+    """Return *base* updated with *over*, recursing into nested mappings.
+
+    Mappings merge key by key; anything else (scalars, lists) is replaced whole,
+    so an override can redefine one entry without restating its neighbours.
+    """
+    if isinstance(base, dict) and isinstance(over, dict):
+        merged = dict(base)
+        for key, value in over.items():
+            merged[key] = _deep_merge(merged[key], value) if key in merged else value
+        return merged
+    return over
+
+
 def load_data_yaml(
     package: str,
     filename: str,
     override: str | Path | None = None,
+    merge: bool = False,
 ) -> Any:
     """Load a YAML reference file from an override path or the bundled default.
 
     Args:
         package: Dot-path to the sub-package (e.g. ``"flexpipe.data.hosts"``).
         filename: File name (e.g. ``"host_rules.yaml"``).
-        override: Optional path to a user-supplied replacement file.
+        override: Optional path to a user-supplied file.
+        merge: When True, the override is layered on top of the bundled default
+            instead of replacing it, so a build that adds one entry keeps every
+            bundled entry it did not mention.
 
     Returns:
         The parsed YAML object (typically a ``dict`` or ``list``).
     """
-    if override:
-        p = Path(override)
-        if not p.exists():
-            raise FileNotFoundError(
-                f"Data override not found: {p}\n"
-                f"(The bundled default for {package}/{filename} would have been used.)"
-            )
-        logger.debug("Loading YAML override: %s", p)
-        return yaml.safe_load(p.read_text(encoding="utf-8"))
+    bundled: Any = None
+    if not override or merge:
+        resource = files(package) / filename
+        logger.debug("Loading bundled YAML: %s/%s", package, filename)
+        with resource.open("r", encoding="utf-8") as fh:
+            bundled = yaml.safe_load(fh)
 
-    resource = files(package) / filename
-    logger.debug("Loading bundled YAML: %s/%s", package, filename)
-    with resource.open("r", encoding="utf-8") as fh:
-        return yaml.safe_load(fh)
+    if not override:
+        return bundled
+
+    p = Path(override)
+    if not p.exists():
+        raise FileNotFoundError(
+            f"Data override not found: {p}\n"
+            f"(The bundled default for {package}/{filename} would have been used.)"
+        )
+    logger.debug("Loading YAML override: %s (merge=%s)", p, merge)
+    data = yaml.safe_load(p.read_text(encoding="utf-8"))
+    return _deep_merge(bundled, data) if merge else data

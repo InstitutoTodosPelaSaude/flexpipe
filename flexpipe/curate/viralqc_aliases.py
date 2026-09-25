@@ -35,7 +35,10 @@ def normalize_label(value: object) -> str:
 
 
 def _load_registry(override: str | Path | None = None) -> dict[str, Any]:
-    data = load_data_yaml("flexpipe.data.viralqc", "aliases.yaml", override=override)
+    # merge=True: a build that adds one virus keeps the whole bundled registry.
+    # Replacing it silently dropped every other alias, and the symptom was a build
+    # where an unrelated virus suddenly stopped matching.
+    data = load_data_yaml("flexpipe.data.viralqc", "aliases.yaml", override=override, merge=True)
     if not isinstance(data, dict):
         raise ValueError("ViralQC alias registry must be a YAML mapping")
     return data
