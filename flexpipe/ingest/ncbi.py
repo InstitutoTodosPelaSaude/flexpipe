@@ -308,12 +308,30 @@ def main() -> None:
 
     rows = []
     n_seq = 0
+    n_no_sequence = 0
 
     with open(args.sequences_output, "w") as fa:
         for rec in iter_records(count, webenv, query_key):
+            # Some GenBank records carry no sequence content: WGS master records and
+            # records whose sequence is defined by a CONTIG/join directive. Biopython
+            # returns an undefined Seq for those, and str(rec.seq) raises
+            # UndefinedSequenceError, which aborts the whole fetch. Skip them and report
+            # the count. Seen with Enterovirus B (taxid 138949) and Human mastadenovirus D
+            # (taxid 130310).
+            try:
+                seq = str(rec.seq)
+            except Exception:
+                n_no_sequence += 1
+                continue
             rows.append(parse_gb_record(rec))
-            fa.write(f">{rec.id}\n{rec.seq}\n")
+            fa.write(f">{rec.id}\n{seq}\n")
             n_seq += 1
+
+    if n_no_sequence:
+        logger.warning(
+            "Skipped %d record(s) with no sequence content (WGS master or CONTIG/join).",
+            n_no_sequence,
+        )
 
     df = pd.DataFrame(rows)
     df.to_csv(args.metadata_output, sep="\t", index=False)

@@ -171,3 +171,56 @@ class TestSearchNcbi:
         search_ncbi(11089, 7000, 12000, min_date="2020-01-01", max_date="2026-06-06")
 
         assert "2020/01/01:2026/06/06[PDAT]" in captured["term"]
+
+
+class TestFetchSkipsRecordsWithoutSequence:
+    """WGS master and CONTIG/join records carry no sequence and used to abort the fetch."""
+
+    def _run_main(self, tmp_path, monkeypatch, records):
+        import sys
+
+        from flexpipe.ingest import ncbi as mod
+
+        metadata_out = tmp_path / "metadata.tsv"
+        sequences_out = tmp_path / "sequences.fasta"
+
+        cfg = {"ncbi": {"taxid": 1, "genome_size": 100, "email": "a@b.c"}}
+        monkeypatch.setattr(mod, "load_config", lambda _p: cfg)
+        monkeypatch.setattr(mod, "search_ncbi", lambda *a, **k: (len(records), "we", "qk"))
+        monkeypatch.setattr(mod, "iter_records", lambda *a, **k: iter(records))
+        monkeypatch.setattr(mod, "parse_gb_record", lambda rec: {"accessionVersion": rec.id})
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            [
+                "flexpipe-fetch-ncbi",
+                "--config",
+                "unused.yaml",
+                "--metadata-output",
+                str(metadata_out),
+                "--sequences-output",
+                str(sequences_out),
+            ],
+        )
+        mod.main()
+        return metadata_out, sequences_out
+
+    def test_undefined_sequence_is_skipped_and_the_rest_is_written(self, tmp_path, monkeypatch):
+        class UndefinedSeq:
+            def __str__(self):
+                raise ValueError("Sequence content is undefined")
+
+        good = MagicMock()
+        good.id = "OK123.1"
+        good.seq = "ACGT"
+
+        bad = MagicMock()
+        bad.id = "WGS000.1"
+        bad.seq = UndefinedSeq()
+
+        metadata_out, sequences_out = self._run_main(tmp_path, monkeypatch, [bad, good])
+
+        fasta = sequences_out.read_text()
+        assert ">OK123.1\nACGT\n" in fasta
+        assert "WGS000.1" not in fasta
+        assert len(metadata_out.read_text().strip().splitlines()) == 2  # header + 1 record
