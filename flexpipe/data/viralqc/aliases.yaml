@@ -122,11 +122,17 @@ viruses:
     ictv_species: Influenza B virus
     aliases:
       - flu_b
+      # ViralQC emits the short form "Influenza B" in results.tsv (it comes from
+      # virus_name in viralqc/config/datasets.yml, not from blast.tsv's virus_name
+      # "Influenza B virus (B/Lee/1940)" nor from the ICTV species name
+      # "Betainfluenzavirus influenzae"). Without the short form every Influenza B
+      # sequence is flagged wrong_virus and the build ends up empty.
+      - Influenza B
       - Influenza B virus
       - Influenza B virus (B/Lee/1940)
       - Influenza B virus (B/Brisbane/60/2008)
     patterns:
-      - '^influenza b virus.*$'
+      - '^influenza b( virus.*)?$'
 
   measles:
     ictv_species: Morbillivirus hominis

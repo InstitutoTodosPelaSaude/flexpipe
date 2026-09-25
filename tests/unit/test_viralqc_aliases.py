@@ -52,6 +52,8 @@ def test_flu_aliases_match_strain_specific_virus_and_ha_segment():
         "viruses",
     )
     assert labels_match_expected("Influenza B virus (B/Lee/1940)", "flu_b", "viruses")
+    # ViralQC writes the short form into results.tsv; without it every flu B build is empty
+    assert labels_match_expected("Influenza B", "flu_b", "viruses")
     assert labels_match_expected("HA", "ha", "segments")
     assert labels_match_expected("4", "ha", "segments")
     assert not labels_match_expected("NA", "ha", "segments")
