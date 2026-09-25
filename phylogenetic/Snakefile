@@ -221,7 +221,8 @@ rule refine:
     input:
         tree      = rules.tree.output.tree,
         alignment = rules.mask.output.alignment,
-        metadata  = SUBSAMPLED_METADATA
+        metadata  = SUBSAMPLED_METADATA,
+        keep      = files.keep
     threads:
         options.threads
     params:
@@ -247,6 +248,7 @@ rule refine:
             --coalescent       {params.coalescent:q} \
             {params.date_confidence_args:q} \
             --clock-filter-iqd {params.clock_filter} \
+            --keep-ids         {input.keep:q} \
             --divergence-units {params.unit:q} \
             --date-inference   {params.date_inference:q}
         """
