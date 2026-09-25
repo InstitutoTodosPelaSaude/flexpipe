@@ -164,6 +164,49 @@ def _check_reference_annotation(build_dir: Path, errors: list[str], warnings: li
     else:
         _ok(f"reference.gb CDS names are gene names ({len(named)} CDS)")
 
+    # augur stores one CDS per name, so among CDS sharing a name only the last survives.
+    # Every gene with alternative splicing hits this: in the adenoviruses E3 has 8 CDS and
+    # only one was drawn.
+    counts: dict[str, int] = {}
+    for name, _feat in named:
+        counts[name] = counts.get(name, 0) + 1
+    shared = {name: n for name, n in counts.items() if n > 1}
+    if shared:
+        dropped = sum(n - 1 for n in shared.values())
+        kept = {}
+        for name, feat in named:
+            kept[name] = feat  # last one wins, exactly as augur does
+        genome_len = len(record.seq) or 1
+        all_cov = len(_covered_positions(feat for _n, feat in named)) / genome_len
+        kept_cov = len(_covered_positions(kept.values())) / genome_len
+        listed = ", ".join(f"{name} ({n} CDS)" for name, n in sorted(shared.items())[:3])
+        msg = (
+            f"{len(shared)} gene name(s) in reference.gb are shared by more than one CDS: "
+            f"{listed}{', ...' if len(shared) > 3 else ''}. augur keeps one CDS per name, so "
+            f"{dropped} CDS will not be drawn and the annotation covers "
+            f"{kept_cov:.0%} of the genome instead of {all_cov:.0%}. Give each CDS a distinct "
+            f"name (a positional suffix, or the /product) to draw them all."
+        )
+        warnings.append(msg)
+        _warn(
+            f"{dropped} CDS dropped from the annotation for sharing a name "
+            f"({kept_cov:.0%} of the genome covered instead of {all_cov:.0%})"
+        )
+    else:
+        _ok(f"reference.gb CDS names are distinct ({len(named)} CDS)")
+
+
+def _covered_positions(feats) -> set[int]:
+    """Genome positions covered by the given features, joins included."""
+    covered: set[int] = set()
+    for feat in feats:
+        location = getattr(feat, "location", None)
+        if location is None:
+            continue
+        for part in location.parts:
+            covered.update(range(int(part.start), int(part.end)))
+    return covered
+
 
 def _check_clades_tsv(build_dir: Path, errors: list[str], warnings: list[str]) -> None:
     """Flag header-only clades.tsv as informational."""

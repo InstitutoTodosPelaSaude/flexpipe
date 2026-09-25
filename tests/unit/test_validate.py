@@ -638,3 +638,54 @@ class TestCheckReferenceAnnotation:
         _check_reference_annotation(build_dir, errors, warnings)
         assert errors == []
         assert any("could not be parsed" in w for w in warnings)
+
+
+class TestCheckReferenceAnnotationSharedNames:
+    def test_warns_when_two_cds_share_a_gene_name(self, tmp_path):
+        build_dir = _build_dir(tmp_path)
+        _write(
+            build_dir / "reference.gb",
+            _genbank(
+                _cds("1..30", gene="E3") + _cds("31..60", gene="E3"),
+                length=60,
+            ),
+        )
+        errors, warnings = [], []
+        _check_reference_annotation(build_dir, errors, warnings)
+        assert errors == []
+        assert any("E3 (2 CDS)" in w and "1 CDS will not be drawn" in w for w in warnings)
+
+    def test_reports_the_annotation_coverage_that_is_lost(self, tmp_path):
+        build_dir = _build_dir(tmp_path)
+        # two CDS named E3 cover the whole 100 bp; augur keeps the second, so 50% is lost
+        _write(
+            build_dir / "reference.gb",
+            _genbank(_cds("1..50", gene="E3") + _cds("51..100", gene="E3"), length=100),
+        )
+        errors, warnings = [], []
+        _check_reference_annotation(build_dir, errors, warnings)
+        assert any("50% of the genome instead of 100%" in w for w in warnings)
+
+    def test_quiet_when_every_cds_has_its_own_name(self, tmp_path):
+        build_dir = _build_dir(tmp_path)
+        _write(
+            build_dir / "reference.gb",
+            _genbank(_cds("1..30", gene="E3.1") + _cds("31..60", gene="E3.2"), length=60),
+        )
+        errors, warnings = [], []
+        _check_reference_annotation(build_dir, errors, warnings)
+        assert warnings == []
+
+    def test_joined_cds_counts_every_part(self, tmp_path):
+        build_dir = _build_dir(tmp_path)
+        _write(
+            build_dir / "reference.gb",
+            _genbank(
+                _cds("join(1..20,41..60)", gene="E3") + _cds("21..40", gene="E3"),
+                length=60,
+            ),
+        )
+        errors, warnings = [], []
+        _check_reference_annotation(build_dir, errors, warnings)
+        # all three segments together cover the record; keeping only 21..40 leaves a third
+        assert any("33% of the genome instead of 100%" in w for w in warnings)
