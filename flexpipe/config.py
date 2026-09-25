@@ -231,7 +231,11 @@ class ParametersConfig(BaseModel):
     )
     ufboot: int = Field(default=1000, ge=0)
     model: str = Field(default="MFP", min_length=1)
-    root: Literal["least-squares", "min_dev", "oldest", "best"] = "least-squares"
+    # mid_point is accepted by augur refine --root and is the only usable option when the
+    # sampled window carries no clock: least-squares aborts with "No valid root found" as
+    # soon as root-to-tip regression loses its positive slope, which happens in any build
+    # whose divergent outgroup was removed.
+    root: Literal["least-squares", "min_dev", "oldest", "best", "mid_point"] = "least-squares"
     coalescent: Literal["skyline", "opt", "const", "fixed"] = "skyline"
     date_inference: Literal["marginal", "joint"] = "marginal"
     divergence_units: Literal["mutations", "mutations-per-site"] = "mutations"

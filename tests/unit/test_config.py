@@ -364,6 +364,14 @@ class TestLoadConfig:
         with pytest.raises(SystemExit, match="local_sequences.metadata"):
             load_config(config_yaml, skip_viralqc=True)
 
+    def test_mid_point_rooting_is_accepted(self):
+        cfg = FlexpipeConfig(
+            data_source="pathoplexus",
+            pathoplexus={"organism": "yellow-fever"},
+            parameters={"root": "mid_point"},
+        )
+        assert cfg.parameters.root == "mid_point"
+
     def test_invalid_enum_and_column_list_fail_fast(self):
         with pytest.raises(pydantic.ValidationError, match="parameters.root"):
             FlexpipeConfig(
