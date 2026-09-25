@@ -422,6 +422,14 @@ class ViralqcConfig(BaseModel):
     runner: Literal["conda", "mamba", "micromamba", "direct"] = "conda"
     executable: str = "vqc"
     mode: Literal["run", "precomputed", "skip"] = "run"
+    # Clade columns to carry over from the ViralQC results.tsv in ADDITION to the one
+    # picked by clade_column. Meant for viruses with two live nomenclatures, such as
+    # influenza B, where Nextclade reports the new subclade (C.5.7) and the legacy clade
+    # (V1A.3a.2) in separate columns and both are worth keeping. Each entry becomes a
+    # metadata column named after the source, sanitized to a valid identifier
+    # (legacy-clade-vic -> legacy_clade_vic), or after the alias given as
+    # "source:alias". Empty keeps the previous behaviour of a single clade column.
+    extra_clade_columns: list[str] = Field(default_factory=list)
     precomputed: str = ""  # path to a pre-run ViralQC results.tsv (mode=precomputed only)
 
 
