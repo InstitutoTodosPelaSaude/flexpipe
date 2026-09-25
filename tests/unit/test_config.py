@@ -897,3 +897,28 @@ class TestFragmentConfig:
             )
         )
         assert set(cfg.fragment.target_quality) == {"A", "B"}
+
+
+class TestTopologyOnlyBuilds:
+    """parameters.timetree: false drops the time scale, so date-based rooting is out."""
+
+    def _cfg(self, **params):
+        return FlexpipeConfig(
+            data_source="pathoplexus",
+            pathoplexus={"organism": "yellow-fever"},
+            parameters=params,
+        )
+
+    def test_timetree_defaults_to_true(self):
+        assert self._cfg().parameters.timetree is True
+
+    def test_mid_point_is_allowed_without_a_time_scale(self):
+        cfg = self._cfg(timetree=False, root="mid_point")
+        assert cfg.parameters.timetree is False
+
+    def test_least_squares_without_a_time_scale_is_rejected(self):
+        with pytest.raises(pydantic.ValidationError, match="mid_point"):
+            self._cfg(timetree=False, root="least-squares")
+
+    def test_date_based_rooting_is_still_fine_with_a_time_scale(self):
+        assert self._cfg(timetree=True, root="least-squares").parameters.root == "least-squares"

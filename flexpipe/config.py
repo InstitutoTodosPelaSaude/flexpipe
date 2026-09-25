@@ -243,6 +243,21 @@ class ParametersConfig(BaseModel):
     date_confidence: bool = True
     traits_confidence: bool = True
     ancestral_inference: Literal["joint", "marginal"] = "joint"
+    # False builds a tree with no time scale: augur refine runs without --timetree and the
+    # dataset carries divergence only. For a virus whose sampled window holds no clock
+    # signal, the time axis TreeTime returns is not interpretable, and Auspice will happily
+    # draw it anyway. The date-dependent parameters above are skipped in that mode.
+    timetree: bool = True
+
+    @model_validator(mode="after")
+    def _root_method_needs_dates(self) -> "ParametersConfig":
+        date_based = {"least-squares", "best", "oldest", "min_dev"}
+        if not self.timetree and self.root in date_based:
+            raise ValueError(
+                f"parameters.root={self.root!r} roots the tree from tip dates, which is not "
+                f"available when parameters.timetree is false. Use 'mid_point'."
+            )
+        return self
 
 
 class OptionsConfig(BaseModel):

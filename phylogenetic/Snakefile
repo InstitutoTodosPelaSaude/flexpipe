@@ -123,6 +123,10 @@ _mask_sites = str(config["parameters"].get("mask_sites", "")).strip()
 _mask_from_beginning = int(parameters.mask_5prime)
 _mask_from_end = int(parameters.mask_3prime)
 _date_confidence = bool(config["parameters"].get("date_confidence", True))
+# parameters.timetree: False produces a topology-only dataset. augur refine then runs
+# without --timetree and every date-dependent flag is dropped, because a coalescent prior,
+# date inference and the clock filter all need a clock that this build does not claim.
+_timetree = bool(config["parameters"].get("timetree", True))
 _traits_confidence = bool(config["parameters"].get("traits_confidence", True))
 # A BED file is "active" only when the path is set and the file has actual content.
 # An empty or whitespace-only file is equivalent to no mask; we skip the --mask flag
@@ -211,7 +215,7 @@ rule tree:
 
 rule refine:
     message:
-        "Refining tree (root={params.root}, coalescent={params.coalescent})"
+        "Refining tree (root={params.root}, timetree=" + str(_timetree) + ")"
     input:
         tree      = rules.tree.output.tree,
         alignment = rules.mask.output.alignment,
@@ -220,11 +224,18 @@ rule refine:
         options.threads
     params:
         root           = parameters.root,
-        coalescent     = parameters.coalescent,
-        date_inference = parameters.date_inference,
         unit           = parameters.divergence_units,
-        clock_filter   = parameters.clock_filter_iqd,
-        date_confidence_args = ["--date-confidence"] if _date_confidence else []
+        time_args      = (
+            [
+                "--timetree",
+                "--coalescent", str(parameters.coalescent),
+                "--clock-filter-iqd", str(parameters.clock_filter_iqd),
+                "--date-inference", str(parameters.date_inference),
+            ]
+            + (["--date-confidence"] if _date_confidence else [])
+            if _timetree
+            else []
+        )
     output:
         tree      = f"{_wd}/results/trees/timetree.nwk",
         node_data = f"{_wd}/results/trees/branch_lengths.json"
@@ -237,12 +248,8 @@ rule refine:
             --output-tree      {output.tree:q} \
             --output-node-data {output.node_data:q} \
             --root             {params.root:q} \
-            --timetree \
-            --coalescent       {params.coalescent:q} \
-            {params.date_confidence_args:q} \
-            --clock-filter-iqd {params.clock_filter} \
             --divergence-units {params.unit:q} \
-            --date-inference   {params.date_inference:q}
+            {params.time_args:q}
         """
 
 
@@ -367,6 +374,29 @@ rule clades:
         """
 
 
+rule resolve_auspice_config:
+    """Write the workdir copy of auspice_config.json that augur export reads.
+
+    With a time scale it is copied unchanged. Without one the dataset carries no
+    num_date, so distance_measure falls back to divergence and date colourings and
+    filters are dropped rather than left pointing at attributes that do not exist.
+    """
+    input:
+        auspice_config = files.auspice_config
+    params:
+        timetree = _timetree
+    output:
+        resolved = f"{_wd}/config/auspice_config_resolved.json"
+    run:
+        import json, os
+        from flexpipe.phylo.auspice_config import resolve_auspice_config
+        with open(input.auspice_config, encoding="utf-8") as fh:
+            raw = json.load(fh)
+        os.makedirs(os.path.dirname(output.resolved), exist_ok=True)
+        with open(output.resolved, "w", encoding="utf-8") as fh:
+            json.dump(resolve_auspice_config(raw, timetree=params.timetree), fh, indent=2)
+
+
 rule export:
     message:
         "Exporting data files for auspice"
@@ -380,7 +410,7 @@ rule export:
         colors         = f"{_wd}/config/colour_scheme.tsv",
         lat_longs      = f"{_wd}/config/latlongs.tsv",
         clades         = rules.clades.output.clade_data,
-        auspice_config = files.auspice_config
+        auspice_config = rules.resolve_auspice_config.output.resolved
     output:
         auspice = f"{_wd}/auspice/results.json"
     shell:

@@ -337,3 +337,46 @@ class TestPhyloWiring:
         """
         output, rc = _dry_run(tmp_path, build_config, monkeypatch)
         assert rc == 0, f"{build_config.parent.name} phylo dry-run failed:\n{output}"
+
+
+@pytest.mark.integration
+class TestTopologyOnlyWiring:
+    """parameters.timetree: false must drop every date-dependent augur refine flag."""
+
+    def _build_config_without_timetree(self, tmp_path: Path) -> Path:
+        raw = yaml.safe_load(YFV_BUILD_CONFIG.read_text())
+        raw.setdefault("parameters", {})["timetree"] = False
+        raw["parameters"]["root"] = "mid_point"
+        # the build config carries repo-root-relative paths; make them absolute so the
+        # copy still finds them from tmp_path
+        for key, value in (raw.get("files") or {}).items():
+            raw["files"][key] = str((REPO_ROOT / value).resolve())
+        out = tmp_path / "config_no_timetree.yaml"
+        out.write_text(yaml.safe_dump(raw), encoding="utf-8")
+        return out
+
+    def test_refine_runs_without_timetree_and_without_date_flags(self, tmp_path, monkeypatch):
+        build_config = self._build_config_without_timetree(tmp_path)
+        output, rc = _dry_run(tmp_path, build_config, monkeypatch)
+        assert rc == 0, output
+        refine = [ln for ln in output.splitlines() if "augur refine" in ln]
+        assert refine, output
+        rendered = "\n".join(refine)
+        assert "--timetree" not in rendered
+        assert "--coalescent" not in rendered
+        assert "--clock-filter-iqd" not in rendered
+        assert "--date-inference" not in rendered
+        assert "--divergence-units" in rendered
+
+    def test_export_reads_the_resolved_auspice_config(self, tmp_path, monkeypatch):
+        build_config = self._build_config_without_timetree(tmp_path)
+        output, rc = _dry_run(tmp_path, build_config, monkeypatch)
+        assert rc == 0, output
+        assert "auspice_config_resolved.json" in output
+
+    def test_timetree_stays_on_by_default(self, tmp_path, monkeypatch):
+        output, rc = _dry_run(tmp_path, YFV_BUILD_CONFIG, monkeypatch)
+        assert rc == 0, output
+        refine = "\n".join(ln for ln in output.splitlines() if "augur refine" in ln)
+        assert "--timetree" in refine
+        assert "--coalescent" in refine
