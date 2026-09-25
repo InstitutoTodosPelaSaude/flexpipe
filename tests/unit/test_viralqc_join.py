@@ -514,3 +514,34 @@ class TestParseCoverageFormat:
 
         val = self._run("no_colons_at_all", target_gene="N")
         assert math.isnan(val)
+
+
+class TestUngradedBuildWarning:
+    """A run where ViralQC graded nothing ends as an empty build; say so at the cause."""
+
+    def test_error_logged_when_no_sequence_is_graded(self, tmp_path, caplog):
+        df = _make_metadata("SEQ001", "SEQ002")
+        path = _write_viralqc(
+            tmp_path,
+            [
+                {"seqName": "SEQ001", "genomeQuality": "", "clade": "1A"},
+                {"seqName": "SEQ002", "genomeQuality": "", "clade": "1A"},
+            ],
+        )
+        with caplog.at_level("ERROR"):
+            join_viralqc(df, nextclade_path=path, viralqc_cfg={})
+        assert "no genomeQuality grade" in caplog.text
+        assert "viralqc.mode='skip'" in caplog.text
+
+    def test_no_error_when_at_least_one_sequence_is_graded(self, tmp_path, caplog):
+        df = _make_metadata("SEQ001", "SEQ002")
+        path = _write_viralqc(
+            tmp_path,
+            [
+                {"seqName": "SEQ001", "genomeQuality": "A", "clade": "1A"},
+                {"seqName": "SEQ002", "genomeQuality": "", "clade": "1A"},
+            ],
+        )
+        with caplog.at_level("ERROR"):
+            join_viralqc(df, nextclade_path=path, viralqc_cfg={})
+        assert "no genomeQuality grade" not in caplog.text
