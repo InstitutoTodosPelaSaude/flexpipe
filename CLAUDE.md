@@ -314,7 +314,7 @@ path, not the workdir-local resolved snapshot. The Snakefile reads
 1. **align**: MAFFT alignment to reference
 2. **mask**: mask terminal regions (e.g., YFV: 142bp 5′, 548bp 3′; configurable per pathogen)
 3. **tree**: IQ-TREE 3 with UFBoot (model, bootstrap replicates from config)
-4. **refine**: TreeTime temporal calibration (root method, coalescent model, date inference, clock outlier filtering)
+4. **refine**: TreeTime temporal calibration (root method, coalescent model, date inference, clock outlier filtering); with `parameters.timetree: false` it runs in divergence-only mode and the date-dependent flags are skipped
 5. **ancestral**: nucleotide mutation reconstruction
 6. **translate**: amino acid mutations
 7. **traits**: ancestral state inference for geographic/clade traits
@@ -411,6 +411,11 @@ Key fields to update in `config.yaml`:
   are per-reference**: YFV uses 142/548 (X03700.1); you must re-derive them for any new reference
 - `parameters.mask_sites_file` (optional BED file path for generated terminal masks or
   problematic-site masking; leave blank if unused)
+- `parameters.timetree` (default `true`; set `false` for a topology-only build — `augur refine`
+  runs without `--timetree` and without the coalescent prior, date inference, date confidence and
+  clock filter, and the exported dataset measures distance in divergence with date colourings and
+  filters removed. `parameters.root` must then be `mid_point`, since the other methods root from
+  tip dates)
 - `curation.clade_levels` (hierarchy depth for `clade_truncated`)
 - `curation.lineage_parser` (`none`, `dengue`, `pango`, `generic_dot`) for optional derived lineage
   columns; DENV outputs are prefix-safe (e.g. `3III_B.3.2`, not bare `B`)
@@ -424,6 +429,10 @@ Key fields to update in `config.yaml`:
   `legacy-clade` for seasonal flu A HA / per-lineage flu-B Victoria, `legacy-clade-vic` for the
   combined flu-B dataset, `legacy_clade` for hMPV; keep the default for measles, RSV, dengue, YFV,
   Zika, mumps, SARS-CoV-2. See "Quality control via ViralQC" above.)
+- `viralqc.extra_clade_columns` (optional list of extra `results.tsv` clade columns to carry into
+  the metadata alongside `clade`, each optionally renamed as `"source:alias"`. For viruses with two
+  live nomenclatures, e.g. `["legacy-clade-vic:legacy_clade"]` on a flu-B build keeps both the new
+  subclade and the legacy clade)
 - `viralqc.*` (or set `VIRALQC_DATASETS_DIR`)
 - `traits.columns` (which metadata fields to infer ancestral states for)
 - `traits.max_states` / `traits.rare_state_label` (TreeTime-safe categorical cap)
