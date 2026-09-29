@@ -182,9 +182,7 @@ def join_viralqc(
             if key not in df.columns:
                 continue
             # same <int>.0 float artifact the main clade column is cleaned of
-            df[out] = (
-                df[key].fillna("").astype(str).str.replace(r"^(\d+)\.0$", r"\1", regex=True)
-            )
+            df[out] = df[key].fillna("").astype(str).str.replace(r"^(\d+)\.0$", r"\1", regex=True)
             n_filled = int((df[out].str.strip() != "").sum())
             logger.info(
                 "viralqc.extra_clade_columns: %s populated for %d sequence(s)", out, n_filled

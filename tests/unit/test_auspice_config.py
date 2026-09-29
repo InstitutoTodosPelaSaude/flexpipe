@@ -50,7 +50,5 @@ class TestWithoutTimetree:
         assert out == {"title": "Bare"}
 
     def test_string_colorings_are_handled(self):
-        out = resolve_auspice_config(
-            {"colorings": ["clade", "num_date"]}, timetree=False
-        )
+        out = resolve_auspice_config({"colorings": ["clade", "num_date"]}, timetree=False)
         assert out["colorings"] == ["clade"]

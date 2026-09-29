@@ -250,7 +250,7 @@ class ParametersConfig(BaseModel):
     timetree: bool = True
 
     @model_validator(mode="after")
-    def _root_method_needs_dates(self) -> "ParametersConfig":
+    def _root_method_needs_dates(self) -> ParametersConfig:
         date_based = {"least-squares", "best", "oldest", "min_dev"}
         if not self.timetree and self.root in date_based:
             raise ValueError(

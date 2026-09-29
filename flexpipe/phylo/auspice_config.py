@@ -45,16 +45,20 @@ def resolve_auspice_config(raw: dict[str, Any], timetree: bool = True) -> dict[s
     if isinstance(colorings, list):
         kept = [c for c in colorings if not _is_time_key(c)]
         if len(kept) != len(colorings):
-            logger.info("No time scale in this run: dropped %d date colouring(s)",
-                        len(colorings) - len(kept))
+            logger.info(
+                "No time scale in this run: dropped %d date colouring(s)",
+                len(colorings) - len(kept),
+            )
         out["colorings"] = kept
 
     filters = out.get("filters")
     if isinstance(filters, list):
         kept_filters = [f for f in filters if str(f) not in TIME_KEYS]
         if len(kept_filters) != len(filters):
-            logger.info("No time scale in this run: dropped %d date filter(s)",
-                        len(filters) - len(kept_filters))
+            logger.info(
+                "No time scale in this run: dropped %d date filter(s)",
+                len(filters) - len(kept_filters),
+            )
         out["filters"] = kept_filters
 
     return out
