@@ -11,6 +11,7 @@ start of ``main()`` that begins ``if args.nextclade and os.path.isfile(…)``).
 
 import logging
 import os
+import re
 from pathlib import Path
 from typing import Optional, Union
 
@@ -125,6 +126,25 @@ def join_viralqc(
             if "targetGene" in nc.columns:
                 nc_cols["targetGene"] = "_nc_target_gene"
 
+        # Additional clade columns (viralqc.extra_clade_columns). Each entry is either
+        # "source" or "source:alias"; the output name is sanitized to a valid identifier.
+        extra_map: dict[str, str] = {}
+        for spec in viralqc_cfg.get("extra_clade_columns", []) or []:
+            src, _, alias = str(spec).partition(":")
+            src = src.strip()
+            out = alias.strip() or src
+            out = re.sub(r"[^A-Za-z0-9_]", "_", out).strip("_")
+            if not src or not out:
+                continue
+            if src not in nc.columns:
+                logger.warning(
+                    "viralqc.extra_clade_columns: %r not found in ViralQC output; skipped.", src
+                )
+                continue
+            key = f"_nc_extra_{out}"
+            nc_cols[src] = key
+            extra_map[key] = out
+
         nc_sub = _joinable_viralqc_table(nc, nc_cols)
         nc_sub["_has_viralqc"] = "1"
         df = df.merge(nc_sub, on="strain", how="left")
@@ -157,6 +177,17 @@ def join_viralqc(
                 )
             df["clade"] = nc_clade.where(has_nc_clade, existing)
             df.drop(columns=["_nc_clade"], inplace=True)
+
+        for key, out in extra_map.items():
+            if key not in df.columns:
+                continue
+            # same <int>.0 float artifact the main clade column is cleaned of
+            df[out] = df[key].fillna("").astype(str).str.replace(r"^(\d+)\.0$", r"\1", regex=True)
+            n_filled = int((df[out].str.strip() != "").sum())
+            logger.info(
+                "viralqc.extra_clade_columns: %s populated for %d sequence(s)", out, n_filled
+            )
+            df.drop(columns=[key], inplace=True)
 
         if "_nc_genome_quality" in df.columns:
             df["genome_quality"] = df["_nc_genome_quality"].fillna("")

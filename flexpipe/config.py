@@ -231,7 +231,11 @@ class ParametersConfig(BaseModel):
     )
     ufboot: int = Field(default=1000, ge=0)
     model: str = Field(default="MFP", min_length=1)
-    root: Literal["least-squares", "min_dev", "oldest", "best"] = "least-squares"
+    # mid_point is accepted by augur refine --root and is the only usable option when the
+    # sampled window carries no clock: least-squares aborts with "No valid root found" as
+    # soon as root-to-tip regression loses its positive slope, which happens in any build
+    # whose divergent outgroup was removed.
+    root: Literal["least-squares", "min_dev", "oldest", "best", "mid_point"] = "least-squares"
     coalescent: Literal["skyline", "opt", "const", "fixed"] = "skyline"
     date_inference: Literal["marginal", "joint"] = "marginal"
     divergence_units: Literal["mutations", "mutations-per-site"] = "mutations"
@@ -239,6 +243,21 @@ class ParametersConfig(BaseModel):
     date_confidence: bool = True
     traits_confidence: bool = True
     ancestral_inference: Literal["joint", "marginal"] = "joint"
+    # False builds a tree with no time scale: augur refine runs without --timetree and the
+    # dataset carries divergence only. For a virus whose sampled window holds no clock
+    # signal, the time axis TreeTime returns is not interpretable, and Auspice will happily
+    # draw it anyway. The date-dependent parameters above are skipped in that mode.
+    timetree: bool = True
+
+    @model_validator(mode="after")
+    def _root_method_needs_dates(self) -> ParametersConfig:
+        date_based = {"least-squares", "best", "oldest", "min_dev"}
+        if not self.timetree and self.root in date_based:
+            raise ValueError(
+                f"parameters.root={self.root!r} roots the tree from tip dates, which is not "
+                f"available when parameters.timetree is false. Use 'mid_point'."
+            )
+        return self
 
 
 class OptionsConfig(BaseModel):
@@ -418,6 +437,14 @@ class ViralqcConfig(BaseModel):
     runner: Literal["conda", "mamba", "micromamba", "direct"] = "conda"
     executable: str = "vqc"
     mode: Literal["run", "precomputed", "skip"] = "run"
+    # Clade columns to carry over from the ViralQC results.tsv in ADDITION to the one
+    # picked by clade_column. Meant for viruses with two live nomenclatures, such as
+    # influenza B, where Nextclade reports the new subclade (C.5.7) and the legacy clade
+    # (V1A.3a.2) in separate columns and both are worth keeping. Each entry becomes a
+    # metadata column named after the source, sanitized to a valid identifier
+    # (legacy-clade-vic -> legacy_clade_vic), or after the alias given as
+    # "source:alias". Empty keeps the previous behaviour of a single clade column.
+    extra_clade_columns: list[str] = Field(default_factory=list)
     precomputed: str = ""  # path to a pre-run ViralQC results.tsv (mode=precomputed only)
 
 

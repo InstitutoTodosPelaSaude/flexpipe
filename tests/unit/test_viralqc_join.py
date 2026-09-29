@@ -514,3 +514,60 @@ class TestParseCoverageFormat:
 
         val = self._run("no_colons_at_all", target_gene="N")
         assert math.isnan(val)
+
+
+class TestExtraCladeColumns:
+    """viralqc.extra_clade_columns carries additional nomenclatures into the metadata."""
+
+    def _viralqc(self, tmp_path):
+        return _write_viralqc(
+            tmp_path,
+            [
+                {"seqName": "SEQ001", "clade": "C.5.7", "legacy-clade-vic": "V1A.3a.2"},
+                {"seqName": "SEQ002", "clade": "C.5.1", "legacy-clade-vic": ""},
+            ],
+        )
+
+    def test_source_name_is_sanitized_into_a_column(self, tmp_path):
+        df = _make_metadata("SEQ001", "SEQ002")
+        result = join_viralqc(
+            df,
+            nextclade_path=self._viralqc(tmp_path),
+            viralqc_cfg={"extra_clade_columns": ["legacy-clade-vic"]},
+        )
+        assert list(result["legacy_clade_vic"]) == ["V1A.3a.2", ""]
+        assert list(result["clade"]) == ["C.5.7", "C.5.1"]
+
+    def test_alias_names_the_column(self, tmp_path):
+        df = _make_metadata("SEQ001", "SEQ002")
+        result = join_viralqc(
+            df,
+            nextclade_path=self._viralqc(tmp_path),
+            viralqc_cfg={"extra_clade_columns": ["legacy-clade-vic:legacy_clade"]},
+        )
+        assert list(result["legacy_clade"]) == ["V1A.3a.2", ""]
+        assert "legacy_clade_vic" not in result.columns
+
+    def test_absent_source_column_is_skipped_with_a_warning(self, tmp_path, caplog):
+        df = _make_metadata("SEQ001", "SEQ002")
+        with caplog.at_level("WARNING"):
+            result = join_viralqc(
+                df,
+                nextclade_path=self._viralqc(tmp_path),
+                viralqc_cfg={"extra_clade_columns": ["not-there"]},
+            )
+        assert "not-there" in caplog.text
+        assert "not_there" not in result.columns
+
+    def test_empty_config_keeps_a_single_clade_column(self, tmp_path):
+        df = _make_metadata("SEQ001", "SEQ002")
+        result = join_viralqc(df, nextclade_path=self._viralqc(tmp_path), viralqc_cfg={})
+        assert "legacy_clade_vic" not in result.columns
+
+    def test_float_artifact_is_collapsed_in_extra_columns(self, tmp_path):
+        df = _make_metadata("SEQ001")
+        path = _write_viralqc(tmp_path, [{"seqName": "SEQ001", "clade": "1A", "other": "1.0"}])
+        result = join_viralqc(
+            df, nextclade_path=path, viralqc_cfg={"extra_clade_columns": ["other"]}
+        )
+        assert list(result["other"]) == ["1"]
