@@ -20,6 +20,7 @@ import logging
 import os
 import sys
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -97,14 +98,14 @@ def _check_reference_gb(build_dir: Path, errors: list[str], warnings: list[str])
         _ok("reference.gb exists and is not a placeholder")
 
 
-def _augur_cds_names(record) -> list[tuple[str, object]]:
+def _augur_cds_names(record: Any) -> list[tuple[str, Any]]:
     """Return (name, feature) for each CDS, named the way augur names it.
 
     Mirrors ``augur.io.sequences._read_genbank``: a CDS is named after its
     ``/locus_tag`` when present, otherwise ``/gene``, and a CDS with neither is
     skipped. These are the names that reach the entropy panel.
     """
-    out: list[tuple[str, object]] = []
+    out: list[tuple[str, Any]] = []
     for feat in record.features:
         if feat.type != "CDS":
             continue
