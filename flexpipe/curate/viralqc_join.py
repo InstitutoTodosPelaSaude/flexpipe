@@ -165,6 +165,18 @@ def join_viralqc(
             )
             df.loc[poor_quality, "qc_exclusion_reason"] = "viralqc_quality"
             df.drop(columns=["_nc_genome_quality"], inplace=True)
+            # augur filter always excludes genome_quality= (ungraded), so a run where
+            # ViralQC graded nothing silently produces an empty build. That happens when
+            # the target virus has no Nextclade dataset: genomeQuality comes back blank
+            # for every sequence. Say so here, where the cause is still visible.
+            if len(df) and not (df["genome_quality"].str.strip() != "").any():
+                logger.error(
+                    "ViralQC returned no genomeQuality grade for any of the %d sequences. "
+                    "The QC filter excludes ungraded sequences, so this build will come out "
+                    "empty. This usually means the target virus has no Nextclade dataset; "
+                    "use viralqc.mode='skip' (with ncbi.genome_size set) or supply a dataset.",
+                    len(df),
+                )
 
         if "_nc_qc" in df.columns:
             df["qc_overall_status"] = df["_nc_qc"].fillna("")

@@ -537,7 +537,14 @@ rule prepare:
     input:
         sequences     = rules.clade_filter.output.sequences,
         metadata      = rules.clade_filter.output.metadata,
-        subsample_cfg = rules.resolve_subsample_config.output.resolved
+        subsample_cfg = rules.resolve_subsample_config.output.resolved,
+        # keep.txt and ignore.txt reach augur subsample through the subsample config
+        # (samples.*.include and defaults.exclude), so they are real inputs of this rule.
+        # Without them declared, editing either file leaves the subsampled set stale:
+        # Snakemake reruns only from the steps that do declare them, and the tree is
+        # rebuilt from the previous selection with no error and no warning.
+        keep          = files.keep,
+        ignore        = files.ignore
     params:
         seed = _sub.get("random_seed", 42)
     output:
