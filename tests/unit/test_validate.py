@@ -13,6 +13,7 @@ from flexpipe.validate import (
     _check_data_source_prerequisites,
     _check_mask_sites_file,
     _check_no_clade_source,
+    _check_reference_annotation,
     _check_reference_gb,
     _check_subsample_yaml,
     _check_viralqc_aliases,
@@ -559,3 +560,132 @@ class TestValidateBuild:
             pytest.skip("yfv-brazil build not present")
         rc = validate_build(yfv_config)
         assert rc == 0, "yfv-brazil should pass flexpipe-validate-build with no errors"
+
+
+# ── Reference annotation checks ───────────────────────────────────────────────
+
+
+def _cds(location: str, **qualifiers: str) -> str:
+    """One CDS feature block, at the columns the GenBank feature table expects."""
+    lines = [f"     CDS             {location}"]
+    lines += [f'                     /{k}="{v}"' for k, v in qualifiers.items()]
+    return "\n".join(lines) + "\n"
+
+
+def _genbank(cds_blocks: str, length: int = 60) -> str:
+    """Minimal GenBank record carrying the given CDS feature blocks."""
+    seq = ("atgcatgcat" * ((length // 10) + 1))[:length]
+    return (
+        "LOCUS       " + "TEST".ljust(16) + str(length).rjust(12) + " bp    DNA     linear"
+        "   VRL 01-JAN-2020\n"
+        "DEFINITION  Test record.\n"
+        "ACCESSION   TEST\n"
+        "VERSION     TEST.1\n"
+        "FEATURES             Location/Qualifiers\n"
+        f"     source          1..{length}\n"
+        '                     /organism="Test virus"\n'
+        f"{cds_blocks}"
+        "ORIGIN\n"
+        f"        1 {seq}\n"
+        "//\n"
+    )
+
+
+class TestCheckReferenceAnnotation:
+    def test_warns_when_locus_tag_shadows_gene(self, tmp_path):
+        build_dir = _build_dir(tmp_path)
+        _write(
+            build_dir / "reference.gb",
+            _genbank(_cds("1..30", locus_tag="TESTgp01", gene="NS1")),
+        )
+        errors, warnings = [], []
+        _check_reference_annotation(build_dir, errors, warnings)
+        assert errors == []
+        assert any("locus_tag" in w and "NS1" in w for w in warnings)
+
+    def test_quiet_when_cds_carry_gene_only(self, tmp_path):
+        build_dir = _build_dir(tmp_path)
+        _write(
+            build_dir / "reference.gb",
+            _genbank(_cds("1..30", gene="NS1")),
+        )
+        errors, warnings = [], []
+        _check_reference_annotation(build_dir, errors, warnings)
+        assert errors == []
+        assert warnings == []
+
+    def test_quiet_when_locus_tag_is_the_only_name(self, tmp_path):
+        build_dir = _build_dir(tmp_path)
+        _write(
+            build_dir / "reference.gb",
+            _genbank(_cds("1..30", locus_tag="TESTgp01")),
+        )
+        errors, warnings = [], []
+        _check_reference_annotation(build_dir, errors, warnings)
+        assert warnings == []
+
+    def test_skips_placeholder_reference(self, tmp_path):
+        build_dir = _build_dir(tmp_path)
+        _write(build_dir / "reference.gb", "LOCUS PLACEHOLDER 0 bp\n")
+        errors, warnings = [], []
+        _check_reference_annotation(build_dir, errors, warnings)
+        assert errors == [] and warnings == []
+
+    def test_unparsable_reference_warns_without_raising(self, tmp_path):
+        build_dir = _build_dir(tmp_path)
+        _write(build_dir / "reference.gb", "not a genbank file at all\n")
+        errors, warnings = [], []
+        _check_reference_annotation(build_dir, errors, warnings)
+        assert errors == []
+        assert any("could not be parsed" in w for w in warnings)
+
+
+class TestCheckReferenceAnnotationSharedNames:
+    def test_warns_when_two_cds_share_a_gene_name(self, tmp_path):
+        build_dir = _build_dir(tmp_path)
+        _write(
+            build_dir / "reference.gb",
+            _genbank(
+                _cds("1..30", gene="E3") + _cds("31..60", gene="E3"),
+                length=60,
+            ),
+        )
+        errors, warnings = [], []
+        _check_reference_annotation(build_dir, errors, warnings)
+        assert errors == []
+        assert any("E3 (2 CDS)" in w and "1 CDS will not be drawn" in w for w in warnings)
+
+    def test_reports_the_annotation_coverage_that_is_lost(self, tmp_path):
+        build_dir = _build_dir(tmp_path)
+        # two CDS named E3 cover the whole 100 bp; augur keeps the second, so 50% is lost
+        _write(
+            build_dir / "reference.gb",
+            _genbank(_cds("1..50", gene="E3") + _cds("51..100", gene="E3"), length=100),
+        )
+        errors, warnings = [], []
+        _check_reference_annotation(build_dir, errors, warnings)
+        assert any("50% of the genome instead of 100%" in w for w in warnings)
+
+    def test_quiet_when_every_cds_has_its_own_name(self, tmp_path):
+        build_dir = _build_dir(tmp_path)
+        _write(
+            build_dir / "reference.gb",
+            _genbank(_cds("1..30", gene="E3.1") + _cds("31..60", gene="E3.2"), length=60),
+        )
+        errors, warnings = [], []
+        _check_reference_annotation(build_dir, errors, warnings)
+        assert warnings == []
+
+    def test_joined_cds_counts_every_part(self, tmp_path):
+        build_dir = _build_dir(tmp_path)
+        _write(
+            build_dir / "reference.gb",
+            _genbank(
+                _cds("join(1..20,41..60)", gene="E3") + _cds("21..40", gene="E3"),
+                length=60,
+            ),
+        )
+        errors, warnings = [], []
+        _check_reference_annotation(build_dir, errors, warnings)
+        # all three segments together cover the record; keeping only 21..40 leaves a third
+        assert any("33% of the genome instead of 100%" in w for w in warnings)

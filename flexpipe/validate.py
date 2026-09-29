@@ -20,6 +20,7 @@ import logging
 import os
 import sys
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -95,6 +96,117 @@ def _check_reference_gb(build_dir: Path, errors: list[str], warnings: list[str])
         _warn("reference.gb is a PLACEHOLDER — replace before running phylogenetics")
     else:
         _ok("reference.gb exists and is not a placeholder")
+
+
+def _augur_cds_names(record: Any) -> list[tuple[str, Any]]:
+    """Return (name, feature) for each CDS, named the way augur names it.
+
+    Mirrors ``augur.io.sequences._read_genbank``: a CDS is named after its
+    ``/locus_tag`` when present, otherwise ``/gene``, and a CDS with neither is
+    skipped. These are the names that reach the entropy panel.
+    """
+    out: list[tuple[str, Any]] = []
+    for feat in record.features:
+        if feat.type != "CDS":
+            continue
+        quals = feat.qualifiers
+        if "locus_tag" in quals:
+            out.append((str(quals["locus_tag"][0]), feat))
+        elif "gene" in quals:
+            out.append((str(quals["gene"][0]), feat))
+    return out
+
+
+def _check_reference_annotation(build_dir: Path, errors: list[str], warnings: list[str]) -> None:
+    """Warn when reference.gb annotation reaches Auspice under unhelpful names.
+
+    augur names a CDS after ``/locus_tag`` before ``/gene``, and most RefSeq
+    records carry a generic locus_tag, so the nucleotide diversity panel ends up
+    labelled HRSVgp01 or DZD21_gp01 instead of N, P, M or F. Nothing fails, so
+    this goes unnoticed until someone opens the panel.
+    """
+    ref_path = build_dir / "reference.gb"
+    if not ref_path.exists() or "PLACEHOLDER" in ref_path.read_text():
+        return
+
+    try:
+        from Bio import SeqIO
+
+        record = SeqIO.read(str(ref_path), "genbank")
+    except Exception as exc:  # noqa: BLE001 — parsing failure is reported, not raised
+        warnings.append(f"reference.gb could not be parsed for annotation checks: {exc}")
+        _warn(f"reference.gb could not be parsed for annotation checks: {exc}")
+        return
+
+    named = _augur_cds_names(record)
+    if not named:
+        _ok("reference.gb has no CDS features to annotate")
+        return
+
+    shadowed = [
+        (name, str(feat.qualifiers["gene"][0]))
+        for name, feat in named
+        if "locus_tag" in feat.qualifiers and "gene" in feat.qualifiers
+    ]
+    if shadowed:
+        sample = ", ".join(f"{lt} (gene={gene})" for lt, gene in shadowed[:3])
+        msg = (
+            f"{len(shadowed)} of {len(named)} CDS features in reference.gb will be labelled by "
+            f"/locus_tag although they carry a /gene qualifier: {sample}"
+            f"{', ...' if len(shadowed) > 3 else ''}. augur reads /locus_tag first, so the "
+            f"nucleotide diversity panel will show these names. Drop /locus_tag from those CDS "
+            f"to fall back on the gene names."
+        )
+        warnings.append(msg)
+        _warn(
+            f"{len(shadowed)} CDS will show /locus_tag instead of /gene in the entropy panel "
+            f"(e.g. {shadowed[0][0]} instead of {shadowed[0][1]})"
+        )
+    else:
+        _ok(f"reference.gb CDS names are gene names ({len(named)} CDS)")
+
+    # augur stores one CDS per name, so among CDS sharing a name only the last survives.
+    # Every gene with alternative splicing hits this: in the adenoviruses E3 has 8 CDS and
+    # only one was drawn.
+    counts: dict[str, int] = {}
+    for name, _feat in named:
+        counts[name] = counts.get(name, 0) + 1
+    shared = {name: n for name, n in counts.items() if n > 1}
+    if shared:
+        dropped = sum(n - 1 for n in shared.values())
+        kept = {}
+        for name, feat in named:
+            kept[name] = feat  # last one wins, exactly as augur does
+        genome_len = len(record.seq) or 1
+        all_cov = len(_covered_positions(feat for _n, feat in named)) / genome_len
+        kept_cov = len(_covered_positions(kept.values())) / genome_len
+        listed = ", ".join(f"{name} ({n} CDS)" for name, n in sorted(shared.items())[:3])
+        msg = (
+            f"{len(shared)} gene name(s) in reference.gb are shared by more than one CDS: "
+            f"{listed}{', ...' if len(shared) > 3 else ''}. augur keeps one CDS per name, so "
+            f"{dropped} CDS will not be drawn and the annotation covers "
+            f"{kept_cov:.0%} of the genome instead of {all_cov:.0%}. Give each CDS a distinct "
+            f"name (a positional suffix, or the /product) to draw them all."
+        )
+        warnings.append(msg)
+        _warn(
+            f"{dropped} CDS dropped from the annotation for sharing a name "
+            f"({kept_cov:.0%} of the genome covered instead of {all_cov:.0%})"
+        )
+    else:
+        _ok(f"reference.gb CDS names are distinct ({len(named)} CDS)")
+
+
+def _covered_positions(feats) -> set[int]:
+    """Genome positions covered by the given features, joins included."""
+    covered: set[int] = set()
+    for feat in feats:
+        location = getattr(feat, "location", None)
+        if location is None:
+            continue
+        for part in location.parts:
+            covered.update(range(int(part.start), int(part.end)))
+    return covered
 
 
 def _check_clades_tsv(build_dir: Path, errors: list[str], warnings: list[str]) -> None:
@@ -684,6 +796,7 @@ def validate_build(config_path: str | Path) -> int:
     # ── 2. Build file checks ───────────────────────────────────────────────────
     _check_subsample_yaml(build_dir, errors, warnings)
     _check_reference_gb(build_dir, errors, warnings)
+    _check_reference_annotation(build_dir, errors, warnings)
     _check_clades_tsv(build_dir, errors, warnings)
     _check_mask_sites_file(config_raw, build_dir, errors, warnings)
     _check_data_source_prerequisites(config_raw, build_dir, errors, warnings)
